@@ -2,8 +2,15 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin } from "lucide-react";
+import { MapPin, Star } from "lucide-react";
 import { Restaurant } from "@/data/taiwan-food";
+
+// 리뷰수 포맷 (1000 -> 1K, 10000 -> 10K)
+function formatReviewCount(count: number): string {
+  if (count >= 10000) return `${(count / 1000).toFixed(0)}K`;
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+  return count.toString();
+}
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
@@ -49,6 +56,15 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: Re
         </div>
         <CardContent className="p-3">
           <h3 className="font-semibold text-sm truncate">{restaurant.이름}</h3>
+          {restaurant.평점 && (
+            <p className="text-xs flex items-center gap-1 mt-1">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              <span className="font-medium">{restaurant.평점}</span>
+              {restaurant.리뷰수 && (
+                <span className="text-muted-foreground">({formatReviewCount(restaurant.리뷰수)})</span>
+              )}
+            </p>
+          )}
           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
             <MapPin className="h-3 w-3" />
             <span className="truncate">{restaurant.위치?.substring(0, 12)}</span>
@@ -71,7 +87,15 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: Re
             </span>
           </div>
           <div className="flex-1 p-3 min-w-0">
-            <h3 className="font-semibold truncate">{restaurant.이름}</h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="font-semibold truncate">{restaurant.이름}</h3>
+              {restaurant.평점 && (
+                <span className="text-xs flex items-center gap-0.5 flex-shrink-0">
+                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                  <span className="font-medium">{restaurant.평점}</span>
+                </span>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
               <MapPin className="h-3 w-3 flex-shrink-0" />
               <span className="truncate">{restaurant.위치}</span>
@@ -81,11 +105,18 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: Re
                 {restaurant.특징}
               </p>
             )}
-            {restaurant.야시장 && (
-              <Badge variant="secondary" className="mt-2 text-xs bg-accent/20 text-accent-foreground">
-                {restaurant.야시장}
-              </Badge>
-            )}
+            <div className="flex items-center gap-2 mt-2">
+              {restaurant.야시장 && (
+                <Badge variant="secondary" className="text-xs bg-accent/20 text-accent-foreground">
+                  {restaurant.야시장}
+                </Badge>
+              )}
+              {restaurant.리뷰수 && (
+                <span className="text-xs text-muted-foreground">
+                  리뷰 {formatReviewCount(restaurant.리뷰수)}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>

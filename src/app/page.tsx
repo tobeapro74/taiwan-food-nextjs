@@ -13,11 +13,11 @@ import {
   categories,
   markets,
   tourAreas,
-  getAllRestaurants,
   getRestaurantsByCategory,
   getRestaurantsByMarket,
   getRestaurantsByTour,
   getPlaces,
+  getPopularRestaurants,
 } from "@/data/taiwan-food";
 
 type View = "home" | "list" | "detail";
@@ -38,10 +38,9 @@ export default function Home() {
   // 홈 화면 야시장 필터
   const [selectedMarket, setSelectedMarket] = useState("전체");
 
-  // 인기 맛집 (랜덤 8개)
+  // 인기 맛집 (평점 * 리뷰수 기준)
   const popularRestaurants = useMemo(() => {
-    const all = getAllRestaurants();
-    return [...all].sort(() => Math.random() - 0.5).slice(0, 8);
+    return getPopularRestaurants(8);
   }, []);
 
   // 야시장별 맛집
