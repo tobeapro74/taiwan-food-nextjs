@@ -233,66 +233,11 @@ export function getPopularRestaurants(limit: number = 8): Restaurant[] {
     .slice(0, limit);
 }
 
-// Unsplash 이미지 URL 생성 (음식/장소 키워드 기반)
-export function getUnsplashImage(name: string, category?: string): string {
-  // 음식 종류별 키워드 매핑
-  const keywordMap: Record<string, string> = {
-    "면선": "taiwan noodle soup",
-    "우육면": "beef noodle taiwan",
-    "딩타이펑": "xiaolongbao dumpling",
-    "샤오롱바오": "xiaolongbao dumpling",
-    "루로우판": "braised pork rice taiwan",
-    "지로우판": "chicken rice taiwan",
-    "파이구판": "pork chop rice",
-    "퐌투안": "rice roll taiwan breakfast",
-    "또우장": "soy milk taiwan",
-    "비엔당": "taiwan bento box",
-    "빙수": "shaved ice dessert",
-    "망고": "mango shaved ice",
-    "두부": "tofu pudding taiwan",
-    "타로": "taro ball taiwan",
-    "고구마": "sweet potato ball",
-    "지파이": "taiwan fried chicken",
-    "굴전": "oyster omelette taiwan",
-    "치즈감자": "cheese potato",
-    "소세지": "taiwan sausage",
-    "옥수수": "grilled corn",
-    "팬케이크": "taiwan egg pancake",
-    "단수이": "tamsui taipei sunset",
-    "지우펀": "jiufen taiwan",
-    "용산사": "longshan temple taipei",
-    "중정기념당": "chiang kai shek memorial",
-    "타이베이 101": "taipei 101",
-    "예류": "yehliu geopark",
-    "스펀": "shifen waterfall taiwan",
-    "야시장": "taiwan night market food",
-  };
-
-  // 이름에서 키워드 찾기
-  let keyword = "taiwan street food";
-  for (const [key, value] of Object.entries(keywordMap)) {
-    if (name.includes(key)) {
-      keyword = value;
-      break;
-    }
-  }
-
-  // 카테고리 기반 기본 키워드
-  if (keyword === "taiwan street food" && category) {
-    const categoryKeywords: Record<string, string> = {
-      "면류": "taiwan noodle",
-      "만두": "dumpling dim sum",
-      "밥류": "taiwan rice bowl",
-      "디저트": "taiwan dessert",
-      "길거리음식": "taiwan street food",
-      "갈만한 곳": "taipei landmark",
-    };
-    keyword = categoryKeywords[category] || keyword;
-  }
-
-  // Unsplash Source API (무료, API 키 불필요)
+// 이미지 URL 생성 (Lorem Picsum 사용)
+export function getUnsplashImage(name: string): string {
+  // 이름 해시로 고유 시드 생성 (같은 이름은 항상 같은 이미지)
   const seed = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  return `https://source.unsplash.com/400x300/?${encodeURIComponent(keyword)}&sig=${seed}`;
+  return `https://picsum.photos/seed/${seed}/400/300`;
 }
 
 // 구글 맵 링크 생성
