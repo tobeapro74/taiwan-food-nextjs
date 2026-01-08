@@ -46,39 +46,50 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* 밝은 테마 (N2골프 스타일) */
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.13 0.02 260);
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.18 0.02 260);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.18 0.02 260);
-  --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.65 0.2 15);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.25 0.02 260);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.25 0.02 260);
-  --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.7 0.18 80);
-  --accent-foreground: oklch(0.15 0 0);
-  --destructive: oklch(0.6 0.2 25);
-  --border: oklch(0.3 0.02 260);
-  --input: oklch(0.25 0.02 260);
-  --ring: oklch(0.65 0.2 15);
-  --chart-1: oklch(0.65 0.2 15);
-  --chart-2: oklch(0.7 0.15 175);
-  --chart-3: oklch(0.7 0.18 80);
-  --chart-4: oklch(0.6 0.2 280);
-  --chart-5: oklch(0.7 0.15 140);
-  --sidebar: oklch(0.15 0.02 260);
-  --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.65 0.2 15);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.25 0.02 260);
-  --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.3 0.02 260);
-  --sidebar-ring: oklch(0.65 0.2 15);
+  --radius: 0.5rem;
+  /* 배경: 순수 흰색 베이스 */
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(240, 10%, 3.9%);
+  /* 카드: 순수 흰색 */
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(240, 10%, 3.9%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(240, 10%, 3.9%);
+  /* 주요 색상: 대만 느낌의 빨간색 */
+  --primary: hsl(0, 84%, 50%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  /* 보조 색상: 밝은 회색 */
+  --secondary: hsl(240, 4.8%, 95.9%);
+  --secondary-foreground: hsl(240, 5.9%, 10%);
+  /* 음소거 색상 */
+  --muted: hsl(240, 4.8%, 95.9%);
+  --muted-foreground: hsl(240, 3.8%, 46.1%);
+  /* 강조 색상 */
+  --accent: hsl(240, 4.8%, 95.9%);
+  --accent-foreground: hsl(240, 5.9%, 10%);
+  /* 파괴적 액션 */
+  --destructive: hsl(0, 84.2%, 60.2%);
+  /* 테두리 및 입력 */
+  --border: hsl(240, 5.9%, 90%);
+  --input: hsl(240, 5.9%, 90%);
+  --ring: hsl(0, 84%, 50%);
+  /* 차트 색상 */
+  --chart-1: hsl(0, 84%, 50%);
+  --chart-2: hsl(142, 76%, 36%);
+  --chart-3: hsl(38, 92%, 50%);
+  --chart-4: hsl(217, 91%, 60%);
+  --chart-5: hsl(280, 65%, 60%);
+  /* 사이드바 */
+  --sidebar: hsl(240, 4.8%, 95.9%);
+  --sidebar-foreground: hsl(240, 10%, 3.9%);
+  --sidebar-primary: hsl(0, 84%, 50%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(240, 4.8%, 95.9%);
+  --sidebar-accent-foreground: hsl(240, 5.9%, 10%);
+  --sidebar-border: hsl(240, 5.9%, 90%);
+  --sidebar-ring: hsl(0, 84%, 50%);
 }
 
 @layer base {
