@@ -1,0 +1,272 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { BottomNav } from "@/components/bottom-nav";
+import { RestaurantCard } from "@/components/restaurant-card";
+import { RestaurantList } from "@/components/restaurant-list";
+import { RestaurantDetail } from "@/components/restaurant-detail";
+import { CategorySheet } from "@/components/category-sheet";
+import {
+  Restaurant,
+  categories,
+  markets,
+  tourAreas,
+  getAllRestaurants,
+  getRestaurantsByCategory,
+  getRestaurantsByMarket,
+  getRestaurantsByTour,
+  getPlaces,
+} from "@/data/taiwan-food";
+
+type View = "home" | "list" | "detail";
+type TabType = "home" | "category" | "market" | "tour" | "places";
+
+export default function Home() {
+  const [activeTab, setActiveTab] = useState<TabType>("home");
+  const [currentView, setCurrentView] = useState<View>("home");
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+  const [listTitle, setListTitle] = useState("");
+  const [listItems, setListItems] = useState<Restaurant[]>([]);
+
+  // 시트 상태
+  const [categorySheetOpen, setCategorySheetOpen] = useState(false);
+  const [marketSheetOpen, setMarketSheetOpen] = useState(false);
+  const [tourSheetOpen, setTourSheetOpen] = useState(false);
+
+  // 홈 화면 야시장 필터
+  const [selectedMarket, setSelectedMarket] = useState("전체");
+
+  // 인기 맛집 (랜덤 8개)
+  const popularRestaurants = useMemo(() => {
+    const all = getAllRestaurants();
+    return [...all].sort(() => Math.random() - 0.5).slice(0, 8);
+  }, []);
+
+  // 야시장별 맛집
+  const marketRestaurants = useMemo(() => {
+    return getRestaurantsByMarket(selectedMarket).slice(0, 6);
+  }, [selectedMarket]);
+
+  // 탭 변경 처리
+  const handleTabChange = (tab: TabType) => {
+    if (tab === "home") {
+      setCurrentView("home");
+      setActiveTab("home");
+    } else if (tab === "category") {
+      setCategorySheetOpen(true);
+    } else if (tab === "market") {
+      setMarketSheetOpen(true);
+    } else if (tab === "tour") {
+      setTourSheetOpen(true);
+    } else if (tab === "places") {
+      setListTitle("갈만한 곳");
+      setListItems(getPlaces());
+      setCurrentView("list");
+      setActiveTab("places");
+    }
+  };
+
+  // 카테고리 선택
+  const handleCategorySelect = (categoryId: string) => {
+    const category = categories.find((c) => c.id === categoryId);
+    setListTitle(categoryId === "전체" ? "전체 맛집" : `${category?.name || categoryId} 맛집`);
+    setListItems(getRestaurantsByCategory(categoryId));
+    setCurrentView("list");
+    setActiveTab("category");
+  };
+
+  // 야시장 선택
+  const handleMarketSelect = (marketId: string) => {
+    const market = markets.find((m) => m.id === marketId);
+    setListTitle(marketId === "전체" ? "전체 야시장" : market?.id || marketId);
+    setListItems(getRestaurantsByMarket(marketId));
+    setCurrentView("list");
+    setActiveTab("market");
+  };
+
+  // 도심투어 선택
+  const handleTourSelect = (areaId: string) => {
+    const area = tourAreas.find((a) => a.id === areaId);
+    setListTitle(areaId === "전체" ? "전체 도심투어" : `${area?.name || areaId} 맛집 & 카페`);
+    setListItems(getRestaurantsByTour(areaId));
+    setCurrentView("list");
+    setActiveTab("tour");
+  };
+
+  // 맛집 선택
+  const handleRestaurantSelect = (restaurant: Restaurant) => {
+    setSelectedRestaurant(restaurant);
+    setCurrentView("detail");
+  };
+
+  // 뒤로가기
+  const handleBack = () => {
+    if (currentView === "detail") {
+      setCurrentView("list");
+      setSelectedRestaurant(null);
+    } else {
+      setCurrentView("home");
+      setActiveTab("home");
+    }
+  };
+
+  // 렌더링
+  if (currentView === "detail" && selectedRestaurant) {
+    return (
+      <>
+        <RestaurantDetail restaurant={selectedRestaurant} onBack={handleBack} />
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+      </>
+    );
+  }
+
+  if (currentView === "list") {
+    return (
+      <>
+        <RestaurantList
+          title={listTitle}
+          restaurants={listItems}
+          onBack={handleBack}
+          onSelect={handleRestaurantSelect}
+        />
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+        <CategorySheet
+          open={categorySheetOpen}
+          onOpenChange={setCategorySheetOpen}
+          title="카테고리 선택"
+          options={categories}
+          onSelect={handleCategorySelect}
+        />
+        <CategorySheet
+          open={marketSheetOpen}
+          onOpenChange={setMarketSheetOpen}
+          title="야시장 선택"
+          options={markets}
+          onSelect={handleMarketSelect}
+        />
+        <CategorySheet
+          open={tourSheetOpen}
+          onOpenChange={setTourSheetOpen}
+          title="도심투어 지역"
+          options={tourAreas}
+          onSelect={handleTourSelect}
+        />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="min-h-screen pb-20">
+        {/* 헤더 */}
+        <header className="bg-gradient-to-r from-primary to-primary/80 p-4 safe-area-top">
+          <h1 className="text-xl font-bold text-primary-foreground text-center">
+            🍜 대만맛집정보
+          </h1>
+        </header>
+
+        {/* 메인 콘텐츠 */}
+        <div className="p-4 space-y-6">
+          {/* 퀵 카테고리 */}
+          <ScrollArea className="w-full">
+            <div className="flex gap-2 pb-2">
+              {categories.map((category) => (
+                <Button
+                  key={category.id}
+                  variant="secondary"
+                  className="flex-col h-auto py-3 px-4 min-w-[70px]"
+                  onClick={() => handleCategorySelect(category.id)}
+                >
+                  <span className="text-xl mb-1">{category.icon}</span>
+                  <span className="text-xs">{category.name}</span>
+                </Button>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+
+          {/* 인기 맛집 */}
+          <section>
+            <h2 className="text-lg font-semibold mb-3">🔥 인기 맛집</h2>
+            <ScrollArea className="w-full">
+              <div className="flex gap-3 pb-2">
+                {popularRestaurants.map((restaurant, index) => (
+                  <RestaurantCard
+                    key={`${restaurant.이름}-${index}`}
+                    restaurant={restaurant}
+                    variant="horizontal"
+                    onClick={() => handleRestaurantSelect(restaurant)}
+                  />
+                ))}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </section>
+
+          {/* 야시장별 맛집 */}
+          <section>
+            <h2 className="text-lg font-semibold mb-3">🌙 야시장별 맛집</h2>
+            <ScrollArea className="w-full mb-3">
+              <div className="flex gap-2 pb-2">
+                {markets.map((market) => (
+                  <Button
+                    key={market.id}
+                    variant={selectedMarket === market.id ? "default" : "secondary"}
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => setSelectedMarket(market.id)}
+                  >
+                    {market.name}
+                  </Button>
+                ))}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+            <div className="space-y-3">
+              {marketRestaurants.length > 0 ? (
+                marketRestaurants.map((restaurant, index) => (
+                  <RestaurantCard
+                    key={`${restaurant.이름}-${index}`}
+                    restaurant={restaurant}
+                    onClick={() => handleRestaurantSelect(restaurant)}
+                  />
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  등록된 맛집이 없습니다.
+                </p>
+              )}
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+
+      {/* 시트들 */}
+      <CategorySheet
+        open={categorySheetOpen}
+        onOpenChange={setCategorySheetOpen}
+        title="카테고리 선택"
+        options={categories}
+        onSelect={handleCategorySelect}
+      />
+      <CategorySheet
+        open={marketSheetOpen}
+        onOpenChange={setMarketSheetOpen}
+        title="야시장 선택"
+        options={markets}
+        onSelect={handleMarketSelect}
+      />
+      <CategorySheet
+        open={tourSheetOpen}
+        onOpenChange={setTourSheetOpen}
+        title="도심투어 지역"
+        options={tourAreas}
+        onSelect={handleTourSelect}
+      />
+    </>
+  );
+}
