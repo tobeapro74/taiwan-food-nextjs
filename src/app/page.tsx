@@ -185,7 +185,7 @@ export default function Home() {
                   <Button
                     key={category.id}
                     variant="secondary"
-                    className="flex-col h-auto py-3 px-4 min-w-[70px] bg-muted hover:bg-muted/80"
+                    className="flex-col h-auto py-3 px-4 min-w-[70px] bg-muted hover:bg-muted/80 transition-all hover:scale-[1.05] active:scale-[0.98]"
                     onClick={() => handleCategorySelect(category.id)}
                   >
                     <span className="text-xl mb-1">{category.icon}</span>
