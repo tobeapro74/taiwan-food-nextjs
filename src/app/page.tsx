@@ -169,7 +169,7 @@ export default function Home() {
       <div className="min-h-screen pb-20">
         {/* 헤더 */}
         <header className="bg-gradient-to-r from-primary to-primary/80 p-4 safe-area-top">
-          <h1 className="text-xl font-bold text-primary-foreground text-center">
+          <h1 className="text-xl font-bold text-primary-foreground text-center w-full">
             🍜 대만맛집정보
           </h1>
         </header>
