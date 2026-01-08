@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Star } from "lucide-react";
@@ -13,6 +14,9 @@ function formatReviewCount(count: number): string {
   return count.toString();
 }
 
+// 이미지 URL 캐시 (세션 동안 유지)
+const imageCache: Record<string, string> = {};
+
 interface RestaurantCardProps {
   restaurant: Restaurant;
   onClick?: () => void;
@@ -20,7 +24,42 @@ interface RestaurantCardProps {
 }
 
 export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: RestaurantCardProps) {
-  const imageUrl = getUnsplashImage(restaurant.이름);
+  const fallbackUrl = getUnsplashImage(restaurant.이름);
+  const [imageUrl, setImageUrl] = useState<string>(fallbackUrl);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const cacheKey = restaurant.이름;
+
+    // 캐시에 있으면 바로 사용
+    if (imageCache[cacheKey]) {
+      setImageUrl(imageCache[cacheKey]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Google Places API로 이미지 가져오기
+    const fetchImage = async () => {
+      try {
+        const query = `${restaurant.이름} ${restaurant.위치 || ""}`.trim();
+        const res = await fetch(`/api/place-photo?query=${encodeURIComponent(query)}`);
+        const data = await res.json();
+
+        if (data.photoUrl) {
+          imageCache[cacheKey] = data.photoUrl;
+          setImageUrl(data.photoUrl);
+        } else {
+          imageCache[cacheKey] = fallbackUrl;
+        }
+      } catch {
+        imageCache[cacheKey] = fallbackUrl;
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchImage();
+  }, [restaurant.이름, restaurant.위치, fallbackUrl]);
 
   if (variant === "horizontal") {
     return (
@@ -28,12 +67,15 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: Re
         className="flex-shrink-0 w-44 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] overflow-hidden shadow-sm"
         onClick={onClick}
       >
-        <div className="h-28 relative overflow-hidden">
+        <div className="h-28 relative overflow-hidden bg-muted">
+          {isLoading && (
+            <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted/50 to-muted" />
+          )}
           <Image
             src={imageUrl}
             alt={restaurant.이름}
             fill
-            className="object-cover"
+            className={`object-cover transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}
             sizes="176px"
             unoptimized
           />
@@ -69,12 +111,15 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: Re
     >
       <CardContent className="p-0">
         <div className="flex">
-          <div className="w-24 h-24 relative overflow-hidden flex-shrink-0">
+          <div className="w-24 h-24 relative overflow-hidden flex-shrink-0 bg-muted">
+            {isLoading && (
+              <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted/50 to-muted" />
+            )}
             <Image
               src={imageUrl}
               alt={restaurant.이름}
               fill
-              className="object-cover"
+              className={`object-cover transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}
               sizes="96px"
               unoptimized
             />
