@@ -26,6 +26,7 @@ type TabType = "home" | "category" | "market" | "tour" | "places";
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [currentView, setCurrentView] = useState<View>("home");
+  const [previousView, setPreviousView] = useState<View>("home"); // 이전 화면 추적
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [listTitle, setListTitle] = useState("");
   const [listItems, setListItems] = useState<Restaurant[]>([]);
@@ -96,6 +97,7 @@ export default function Home() {
 
   // 맛집 선택
   const handleRestaurantSelect = (restaurant: Restaurant) => {
+    setPreviousView(currentView); // 현재 화면 저장
     setSelectedRestaurant(restaurant);
     setCurrentView("detail");
   };
@@ -103,7 +105,13 @@ export default function Home() {
   // 뒤로가기
   const handleBack = () => {
     if (currentView === "detail") {
-      setCurrentView("list");
+      // 이전 화면이 홈이면 홈으로, 리스트면 리스트로
+      if (previousView === "home") {
+        setCurrentView("home");
+        setActiveTab("home");
+      } else {
+        setCurrentView("list");
+      }
       setSelectedRestaurant(null);
     } else {
       setCurrentView("home");

@@ -1,37 +1,58 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MapPin, Info, Map } from "lucide-react";
-import { Restaurant, getGoogleMapsLink } from "@/data/taiwan-food";
+import { Restaurant, getGoogleMapsLink, getUnsplashImage } from "@/data/taiwan-food";
+import Image from "next/image";
 
 interface RestaurantDetailProps {
   restaurant: Restaurant;
   onBack: () => void;
 }
 
-function getGradient(name: string): string {
-  const hash = name.split("").reduce((acc, char) => {
-    return char.charCodeAt(0) + ((acc << 5) - acc);
-  }, 0);
-
-  const gradients = [
-    "from-rose-500 to-pink-600",
-    "from-violet-500 to-purple-600",
-    "from-blue-500 to-cyan-600",
-    "from-emerald-500 to-teal-600",
-    "from-amber-500 to-orange-600",
-    "from-fuchsia-500 to-pink-600",
-    "from-indigo-500 to-blue-600",
-    "from-lime-500 to-green-600",
-  ];
-
-  return gradients[Math.abs(hash) % gradients.length];
-}
+// 이미지 URL 캐시
+const imageCache: Record<string, string> = {};
 
 export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) {
-  const gradient = getGradient(restaurant.이름);
+  const fallbackUrl = getUnsplashImage(restaurant.이름);
+  const [imageUrl, setImageUrl] = useState<string>(fallbackUrl);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const cacheKey = restaurant.이름;
+
+    // 캐시에 있으면 바로 사용
+    if (imageCache[cacheKey]) {
+      setImageUrl(imageCache[cacheKey]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Google Places API로 이미지 가져오기
+    const fetchImage = async () => {
+      try {
+        const query = `${restaurant.이름} ${restaurant.위치 || ""}`.trim();
+        const res = await fetch(`/api/place-photo?query=${encodeURIComponent(query)}`);
+        const data = await res.json();
+
+        if (data.photoUrl) {
+          imageCache[cacheKey] = data.photoUrl;
+          setImageUrl(data.photoUrl);
+        } else {
+          imageCache[cacheKey] = fallbackUrl;
+        }
+      } catch {
+        imageCache[cacheKey] = fallbackUrl;
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchImage();
+  }, [restaurant.이름, restaurant.위치, fallbackUrl]);
 
   const handleMapClick = () => {
     window.open(getGoogleMapsLink(restaurant.이름, restaurant.위치), "_blank");
@@ -50,10 +71,18 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
       </div>
 
       {/* 이미지 영역 */}
-      <div className={`h-56 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
-        <span className="text-4xl font-bold text-white/90">
-          {restaurant.이름.substring(0, 6)}
-        </span>
+      <div className="h-56 relative overflow-hidden bg-muted">
+        {isLoading && (
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted/50 to-muted" />
+        )}
+        <Image
+          src={imageUrl}
+          alt={restaurant.이름}
+          fill
+          className={`object-cover transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}
+          sizes="100vw"
+          unoptimized
+        />
       </div>
 
       {/* 정보 카드 */}
