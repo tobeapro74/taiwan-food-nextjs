@@ -79,10 +79,6 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: Re
             sizes="176px"
             unoptimized
           />
-          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent`} />
-          <span className="absolute bottom-2 left-2 right-2 text-lg font-bold text-white drop-shadow-md">
-            {restaurant.이름.substring(0, 6)}
-          </span>
         </div>
         <CardContent className="p-3">
           <h3 className="font-semibold text-sm truncate">{restaurant.이름}</h3>
