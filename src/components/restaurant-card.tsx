@@ -3,7 +3,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Star } from "lucide-react";
-import { Restaurant } from "@/data/taiwan-food";
+import { Restaurant, getUnsplashImage } from "@/data/taiwan-food";
+import Image from "next/image";
 
 // 리뷰수 포맷 (1000 -> 1K, 10000 -> 10K)
 function formatReviewCount(count: number): string {
@@ -18,30 +19,8 @@ interface RestaurantCardProps {
   variant?: "horizontal" | "vertical";
 }
 
-// 이름 기반 그라데이션 색상 생성 (다채로운 색상, 붉은 계열 최소화)
-function getGradient(name: string): string {
-  const hash = name.split("").reduce((acc, char) => {
-    return char.charCodeAt(0) + ((acc << 5) - acc);
-  }, 0);
-
-  const gradients = [
-    "from-sky-400 to-blue-500",
-    "from-emerald-400 to-teal-500",
-    "from-violet-400 to-purple-500",
-    "from-cyan-400 to-sky-500",
-    "from-teal-400 to-emerald-500",
-    "from-indigo-400 to-violet-500",
-    "from-blue-400 to-indigo-500",
-    "from-green-400 to-emerald-500",
-    "from-purple-400 to-indigo-500",
-    "from-slate-400 to-slate-500",
-  ];
-
-  return gradients[Math.abs(hash) % gradients.length];
-}
-
 export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: RestaurantCardProps) {
-  const gradient = getGradient(restaurant.이름);
+  const imageUrl = getUnsplashImage(restaurant.이름);
 
   if (variant === "horizontal") {
     return (
@@ -49,9 +28,18 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: Re
         className="flex-shrink-0 w-44 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] overflow-hidden shadow-sm"
         onClick={onClick}
       >
-        <div className={`h-28 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
-          <span className="text-2xl font-bold text-white/90 px-2 text-center">
-            {restaurant.이름.substring(0, 4)}
+        <div className="h-28 relative overflow-hidden">
+          <Image
+            src={imageUrl}
+            alt={restaurant.이름}
+            fill
+            className="object-cover"
+            sizes="176px"
+            unoptimized
+          />
+          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent`} />
+          <span className="absolute bottom-2 left-2 right-2 text-lg font-bold text-white drop-shadow-md">
+            {restaurant.이름.substring(0, 6)}
           </span>
         </div>
         <CardContent className="p-3">
@@ -81,10 +69,15 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: Re
     >
       <CardContent className="p-0">
         <div className="flex">
-          <div className={`w-24 h-24 bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0`}>
-            <span className="text-lg font-bold text-white/90 px-1 text-center">
-              {restaurant.이름.substring(0, 3)}
-            </span>
+          <div className="w-24 h-24 relative overflow-hidden flex-shrink-0">
+            <Image
+              src={imageUrl}
+              alt={restaurant.이름}
+              fill
+              className="object-cover"
+              sizes="96px"
+              unoptimized
+            />
           </div>
           <div className="flex-1 p-3 min-w-0">
             <div className="flex items-center justify-between gap-2">
