@@ -11,21 +11,23 @@ interface RestaurantCardProps {
   variant?: "horizontal" | "vertical";
 }
 
-// 이름 기반 그라데이션 색상 생성
+// 이름 기반 그라데이션 색상 생성 (다채로운 색상, 붉은 계열 최소화)
 function getGradient(name: string): string {
   const hash = name.split("").reduce((acc, char) => {
     return char.charCodeAt(0) + ((acc << 5) - acc);
   }, 0);
 
   const gradients = [
-    "from-rose-500 to-pink-600",
-    "from-violet-500 to-purple-600",
-    "from-blue-500 to-cyan-600",
-    "from-emerald-500 to-teal-600",
-    "from-amber-500 to-orange-600",
-    "from-fuchsia-500 to-pink-600",
-    "from-indigo-500 to-blue-600",
-    "from-lime-500 to-green-600",
+    "from-sky-400 to-blue-500",
+    "from-emerald-400 to-teal-500",
+    "from-violet-400 to-purple-500",
+    "from-cyan-400 to-sky-500",
+    "from-teal-400 to-emerald-500",
+    "from-indigo-400 to-violet-500",
+    "from-blue-400 to-indigo-500",
+    "from-green-400 to-emerald-500",
+    "from-purple-400 to-indigo-500",
+    "from-slate-400 to-slate-500",
   ];
 
   return gradients[Math.abs(hash) % gradients.length];
@@ -37,7 +39,7 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: Re
   if (variant === "horizontal") {
     return (
       <Card
-        className="flex-shrink-0 w-44 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] overflow-hidden border-0"
+        className="flex-shrink-0 w-44 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] overflow-hidden shadow-sm"
         onClick={onClick}
       >
         <div className={`h-28 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
@@ -58,7 +60,7 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: Re
 
   return (
     <Card
-      className="cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] overflow-hidden border-0"
+      className="cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] overflow-hidden shadow-sm"
       onClick={onClick}
     >
       <CardContent className="p-0">

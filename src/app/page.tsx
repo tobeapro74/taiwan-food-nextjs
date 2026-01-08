@@ -168,28 +168,31 @@ export default function Home() {
         </header>
 
         {/* 메인 콘텐츠 */}
-        <div className="p-4 space-y-6">
+        <div className="p-4 space-y-4">
           {/* 퀵 카테고리 */}
-          <ScrollArea className="w-full">
-            <div className="flex gap-2 pb-2">
-              {categories.map((category) => (
-                <Button
-                  key={category.id}
-                  variant="secondary"
-                  className="flex-col h-auto py-3 px-4 min-w-[70px]"
-                  onClick={() => handleCategorySelect(category.id)}
-                >
-                  <span className="text-xl mb-1">{category.icon}</span>
-                  <span className="text-xs">{category.name}</span>
-                </Button>
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          <section className="bg-card rounded-xl p-4 shadow-sm">
+            <h2 className="text-base font-semibold mb-3 text-foreground">카테고리</h2>
+            <ScrollArea className="w-full">
+              <div className="flex gap-2 pb-2">
+                {categories.map((category) => (
+                  <Button
+                    key={category.id}
+                    variant="secondary"
+                    className="flex-col h-auto py-3 px-4 min-w-[70px] bg-muted hover:bg-muted/80"
+                    onClick={() => handleCategorySelect(category.id)}
+                  >
+                    <span className="text-xl mb-1">{category.icon}</span>
+                    <span className="text-xs">{category.name}</span>
+                  </Button>
+                ))}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </section>
 
           {/* 인기 맛집 */}
-          <section>
-            <h2 className="text-lg font-semibold mb-3">🔥 인기 맛집</h2>
+          <section className="bg-card rounded-xl p-4 shadow-sm">
+            <h2 className="text-base font-semibold mb-3 text-foreground">🔥 인기 맛집</h2>
             <ScrollArea className="w-full">
               <div className="flex gap-3 pb-2">
                 {popularRestaurants.map((restaurant, index) => (
@@ -206,8 +209,8 @@ export default function Home() {
           </section>
 
           {/* 야시장별 맛집 */}
-          <section>
-            <h2 className="text-lg font-semibold mb-3">🌙 야시장별 맛집</h2>
+          <section className="bg-card rounded-xl p-4 shadow-sm">
+            <h2 className="text-base font-semibold mb-3 text-foreground">🌙 야시장별 맛집</h2>
             <ScrollArea className="w-full mb-3">
               <div className="flex gap-2 pb-2">
                 {markets.map((market) => (
