@@ -64,7 +64,7 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: Re
   if (variant === "horizontal") {
     return (
       <Card
-        className="flex-shrink-0 w-44 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] overflow-hidden shadow-sm"
+        className="flex-shrink-0 w-44 cursor-pointer transition-all hover:scale-[1.05] hover:shadow-lg active:scale-[0.98] overflow-hidden shadow-sm"
         onClick={onClick}
       >
         <div className="h-28 relative overflow-hidden bg-muted">
@@ -102,7 +102,7 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: Re
 
   return (
     <Card
-      className="cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] overflow-hidden shadow-sm"
+      className="cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] overflow-hidden shadow-sm"
       onClick={onClick}
     >
       <CardContent className="p-0">

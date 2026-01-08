@@ -225,7 +225,7 @@ export default function Home() {
                     key={market.id}
                     variant={selectedMarket === market.id ? "default" : "secondary"}
                     size="sm"
-                    className="rounded-full"
+                    className="rounded-full transition-all hover:scale-[1.05] active:scale-[0.95]"
                     onClick={() => setSelectedMarket(market.id)}
                   >
                     {market.name}

@@ -34,7 +34,7 @@ export function CategorySheet({ open, onOpenChange, title, options, onSelect }: 
             <Button
               key={option.id}
               variant="secondary"
-              className="justify-start text-base h-14"
+              className="justify-start text-base h-14 transition-all hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
               onClick={() => {
                 onSelect(option.id);
                 onOpenChange(false);
