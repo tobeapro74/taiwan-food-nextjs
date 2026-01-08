@@ -21,6 +21,15 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "대만맛집",
   },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
 export const viewport: Viewport = {
@@ -29,7 +38,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#1a1a2e",
+  themeColor: "#FF6B6B",
 };
 
 export default function RootLayout({
