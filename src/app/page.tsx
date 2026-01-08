@@ -207,6 +207,7 @@ export default function Home() {
                     key={`${restaurant.이름}-${index}`}
                     restaurant={restaurant}
                     variant="horizontal"
+                    category={restaurant.카테고리}
                     onClick={() => handleRestaurantSelect(restaurant)}
                   />
                 ))}

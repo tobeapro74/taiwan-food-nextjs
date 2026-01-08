@@ -247,9 +247,13 @@ export function getPlaces(): Restaurant[] {
 }
 
 // 인기 맛집 (카테고리별 최고 평점 맛집 1개씩)
-export function getPopularRestaurants(): Restaurant[] {
+export interface PopularRestaurant extends Restaurant {
+  카테고리: string;
+}
+
+export function getPopularRestaurants(): PopularRestaurant[] {
   const cats = ["면류", "만두", "밥류", "디저트", "길거리음식", "카페"] as const;
-  const topByCategory: Restaurant[] = [];
+  const topByCategory: PopularRestaurant[] = [];
 
   for (const cat of cats) {
     const items = taiwanFoodMap[cat];
@@ -259,7 +263,7 @@ export function getPopularRestaurants(): Restaurant[] {
         .filter((r) => r.평점)
         .sort((a, b) => (b.평점 || 0) - (a.평점 || 0));
       if (sorted.length > 0) {
-        topByCategory.push(sorted[0]);
+        topByCategory.push({ ...sorted[0], 카테고리: cat });
       }
     }
   }

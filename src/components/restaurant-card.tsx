@@ -17,13 +17,24 @@ function formatReviewCount(count: number): string {
 // 이미지 URL 캐시 (세션 동안 유지)
 const imageCache: Record<string, string> = {};
 
+// 카테고리 아이콘 매핑
+const categoryIcons: Record<string, string> = {
+  "면류": "🍜",
+  "만두": "🥟",
+  "밥류": "🍚",
+  "디저트": "🍧",
+  "길거리음식": "🍢",
+  "카페": "☕",
+};
+
 interface RestaurantCardProps {
   restaurant: Restaurant;
   onClick?: () => void;
   variant?: "horizontal" | "vertical";
+  category?: string;
 }
 
-export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: RestaurantCardProps) {
+export function RestaurantCard({ restaurant, onClick, variant = "vertical", category }: RestaurantCardProps) {
   const fallbackUrl = getUnsplashImage(restaurant.이름);
   const [imageUrl, setImageUrl] = useState<string>(fallbackUrl);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,6 +90,11 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical" }: Re
             sizes="176px"
             unoptimized
           />
+          {category && (
+            <Badge className="absolute top-2 left-2 text-xs bg-black/60 text-white border-0">
+              {categoryIcons[category]} {category}
+            </Badge>
+          )}
         </div>
         <CardContent className="p-3">
           <h3 className="font-semibold text-sm truncate">{restaurant.이름}</h3>
