@@ -39,9 +39,9 @@ export default function Home() {
   // 홈 화면 야시장 필터
   const [selectedMarket, setSelectedMarket] = useState("전체");
 
-  // 인기 맛집 (평점 * 리뷰수 기준)
+  // 인기 맛집 (카테고리별 최고 평점 맛집)
   const popularRestaurants = useMemo(() => {
-    return getPopularRestaurants(8);
+    return getPopularRestaurants();
   }, []);
 
   // 야시장별 맛집

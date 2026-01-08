@@ -246,18 +246,25 @@ export function getPlaces(): Restaurant[] {
   return taiwanFoodMap["갈만한 곳"];
 }
 
-// 인기 맛집 (평점 * 리뷰수 기준 정렬)
-export function getPopularRestaurants(limit: number = 8): Restaurant[] {
-  const all = getAllRestaurants();
-  return [...all]
-    .filter((r) => r.평점 && r.리뷰수)
-    .sort((a, b) => {
-      // 인기도 점수 = 평점 * log(리뷰수)
-      const scoreA = (a.평점 || 0) * Math.log10((a.리뷰수 || 1) + 1);
-      const scoreB = (b.평점 || 0) * Math.log10((b.리뷰수 || 1) + 1);
-      return scoreB - scoreA;
-    })
-    .slice(0, limit);
+// 인기 맛집 (카테고리별 최고 평점 맛집 1개씩)
+export function getPopularRestaurants(): Restaurant[] {
+  const cats = ["면류", "만두", "밥류", "디저트", "길거리음식", "카페"] as const;
+  const topByCategory: Restaurant[] = [];
+
+  for (const cat of cats) {
+    const items = taiwanFoodMap[cat];
+    if (items && items.length > 0) {
+      // 각 카테고리에서 평점이 가장 높은 맛집 선택
+      const sorted = [...items]
+        .filter((r) => r.평점)
+        .sort((a, b) => (b.평점 || 0) - (a.평점 || 0));
+      if (sorted.length > 0) {
+        topByCategory.push(sorted[0]);
+      }
+    }
+  }
+
+  return topByCategory;
 }
 
 // 이미지 URL 생성 (Lorem Picsum 사용)
