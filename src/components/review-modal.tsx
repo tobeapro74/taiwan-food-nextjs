@@ -255,7 +255,7 @@ export function ReviewModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center">
-      <div className="bg-background w-full max-w-lg rounded-t-2xl max-h-[85vh] flex flex-col animate-slide-up">
+      <div className="bg-background w-full max-w-lg rounded-t-2xl max-h-[90vh] flex flex-col animate-slide-up safe-area-bottom">
         {/* 헤더 */}
         <div className="flex-shrink-0 border-b px-4 py-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold">{restaurantName}</h2>
@@ -381,7 +381,7 @@ export function ReviewModal({
         </div>
 
         {/* 게시 버튼 - 고정 */}
-        <div className="flex-shrink-0 border-t p-4 safe-area-bottom">
+        <div className="flex-shrink-0 border-t p-4 bg-background">
           <Button
             onClick={handleSubmit}
             disabled={rating === 0 || isSubmitting || isUploading}
