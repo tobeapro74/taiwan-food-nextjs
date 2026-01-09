@@ -17,7 +17,8 @@ interface ReviewModalProps {
 
 const mealTypes = ["아침 식사", "브런치", "점심 식사", "저녁 식사", "기타"];
 const MAX_PHOTOS = 4;
-const MAX_IMAGE_SIZE = 1200; // 최대 이미지 크기 (px)
+const MAX_IMAGE_SIZE = 800; // 최대 이미지 크기 (px) - Vercel 요청 크기 제한 고려
+const IMAGE_QUALITY = 0.6; // JPEG 품질 (0.6 = 60%)
 
 export function ReviewModal({
   isOpen,
@@ -75,8 +76,8 @@ export function ReviewModal({
 
           ctx.drawImage(img, 0, 0, width, height);
 
-          // JPEG로 변환 (품질 0.7로 낮춤)
-          const resizedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+          // JPEG로 변환
+          const resizedBase64 = canvas.toDataURL("image/jpeg", IMAGE_QUALITY);
 
           // 메모리 정리
           URL.revokeObjectURL(objectUrl);
