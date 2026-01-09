@@ -36,14 +36,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Cloudinary에 업로드
+    // Cloudinary에 업로드 (이미 클라이언트에서 리사이즈됨)
     const result = await cloudinary.uploader.upload(image, {
       folder: 'taiwan-food-reviews',
       resource_type: 'image',
-      transformation: [
-        { width: 1200, height: 1200, crop: 'limit' },
-        { quality: 'auto:good' },
-      ],
     });
 
     return NextResponse.json({

@@ -16,6 +16,8 @@ interface ReviewModalProps {
 }
 
 const mealTypes = ["아침 식사", "브런치", "점심 식사", "저녁 식사", "기타"];
+const MAX_PHOTOS = 4;
+const MAX_IMAGE_SIZE = 1200; // 최대 이미지 크기 (px)
 
 export function ReviewModal({
   isOpen,
@@ -38,11 +40,45 @@ export function ReviewModal({
 
   if (!isOpen) return null;
 
-  // 파일을 Base64로 변환하는 함수
-  const fileToBase64 = (file: File): Promise<string> => {
+  // 이미지 리사이즈 함수
+  const resizeImage = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
+      reader.onload = (e) => {
+        const img = document.createElement("img");
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let { width, height } = img;
+
+          // 비율 유지하면서 리사이즈
+          if (width > MAX_IMAGE_SIZE || height > MAX_IMAGE_SIZE) {
+            if (width > height) {
+              height = (height / width) * MAX_IMAGE_SIZE;
+              width = MAX_IMAGE_SIZE;
+            } else {
+              width = (width / height) * MAX_IMAGE_SIZE;
+              height = MAX_IMAGE_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Canvas context를 생성할 수 없습니다."));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // JPEG로 변환 (품질 0.8)
+          const resizedBase64 = canvas.toDataURL("image/jpeg", 0.8);
+          resolve(resizedBase64);
+        };
+        img.onerror = reject;
+        img.src = e.target?.result as string;
+      };
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
@@ -53,24 +89,36 @@ export function ReviewModal({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    // 4개 제한 체크
+    const remainingSlots = MAX_PHOTOS - photos.length;
+    if (remainingSlots <= 0) {
+      alert(`사진은 최대 ${MAX_PHOTOS}개까지만 추가할 수 있습니다.`);
+      return;
+    }
+
+    const filesToUpload = Array.from(files).slice(0, remainingSlots);
+    if (files.length > remainingSlots) {
+      alert(`${remainingSlots}개만 추가됩니다. (최대 ${MAX_PHOTOS}개)`);
+    }
+
     setIsUploading(true);
 
     try {
-      for (const file of Array.from(files)) {
-        // 파일 크기 체크 (10MB)
-        if (file.size > 10 * 1024 * 1024) {
-          alert("파일 크기는 10MB 이하여야 합니다.");
+      for (const file of filesToUpload) {
+        // 이미지 파일 체크
+        if (!file.type.startsWith("image/")) {
+          alert("이미지 파일만 업로드 가능합니다.");
           continue;
         }
 
-        // Base64로 변환
-        const base64 = await fileToBase64(file);
+        // 리사이즈 후 Base64 변환
+        const resizedBase64 = await resizeImage(file);
 
         // Cloudinary 업로드 API 호출
         const response = await fetch("/api/upload", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: base64 }),
+          body: JSON.stringify({ image: resizedBase64 }),
         });
 
         const result = await response.json();
@@ -86,7 +134,6 @@ export function ReviewModal({
       alert("사진 업로드 중 오류가 발생했습니다.");
     } finally {
       setIsUploading(false);
-      // input 초기화
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -276,11 +323,17 @@ export function ReviewModal({
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="w-full py-3 border-2 border-dashed border-primary/50 rounded-lg text-primary flex items-center justify-center gap-2 hover:bg-primary/5 disabled:opacity-50"
+            disabled={isUploading || photos.length >= MAX_PHOTOS}
+            className="w-full py-3 border-2 border-dashed border-primary/50 rounded-lg text-primary flex items-center justify-center gap-2 hover:bg-primary/5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ImagePlus className="w-5 h-5" />
-            <span>{isUploading ? "업로드 중..." : "사진 추가"}</span>
+            <span>
+              {isUploading
+                ? "업로드 중..."
+                : photos.length >= MAX_PHOTOS
+                ? `사진 ${MAX_PHOTOS}개 추가됨`
+                : `사진 추가 (${photos.length}/${MAX_PHOTOS})`}
+            </span>
           </button>
 
           {/* 식사 유형 */}
