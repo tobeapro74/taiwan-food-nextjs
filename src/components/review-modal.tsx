@@ -38,6 +38,16 @@ export function ReviewModal({
 
   if (!isOpen) return null;
 
+  // 파일을 Base64로 변환하는 함수
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   // 사진 업로드 처리
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -54,25 +64,22 @@ export function ReviewModal({
         }
 
         // Base64로 변환
-        const reader = new FileReader();
-        reader.onload = async () => {
-          const base64 = reader.result as string;
+        const base64 = await fileToBase64(file);
 
-          // Cloudinary 업로드 API 호출
-          const response = await fetch("/api/upload", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ image: base64 }),
-          });
+        // Cloudinary 업로드 API 호출
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64 }),
+        });
 
-          const result = await response.json();
-          if (result.success && result.url) {
-            setPhotos((prev) => [...prev, result.url]);
-          } else {
-            alert("사진 업로드에 실패했습니다.");
-          }
-        };
-        reader.readAsDataURL(file);
+        const result = await response.json();
+        if (result.success && result.url) {
+          setPhotos((prev) => [...prev, result.url]);
+        } else {
+          console.error("업로드 실패:", result.error);
+          alert(result.error || "사진 업로드에 실패했습니다.");
+        }
       }
     } catch (error) {
       console.error("사진 업로드 오류:", error);
