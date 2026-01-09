@@ -5,6 +5,7 @@ import { Star, Plus, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReviewModal } from "@/components/review-modal";
+import { AuthModal } from "@/components/auth-modal";
 import { cn } from "@/lib/utils";
 
 interface Review {
@@ -39,6 +40,7 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
   const [reviews, setReviews] = useState<Review[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // 사용자 정보 가져오기
@@ -124,7 +126,7 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
             <Button
               onClick={() => {
                 if (!user) {
-                  alert("리뷰를 작성하려면 로그인이 필요합니다.");
+                  setIsAuthModalOpen(true);
                   return;
                 }
                 setIsModalOpen(true);
@@ -222,6 +224,17 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
         restaurantName={restaurantName}
         user={user}
         onSubmit={fetchReviews}
+      />
+
+      {/* 로그인 모달 */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onLoginSuccess={(userData) => {
+          setUser(userData);
+          setIsAuthModalOpen(false);
+          setIsModalOpen(true); // 로그인 성공 후 리뷰 작성 모달 열기
+        }}
       />
     </div>
   );
