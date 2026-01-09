@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { BottomNav } from "@/components/bottom-nav";
@@ -8,6 +9,7 @@ import { RestaurantCard } from "@/components/restaurant-card";
 import { RestaurantList } from "@/components/restaurant-list";
 import { RestaurantDetail } from "@/components/restaurant-detail";
 import { CategorySheet } from "@/components/category-sheet";
+import { AuthModal } from "@/components/auth-modal";
 import {
   Restaurant,
   categories,
@@ -22,6 +24,13 @@ import {
 
 type View = "home" | "list" | "detail";
 type TabType = "home" | "category" | "market" | "tour" | "places";
+
+interface UserInfo {
+  id: number;
+  name: string;
+  profile_image?: string;
+  is_admin: boolean;
+}
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>("home");
@@ -38,6 +47,36 @@ export default function Home() {
 
   // 홈 화면 야시장 필터
   const [selectedMarket, setSelectedMarket] = useState("전체");
+
+  // 사용자 인증 상태
+  const [user, setUser] = useState<UserInfo | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  // 로그인 상태 확인
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (data.success) {
+          setUser(data.data);
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  // 로그아웃 처리
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      setUser(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   // 인기 맛집 (카테고리별 최고 평점 맛집)
   const popularRestaurants = useMemo(() => {
@@ -169,10 +208,29 @@ export default function Home() {
       <div className="min-h-screen pb-20">
         {/* 헤더 */}
         <header className="bg-gradient-to-r from-primary to-primary/80 safe-area-top">
-          <div className="px-4 py-4 flex items-center justify-center">
+          <div className="px-4 py-3 flex items-center justify-between">
+            <div className="w-10" /> {/* 왼쪽 여백 */}
             <h1 className="text-xl font-bold text-primary-foreground text-center">
               🍜 대만맛집정보
             </h1>
+            {/* 로그인/사용자 버튼 */}
+            {user ? (
+              <button
+                onClick={handleLogout}
+                className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-primary-foreground hover:bg-white/30 transition-colors"
+                title={`${user.name}님 (로그아웃)`}
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            ) : (
+              <button
+                onClick={() => setAuthModalOpen(true)}
+                className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-primary-foreground hover:bg-white/30 transition-colors"
+                title="로그인"
+              >
+                <User className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </header>
 
@@ -279,6 +337,13 @@ export default function Home() {
         title="도심투어 지역"
         options={tourAreas}
         onSelect={handleTourSelect}
+      />
+
+      {/* 로그인/회원가입 모달 */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onLoginSuccess={(userData) => setUser(userData)}
       />
     </>
   );
