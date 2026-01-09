@@ -43,20 +43,22 @@ export function ReviewModal({
   // 이미지 리사이즈 함수
   const resizeImage = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = document.createElement("img");
-        img.onload = () => {
+      // URL.createObjectURL 사용 (메모리 효율적)
+      const objectUrl = URL.createObjectURL(file);
+      const img = document.createElement("img");
+
+      img.onload = () => {
+        try {
           const canvas = document.createElement("canvas");
           let { width, height } = img;
 
           // 비율 유지하면서 리사이즈
           if (width > MAX_IMAGE_SIZE || height > MAX_IMAGE_SIZE) {
             if (width > height) {
-              height = (height / width) * MAX_IMAGE_SIZE;
+              height = Math.round((height / width) * MAX_IMAGE_SIZE);
               width = MAX_IMAGE_SIZE;
             } else {
-              width = (width / height) * MAX_IMAGE_SIZE;
+              width = Math.round((width / height) * MAX_IMAGE_SIZE);
               height = MAX_IMAGE_SIZE;
             }
           }
@@ -66,21 +68,32 @@ export function ReviewModal({
 
           const ctx = canvas.getContext("2d");
           if (!ctx) {
+            URL.revokeObjectURL(objectUrl);
             reject(new Error("Canvas context를 생성할 수 없습니다."));
             return;
           }
 
           ctx.drawImage(img, 0, 0, width, height);
 
-          // JPEG로 변환 (품질 0.8)
-          const resizedBase64 = canvas.toDataURL("image/jpeg", 0.8);
+          // JPEG로 변환 (품질 0.7로 낮춤)
+          const resizedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+
+          // 메모리 정리
+          URL.revokeObjectURL(objectUrl);
+
           resolve(resizedBase64);
-        };
-        img.onerror = reject;
-        img.src = e.target?.result as string;
+        } catch (err) {
+          URL.revokeObjectURL(objectUrl);
+          reject(err);
+        }
       };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("이미지를 로드할 수 없습니다."));
+      };
+
+      img.src = objectUrl;
     });
   };
 
@@ -111,27 +124,34 @@ export function ReviewModal({
           continue;
         }
 
-        // 리사이즈 후 Base64 변환
-        const resizedBase64 = await resizeImage(file);
+        try {
+          // 리사이즈 후 Base64 변환
+          const resizedBase64 = await resizeImage(file);
 
-        // Cloudinary 업로드 API 호출
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: resizedBase64 }),
-        });
+          // Cloudinary 업로드 API 호출
+          const response = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: resizedBase64 }),
+          });
 
-        const result = await response.json();
-        if (result.success && result.url) {
-          setPhotos((prev) => [...prev, result.url]);
-        } else {
-          console.error("업로드 실패:", result.error);
-          alert(result.error || "사진 업로드에 실패했습니다.");
+          const result = await response.json();
+          if (result.success && result.url) {
+            setPhotos((prev) => [...prev, result.url]);
+          } else {
+            console.error("업로드 실패:", result.error);
+            alert(result.error || "사진 업로드에 실패했습니다.");
+          }
+        } catch (fileError) {
+          console.error("파일 처리 오류:", fileError);
+          const errorMsg = fileError instanceof Error ? fileError.message : "파일 처리 중 오류";
+          alert(`사진 처리 실패: ${errorMsg}`);
         }
       }
     } catch (error) {
       console.error("사진 업로드 오류:", error);
-      alert("사진 업로드 중 오류가 발생했습니다.");
+      const errorMsg = error instanceof Error ? error.message : "알 수 없는 오류";
+      alert(`사진 업로드 중 오류: ${errorMsg}`);
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
