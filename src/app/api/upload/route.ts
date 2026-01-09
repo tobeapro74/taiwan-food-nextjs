@@ -49,7 +49,17 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('Cloudinary 업로드 오류:', error);
-    const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+
+    // 상세한 에러 메시지 추출
+    let errorMessage = '알 수 없는 오류';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object' && error !== null) {
+      // Cloudinary 에러 객체 처리
+      const errObj = error as { message?: string; http_code?: number };
+      errorMessage = errObj.message || JSON.stringify(error);
+    }
+
     return NextResponse.json(
       { success: false, error: `이미지 업로드 실패: ${errorMessage}` },
       { status: 500 }
