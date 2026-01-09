@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 
-// CLOUDINARY_URL 환경변수가 있으면 자동으로 설정됨
-// 없으면 개별 환경변수 사용
-if (!process.env.CLOUDINARY_URL) {
+// CLOUDINARY_URL 파싱 또는 개별 환경변수 사용
+if (process.env.CLOUDINARY_URL) {
+  // cloudinary://api_key:api_secret@cloud_name 형식 파싱
+  const url = process.env.CLOUDINARY_URL;
+  const match = url.match(/cloudinary:\/\/(\d+):([^@]+)@(.+)/);
+  if (match) {
+    cloudinary.config({
+      cloud_name: match[3],
+      api_key: match[1],
+      api_secret: match[2],
+    });
+  }
+} else {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
