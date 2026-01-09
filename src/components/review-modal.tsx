@@ -254,10 +254,10 @@ export function ReviewModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center">
-      <div className="bg-background w-full max-w-lg rounded-t-2xl max-h-[90vh] flex flex-col animate-slide-up safe-area-bottom">
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div className="bg-background w-full max-w-lg rounded-2xl max-h-[80vh] flex flex-col">
         {/* 헤더 */}
-        <div className="flex-shrink-0 border-b px-4 py-3 flex items-center justify-between">
+        <div className="flex-shrink-0 border-b px-4 py-3 flex items-center justify-between rounded-t-2xl">
           <h2 className="text-lg font-semibold">{restaurantName}</h2>
           <button
             onClick={onClose}
@@ -381,30 +381,16 @@ export function ReviewModal({
         </div>
 
         {/* 게시 버튼 - 고정 */}
-        <div className="flex-shrink-0 border-t p-4 bg-background">
+        <div className="flex-shrink-0 border-t p-4 bg-background rounded-b-2xl">
           <Button
             onClick={handleSubmit}
             disabled={rating === 0 || isSubmitting || isUploading}
-            className="w-full py-6 text-lg"
+            className="w-full py-5 text-lg"
           >
             {isSubmitting ? "게시 중..." : "게시"}
           </Button>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes slide-up {
-          from {
-            transform: translateY(100%);
-          }
-          to {
-            transform: translateY(0);
-          }
-        }
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }
