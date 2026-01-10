@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { User, LogOut, Search, X, MapPin } from "lucide-react";
+import { User, LogOut, Search, X, MapPin, ChevronDown, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { BottomNav } from "@/components/bottom-nav";
@@ -10,6 +10,7 @@ import { RestaurantList } from "@/components/restaurant-list";
 import { RestaurantDetail } from "@/components/restaurant-detail";
 import { CategorySheet } from "@/components/category-sheet";
 import { AuthModal } from "@/components/auth-modal";
+import { ChangePasswordModal } from "@/components/change-password-modal";
 import {
   Restaurant,
   categories,
@@ -63,6 +64,9 @@ export default function Home() {
   // 사용자 인증 상태
   const [user, setUser] = useState<UserInfo | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   // 로그인 상태 확인
   useEffect(() => {
@@ -85,6 +89,9 @@ export default function Home() {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -266,13 +273,43 @@ export default function Home() {
             </h1>
             {/* 로그인/사용자 버튼 */}
             {user ? (
-              <button
-                onClick={handleLogout}
-                className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-primary-foreground hover:bg-white/30 transition-colors"
-                title={`${user.name}님 (로그아웃)`}
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-primary-foreground hover:bg-white/30 transition-colors"
+                  title={`${user.name}님`}
+                >
+                  <User className="w-5 h-5" />
+                  <ChevronDown className="w-3 h-3 absolute bottom-0 right-0" />
+                </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-12 bg-card rounded-lg shadow-lg border border-border min-w-[160px] py-1 z-50">
+                    <div className="px-3 py-2 border-b border-border">
+                      <p className="text-sm font-medium text-foreground">{user.name}님</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setChangePasswordModalOpen(true);
+                        setUserMenuOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                    >
+                      <Key className="w-4 h-4" />
+                      비밀번호 변경
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setUserMenuOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2 text-destructive"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      로그아웃
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <button
                 onClick={() => setAuthModalOpen(true)}
@@ -466,6 +503,12 @@ export default function Home() {
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         onLoginSuccess={(userData) => setUser(userData)}
+      />
+
+      {/* 비밀번호 변경 모달 */}
+      <ChangePasswordModal
+        isOpen={changePasswordModalOpen}
+        onClose={() => setChangePasswordModalOpen(false)}
       />
     </>
   );
