@@ -89,42 +89,83 @@
 
   <script>
     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-      <defs>
-        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#FF6B6B"/>
-          <stop offset="100%" style="stop-color:#EE5A5A"/>
-        </linearGradient>
-        <linearGradient id="taiwanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#FFFFFF"/>
-          <stop offset="100%" style="stop-color:#F0F0F0"/>
-        </linearGradient>
-      </defs>
-      <rect width="512" height="512" rx="100" fill="url(#bgGradient)"/>
-      <path d="M280 80 C320 90, 350 130, 360 180 C370 230, 365 280, 355 330 C345 380, 320 420, 280 440 C240 460, 200 450, 170 420 C140 390, 130 340, 135 290 C140 240, 160 190, 190 150 C220 110, 250 85, 280 80Z" fill="url(#taiwanGradient)" stroke="#FFFFFF" stroke-width="3" opacity="0.95"/>
-      <ellipse cx="265" cy="320" rx="85" ry="35" fill="#FFF5E6" stroke="#E8D5B7" stroke-width="3"/>
-      <ellipse cx="265" cy="310" rx="75" ry="28" fill="#FFE4C4"/>
-      <ellipse cx="265" cy="305" rx="65" ry="22" fill="#D4A574"/>
-      <path d="M210 300 Q230 310 250 295 Q270 280 290 300 Q310 320 320 305" stroke="#F5DEB3" stroke-width="6" fill="none" stroke-linecap="round"/>
-      <path d="M215 310 Q235 295 255 315 Q275 335 295 310" stroke="#F5DEB3" stroke-width="5" fill="none" stroke-linecap="round"/>
-      <ellipse cx="235" cy="290" rx="18" ry="12" fill="#FFFFFF" stroke="#E8D5B7" stroke-width="2"/>
-      <ellipse cx="235" cy="290" rx="10" ry="7" fill="#FFB347"/>
-      <rect x="280" y="280" width="25" height="6" rx="3" fill="#90EE90" transform="rotate(-20 292 283)"/>
-      <rect x="275" y="290" width="20" height="5" rx="2" fill="#98FB98" transform="rotate(15 285 292)"/>
-      <ellipse cx="300" cy="295" rx="15" ry="8" fill="#CD853F" stroke="#8B4513" stroke-width="1"/>
-      <path d="M230 250 Q225 235 235 220" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.7"/>
-      <path d="M260 245 Q255 225 265 210" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.6"/>
-      <path d="M290 250 Q285 230 295 215" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.7"/>
-      <rect x="180" y="180" width="8" height="140" rx="4" fill="#8B4513" transform="rotate(25 184 250)"/>
-      <rect x="195" y="175" width="8" height="140" rx="4" fill="#A0522D" transform="rotate(20 199 245)"/>
-      <ellipse cx="200" cy="160" rx="15" ry="10" fill="#FFF8DC" stroke="#DEB887" stroke-width="2"/>
-      <path d="M185 160 Q200 150 215 160" stroke="#DEB887" stroke-width="2" fill="none"/>
-      <path d="M320 180 L310 220 L340 220 L330 180 Z" fill="#D2691E" stroke="#8B4513" stroke-width="2"/>
-      <circle cx="320" cy="205" r="4" fill="#2F4F4F"/>
-      <circle cx="328" cy="210" r="3" fill="#2F4F4F"/>
-      <circle cx="315" cy="212" r="3" fill="#2F4F4F"/>
-      <ellipse cx="325" cy="180" rx="12" ry="5" fill="#FFFFFF"/>
-      <text x="256" y="480" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#FFFFFF" text-anchor="middle" opacity="0.9">TW</text>
-    </svg>`;
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B6B"/>
+      <stop offset="100%" style="stop-color:#E85555"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background with rounded corners -->
+  <rect width="512" height="512" rx="110" fill="url(#bgGradient)"/>
+
+  <!-- Taipei 101 Building - Left side -->
+  <g transform="translate(55, 80)">
+    <!-- Spire -->
+    <rect x="42" y="0" width="6" height="35" fill="#FFFFFF" opacity="0.95"/>
+    <!-- Top section -->
+    <rect x="35" y="35" width="20" height="15" fill="#FFFFFF" opacity="0.9"/>
+    <!-- Main tower sections (8 sections like bamboo) -->
+    <path d="M30 50 L60 50 L58 80 L32 80 Z" fill="#FFFFFF" opacity="0.9"/>
+    <path d="M32 82 L58 82 L56 112 L34 112 Z" fill="#FFFFFF" opacity="0.85"/>
+    <path d="M34 114 L56 114 L54 144 L36 144 Z" fill="#FFFFFF" opacity="0.9"/>
+    <path d="M36 146 L54 146 L52 176 L38 176 Z" fill="#FFFFFF" opacity="0.85"/>
+    <path d="M38 178 L52 178 L50 208 L40 208 Z" fill="#FFFFFF" opacity="0.9"/>
+    <!-- Base -->
+    <rect x="38" y="210" width="14" height="25" fill="#FFFFFF" opacity="0.85"/>
+    <!-- Windows (small dots) -->
+    <circle cx="45" cy="65" r="2" fill="#FF6B6B" opacity="0.5"/>
+    <circle cx="45" cy="97" r="2" fill="#FF6B6B" opacity="0.5"/>
+    <circle cx="45" cy="129" r="2" fill="#FF6B6B" opacity="0.5"/>
+    <circle cx="45" cy="161" r="2" fill="#FF6B6B" opacity="0.5"/>
+    <circle cx="45" cy="193" r="2" fill="#FF6B6B" opacity="0.5"/>
+  </g>
+
+  <!-- Large Ramen/Noodle Bowl - Main Focus -->
+  <!-- Bowl outer -->
+  <ellipse cx="280" cy="340" rx="145" ry="55" fill="#FFFFFF"/>
+  <!-- Bowl inner rim -->
+  <ellipse cx="280" cy="325" rx="125" ry="45" fill="#FFF5E6"/>
+  <!-- Soup/Broth -->
+  <ellipse cx="280" cy="318" rx="110" ry="38" fill="#CD853F"/>
+
+  <!-- Noodles - wavy lines -->
+  <path d="M185 310 Q215 290 245 315 Q275 340 305 310 Q335 280 365 310"
+        stroke="#F5DEB3" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <path d="M195 330 Q225 305 255 330 Q285 355 315 325 Q345 295 375 330"
+        stroke="#FAEBD7" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+  <!-- Egg (halved) -->
+  <ellipse cx="220" cy="295" rx="26" ry="17" fill="#FFFFFF" stroke="#E8D5B7" stroke-width="2"/>
+  <ellipse cx="220" cy="295" rx="14" ry="9" fill="#FF9933"/>
+
+  <!-- Meat slices -->
+  <ellipse cx="330" cy="300" rx="24" ry="11" fill="#A0522D" stroke="#8B4513" stroke-width="2"/>
+  <ellipse cx="305" cy="288" rx="18" ry="9" fill="#B8733D" stroke="#8B4513" stroke-width="2"/>
+
+  <!-- Green onions -->
+  <rect x="255" y="278" width="32" height="8" rx="4" fill="#90EE90" transform="rotate(-15 271 282)"/>
+  <rect x="275" y="295" width="28" height="7" rx="3" fill="#7CCD7C" transform="rotate(10 289 298)"/>
+
+  <!-- Steam - more prominent -->
+  <path d="M205 230 Q195 200 210 170" stroke="#FFFFFF" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.8"/>
+  <path d="M250 215 Q240 180 255 145" stroke="#FFFFFF" stroke-width="9" fill="none" stroke-linecap="round" opacity="0.7"/>
+  <path d="M295 220 Q285 185 300 150" stroke="#FFFFFF" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.8"/>
+  <path d="M340 215 Q330 180 345 145" stroke="#FFFFFF" stroke-width="9" fill="none" stroke-linecap="round" opacity="0.7"/>
+  <path d="M380 230 Q370 200 385 170" stroke="#FFFFFF" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.8"/>
+
+  <!-- Chopsticks -->
+  <rect x="130" y="150" width="11" height="190" rx="5" fill="#8B4513" transform="rotate(28 135 245)"/>
+  <rect x="152" y="142" width="11" height="190" rx="5" fill="#A0522D" transform="rotate(23 157 237)"/>
+
+  <!-- Taiwan Flag colors hint - small badge (top right) -->
+  <circle cx="435" cy="85" r="42" fill="#FFFFFF" opacity="0.95"/>
+  <circle cx="435" cy="85" r="33" fill="#000080"/>
+  <polygon points="435,62 439,75 453,75 442,84 446,97 435,88 424,97 428,84 417,75 431,75" fill="#FFFFFF"/>
+
+  <!-- Text: 대만맛집 -->
+  <text x="256" y="462" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#FFFFFF" text-anchor="middle" letter-spacing="3">대만맛집</text>
+</svg>`;
 
     function renderToCanvas(canvasId, size) {
       const canvas = document.getElementById(canvasId);
