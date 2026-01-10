@@ -1,75 +1,79 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/mongodb';
-import bcrypt from 'bcryptjs';
-import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { connectToDatabase } from "@/lib/mongodb";
+
+const JWT_SECRET = process.env.JWT_SECRET || "taiwan-food-secret-key";
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, password } = await request.json();
+    const { email, password } = await request.json();
 
-    // 입력값 검증
-    if (!name || !password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { success: false, error: '이름과 비밀번호를 입력해주세요.' },
+        { success: false, error: "이메일과 비밀번호를 입력해주세요." },
         { status: 400 }
       );
     }
 
     const db = await connectToDatabase();
-    const membersCollection = db.collection('members');
+    const membersCollection = db.collection("members");
 
-    // 회원 찾기
-    const member = await membersCollection.findOne({
-      name,
-      status: 'active'
-    });
-
+    // 사용자 조회
+    const member = await membersCollection.findOne({ email });
     if (!member) {
       return NextResponse.json(
-        { success: false, error: '이름 또는 비밀번호가 일치하지 않습니다.' },
+        { success: false, error: "이메일 또는 비밀번호가 일치하지 않습니다." },
         { status: 401 }
       );
     }
 
     // 비밀번호 확인
-    const isValid = bcrypt.compareSync(password, member.password_hash || '');
-    if (!isValid) {
+    const isValidPassword = await bcrypt.compare(password, member.password);
+    if (!isValidPassword) {
       return NextResponse.json(
-        { success: false, error: '이름 또는 비밀번호가 일치하지 않습니다.' },
+        { success: false, error: "이메일 또는 비밀번호가 일치하지 않습니다." },
         { status: 401 }
       );
     }
 
-    // 세션 데이터 생성 (JWT 대신 간단한 쿠키 세션)
-    const sessionData = {
-      id: member.id,
-      name: member.name,
-      email: member.email,
-      profile_image: member.profile_image,
-      is_admin: member.is_admin,
-    };
+    // JWT 토큰 생성
+    const token = jwt.sign(
+      {
+        userId: member.id,
+        email: member.email,
+        name: member.name,
+        is_admin: member.is_admin,
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-    // 쿠키에 세션 저장 (Base64 인코딩)
-    const sessionToken = Buffer.from(JSON.stringify(sessionData)).toString('base64');
-
-    const cookieStore = await cookies();
-    cookieStore.set('session', sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7일
-      path: '/',
-    });
-
-    return NextResponse.json({
+    // 응답 생성
+    const response = NextResponse.json({
       success: true,
-      message: '로그인 성공',
-      data: sessionData,
+      data: {
+        id: member.id,
+        name: member.name,
+        profile_image: member.profile_image || null,
+        is_admin: member.is_admin,
+      },
     });
+
+    // 쿠키에 토큰 저장
+    response.cookies.set("auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60, // 7일
+      path: "/",
+    });
+
+    return response;
   } catch (error) {
-    console.error('로그인 오류:', error);
+    console.error("Login error:", error);
     return NextResponse.json(
-      { success: false, error: '로그인 처리 중 오류가 발생했습니다.' },
+      { success: false, error: "로그인 중 오류가 발생했습니다." },
       { status: 500 }
     );
   }

@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { X, User, LogIn, UserPlus } from "lucide-react";
+import { X, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,6 +15,7 @@ type AuthMode = "login" | "register";
 export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
   const [mode, setMode] = useState<AuthMode>("login");
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -27,49 +27,72 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
     e.preventDefault();
     setError("");
 
-    if (!name || !password) {
-      setError("이름과 비밀번호를 입력해주세요.");
-      return;
-    }
-
-    if (mode === "register" && password !== confirmPassword) {
-      setError("비밀번호가 일치하지 않습니다.");
-      return;
+    if (mode === "login") {
+      if (!email || !password) {
+        setError("이메일과 비밀번호를 입력해주세요.");
+        return;
+      }
+    } else {
+      if (!name || !email || !password) {
+        setError("모든 필드를 입력해주세요.");
+        return;
+      }
+      if (password.length < 6) {
+        setError("비밀번호는 6자 이상이어야 합니다.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("비밀번호가 일치하지 않습니다.");
+        return;
+      }
     }
 
     setIsLoading(true);
 
     try {
-      const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, password }),
-      });
+      if (mode === "login") {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const result = await response.json();
 
-      const result = await response.json();
+        if (result.success) {
+          onLoginSuccess(result.data);
+          onClose();
+          resetForm();
+        } else {
+          setError(result.error || "로그인에 실패했습니다.");
+        }
+      } else {
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password }),
+        });
+        const result = await response.json();
 
-      if (result.success) {
-        if (mode === "register") {
+        if (result.success) {
           // 회원가입 성공 후 자동 로그인
           const loginRes = await fetch("/api/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, password }),
+            body: JSON.stringify({ email, password }),
           });
           const loginResult = await loginRes.json();
+
           if (loginResult.success) {
             onLoginSuccess(loginResult.data);
             onClose();
             resetForm();
+          } else {
+            setMode("login");
+            setError("회원가입이 완료되었습니다. 로그인해주세요.");
           }
         } else {
-          onLoginSuccess(result.data);
-          onClose();
-          resetForm();
+          setError(result.error || "회원가입에 실패했습니다.");
         }
-      } else {
-        setError(result.error || "처리 중 오류가 발생했습니다.");
       }
     } catch (err) {
       console.error("Auth error:", err);
@@ -81,6 +104,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
 
   const resetForm = () => {
     setName("");
+    setEmail("");
     setPassword("");
     setConfirmPassword("");
     setError("");
@@ -128,22 +152,39 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
             </div>
           )}
 
-          {/* 이름 입력 */}
+          {/* 이름 입력 (회원가입 시) */}
+          {mode === "register" && (
+            <div>
+              <label className="block text-sm font-medium mb-1.5">이름</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="이름을 입력하세요"
+                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
+                autoComplete="name"
+              />
+            </div>
+          )}
+
+          {/* 이메일 입력 */}
           <div>
-            <label className="block text-sm font-medium mb-1.5">이름</label>
+            <label className="block text-sm font-medium mb-1.5">이메일</label>
             <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="이름을 입력하세요"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="이메일을 입력하세요"
               className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
-              autoComplete="username"
+              autoComplete="email"
             />
           </div>
 
           {/* 비밀번호 입력 */}
           <div>
-            <label className="block text-sm font-medium mb-1.5">비밀번호</label>
+            <label className="block text-sm font-medium mb-1.5">
+              비밀번호{mode === "register" && " (6자 이상)"}
+            </label>
             <input
               type="password"
               value={password}

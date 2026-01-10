@@ -63,3 +63,11 @@ export interface SessionUser {
   profile_image?: string;
   is_admin: boolean;
 }
+
+// JWT 페이로드 타입
+export interface JWTPayload {
+  userId: number;
+  email: string;
+  name: string;
+  is_admin: boolean;
+}
