@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { User, LogOut } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { User, LogOut, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { BottomNav } from "@/components/bottom-nav";
@@ -20,6 +20,7 @@ import {
   getRestaurantsByTour,
   getPlaces,
   getPopularRestaurants,
+  searchRestaurants,
 } from "@/data/taiwan-food";
 
 type View = "home" | "list" | "detail";
@@ -47,6 +48,9 @@ export default function Home() {
 
   // 홈 화면 야시장 필터
   const [selectedMarket, setSelectedMarket] = useState("전체");
+
+  // 검색 상태
+  const [searchQuery, setSearchQuery] = useState("");
 
   // 사용자 인증 상태
   const [user, setUser] = useState<UserInfo | null>(null);
@@ -88,11 +92,28 @@ export default function Home() {
     return getRestaurantsByMarket(selectedMarket).slice(0, 6);
   }, [selectedMarket]);
 
+  // 검색 처리
+  const handleSearch = useCallback((query: string) => {
+    if (query.trim().length >= 1) {
+      const results = searchRestaurants(query);
+      setListTitle(`"${query}" 검색 결과 (${results.length}건)`);
+      setListItems(results);
+      setCurrentView("list");
+      setActiveTab("home");
+    }
+  }, []);
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setCurrentView("home");
+  };
+
   // 탭 변경 처리
   const handleTabChange = (tab: TabType) => {
     if (tab === "home") {
       setCurrentView("home");
       setActiveTab("home");
+      setSearchQuery("");
     } else if (tab === "category") {
       setCategorySheetOpen(true);
     } else if (tab === "market") {
@@ -236,6 +257,33 @@ export default function Home() {
 
         {/* 메인 콘텐츠 */}
         <div className="p-4 space-y-4">
+          {/* 검색바 */}
+          <div className="relative">
+            <div className="flex items-center bg-card rounded-xl border-2 border-transparent focus-within:border-primary transition-colors">
+              <Search className="w-5 h-5 text-muted-foreground ml-4" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    handleSearch(searchQuery);
+                  }
+                }}
+                placeholder="식당, 음식, 야시장, 지역 검색..."
+                className="flex-1 bg-transparent border-none outline-none py-3 px-3 text-foreground placeholder:text-muted-foreground"
+              />
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="p-2 mr-2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* 퀵 카테고리 */}
           <section className="bg-card rounded-xl p-4 shadow-sm">
             <h2 className="text-base font-semibold mb-3 text-foreground">카테고리</h2>

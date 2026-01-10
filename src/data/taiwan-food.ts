@@ -287,3 +287,95 @@ export function getGoogleMapsLink(name: string, location: string): string {
   query += " Taipei Taiwan";
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query.trim())}`;
 }
+
+// 통합 검색 함수 - 식당이름, 위치, 음식, 야시장 등 검색
+export interface SearchResult extends Restaurant {
+  카테고리?: string;
+  도심투어?: string;
+  타입?: string;
+  matchType: 'name' | 'location' | 'market' | 'feature';
+}
+
+export function searchRestaurants(query: string): SearchResult[] {
+  const q = query.toLowerCase().trim();
+  if (!q) return [];
+
+  const results: SearchResult[] = [];
+  const seenNames = new Set<string>();
+
+  // 모든 카테고리에서 검색
+  const cats = ["면류", "만두", "밥류", "디저트", "길거리음식", "카페"] as const;
+
+  for (const cat of cats) {
+    const items = taiwanFoodMap[cat] || [];
+    for (const item of items) {
+      if (seenNames.has(item.이름)) continue;
+
+      const name = (item.이름 || '').toLowerCase();
+      const location = (item.위치 || '').toLowerCase();
+      const feature = (item.특징 || '').toLowerCase();
+      const market = (item.야시장 || '').toLowerCase();
+
+      if (name.includes(q) || location.includes(q) || feature.includes(q) || market.includes(q)) {
+        seenNames.add(item.이름);
+        results.push({
+          ...item,
+          카테고리: cat,
+          matchType: name.includes(q) ? 'name' :
+                     location.includes(q) ? 'location' :
+                     market.includes(q) ? 'market' : 'feature'
+        });
+      }
+    }
+  }
+
+  // 도심투어에서 검색
+  for (const area of Object.keys(taiwanFoodMap.도심투어)) {
+    const items = taiwanFoodMap.도심투어[area] || [];
+    for (const item of items) {
+      if (seenNames.has(item.이름)) continue;
+
+      const name = (item.이름 || '').toLowerCase();
+      const location = (item.위치 || '').toLowerCase();
+      const feature = (item.특징 || '').toLowerCase();
+
+      if (name.includes(q) || location.includes(q) || feature.includes(q) || area.toLowerCase().includes(q)) {
+        seenNames.add(item.이름);
+        results.push({
+          ...item,
+          도심투어: area,
+          matchType: name.includes(q) ? 'name' :
+                     location.includes(q) ? 'location' : 'feature'
+        });
+      }
+    }
+  }
+
+  // 갈만한 곳에서 검색
+  const places = taiwanFoodMap["갈만한 곳"] || [];
+  for (const item of places) {
+    if (seenNames.has(item.이름)) continue;
+
+    const name = (item.이름 || '').toLowerCase();
+    const location = (item.위치 || '').toLowerCase();
+    const feature = (item.특징 || '').toLowerCase();
+
+    if (name.includes(q) || location.includes(q) || feature.includes(q)) {
+      seenNames.add(item.이름);
+      results.push({
+        ...item,
+        타입: '명소',
+        matchType: name.includes(q) ? 'name' :
+                   location.includes(q) ? 'location' : 'feature'
+      });
+    }
+  }
+
+  // 이름 매칭을 우선으로 정렬
+  results.sort((a, b) => {
+    const priority = { name: 0, market: 1, location: 2, feature: 3 };
+    return priority[a.matchType] - priority[b.matchType];
+  });
+
+  return results;
+}
