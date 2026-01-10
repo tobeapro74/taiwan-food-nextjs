@@ -29,7 +29,7 @@ export function CategorySheet({ open, onOpenChange, title, options, onSelect }: 
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
         </SheetHeader>
-        <div className="grid gap-2 py-4">
+        <div className="grid gap-2 py-4 overflow-y-auto flex-1 min-h-0 px-4">
           {options.map((option) => (
             <Button
               key={option.id}
