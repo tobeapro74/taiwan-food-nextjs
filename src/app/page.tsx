@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { User, LogOut, Search, X } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { User, LogOut, Search, X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { BottomNav } from "@/components/bottom-nav";
@@ -51,6 +51,14 @@ export default function Home() {
 
   // 검색 상태
   const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // 실시간 검색 결과 (자동완성)
+  const searchSuggestions = useMemo(() => {
+    if (searchQuery.trim().length < 1) return [];
+    return searchRestaurants(searchQuery).slice(0, 8); // 최대 8개 제안
+  }, [searchQuery]);
 
   // 사용자 인증 상태
   const [user, setUser] = useState<UserInfo | null>(null);
@@ -70,6 +78,17 @@ export default function Home() {
       }
     };
     checkAuth();
+  }, []);
+
+  // 검색창 외부 클릭 시 자동완성 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // 로그아웃 처리
@@ -100,11 +119,22 @@ export default function Home() {
       setListItems(results);
       setCurrentView("list");
       setActiveTab("home");
+      setShowSuggestions(false);
     }
   }, []);
 
+  // 자동완성에서 식당 선택
+  const handleSuggestionSelect = (restaurant: Restaurant) => {
+    setSearchQuery("");
+    setShowSuggestions(false);
+    setPreviousView("home");
+    setSelectedRestaurant(restaurant);
+    setCurrentView("detail");
+  };
+
   const handleClearSearch = () => {
     setSearchQuery("");
+    setShowSuggestions(false);
     setCurrentView("home");
   };
 
@@ -258,16 +288,23 @@ export default function Home() {
         {/* 메인 콘텐츠 */}
         <div className="p-4 space-y-4">
           {/* 검색바 */}
-          <div className="relative">
-            <div className="flex items-center bg-card rounded-xl border-2 border-transparent focus-within:border-primary transition-colors">
+          <div className="relative" ref={searchRef}>
+            <div className={`flex items-center bg-card rounded-xl border-2 transition-colors ${showSuggestions && searchSuggestions.length > 0 ? 'border-primary rounded-b-none' : 'border-transparent focus-within:border-primary'}`}>
               <Search className="w-5 h-5 text-muted-foreground ml-4" />
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && searchQuery.trim()) {
                     handleSearch(searchQuery);
+                  }
+                  if (e.key === 'Escape') {
+                    setShowSuggestions(false);
                   }
                 }}
                 placeholder="식당, 음식, 야시장, 지역 검색..."
@@ -282,6 +319,43 @@ export default function Home() {
                 </button>
               )}
             </div>
+
+            {/* 자동완성 드롭다운 */}
+            {showSuggestions && searchSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 bg-card border-2 border-t-0 border-primary rounded-b-xl shadow-lg z-50 max-h-80 overflow-y-auto">
+                {searchSuggestions.map((item, index) => (
+                  <button
+                    key={`${item.이름}-${index}`}
+                    onClick={() => handleSuggestionSelect(item)}
+                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-muted/50 transition-colors text-left border-b border-border/50 last:border-b-0"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <MapPin className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-foreground truncate">{item.이름}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {item.위치}
+                        {item.야시장 && ` · ${item.야시장}`}
+                      </div>
+                    </div>
+                    {item.카테고리 && (
+                      <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground flex-shrink-0">
+                        {item.카테고리}
+                      </span>
+                    )}
+                  </button>
+                ))}
+                {searchSuggestions.length > 0 && (
+                  <button
+                    onClick={() => handleSearch(searchQuery)}
+                    className="w-full px-4 py-3 text-center text-primary font-medium hover:bg-muted/50 transition-colors"
+                  >
+                    "{searchQuery}" 전체 검색 결과 보기
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* 퀵 카테고리 */}
