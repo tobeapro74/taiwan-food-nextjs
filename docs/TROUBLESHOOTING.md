@@ -221,3 +221,50 @@ JWT_SECRET=your_jwt_secret
 - Vercel에서 환경변수 설정 후 반드시 **재배포** 필요
 - `CLOUDINARY_URL`과 개별 변수 중 하나만 설정해도 됨 (둘 다 설정 가능)
 - Production, Preview, Development 환경별로 다르게 설정 가능
+
+---
+
+## 5. 카테고리 모달 스크롤 오버플로우 문제
+
+### 문제 상황
+네비게이션 > 카테고리 클릭 시 나타나는 바텀 시트 모달에서 옵션이 많을 때(11개) 모달 영역을 초과하여 화면 밖으로 넘침
+
+### 원인 분석
+- `SheetContent` 컴포넌트의 `side="bottom"` 설정에 `h-auto`만 있어 높이 제한이 없음
+- 옵션이 많아지면 콘텐츠가 무한정 늘어나 화면을 벗어남
+- flexbox 자식 요소의 스크롤이 작동하지 않음
+
+### 해결 방안
+
+#### 1단계: SheetContent에 최대 높이 제한
+```tsx
+// src/components/ui/sheet.tsx
+side === "bottom" &&
+  "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 max-h-[70vh] border-t",
+```
+
+**변경 사항**: `h-auto` → `max-h-[70vh]`
+- 모달 최대 높이를 화면의 70%로 제한
+
+#### 2단계: 옵션 리스트에 스크롤 추가
+```tsx
+// src/components/category-sheet.tsx
+<div className="grid gap-2 py-4 overflow-y-auto flex-1 min-h-0 px-4">
+  {options.map((option) => (
+    // ...버튼들
+  ))}
+</div>
+```
+
+**핵심 CSS 클래스**:
+- `overflow-y-auto`: 내용이 넘치면 세로 스크롤
+- `flex-1`: 남은 공간을 채움
+- `min-h-0`: flexbox 스크롤 버그 수정 (중요!)
+
+### 왜 min-h-0이 필요한가?
+Flexbox 자식 요소는 기본적으로 `min-height: auto`가 적용됨. 이로 인해 내용이 넘쳐도 축소되지 않고 부모를 벗어남. `min-h-0`을 명시하면 자식이 부모 높이에 맞게 축소되어 `overflow-y: auto`가 정상 작동함.
+
+### 최종 결과
+- 카테고리 11개(전체, 면류, 밥류, 만두, 우육탕, 훠궈, 디저트, 길거리, 카페, 공차, 까르푸) 모두 표시
+- 모달 내에서 스크롤하여 모든 옵션 선택 가능
+- 화면의 70% 이상 차지하지 않음

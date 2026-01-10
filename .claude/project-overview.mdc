@@ -1,0 +1,205 @@
+# 프로젝트 전반 분석
+
+## 프로젝트 정보
+
+| 항목 | 내용 |
+|------|------|
+| **프로젝트명** | 대만맛집정보 (Taiwan Food Guide) |
+| **저장소** | taiwan-food-nextjs |
+| **배포 URL** | https://taiwan-food-nextjs.vercel.app |
+| **프레임워크** | Next.js 15 (App Router) |
+| **언어** | TypeScript |
+| **스타일링** | Tailwind CSS 4 |
+
+## 기술 스택 상세
+
+### 프론트엔드
+```
+Next.js 15.1.1
+├── React 19
+├── TypeScript 5
+├── Tailwind CSS 4
+├── Radix UI (shadcn/ui)
+│   ├── Dialog
+│   ├── Sheet
+│   ├── Tabs
+│   ├── ScrollArea
+│   └── ...
+└── Lucide React (아이콘)
+```
+
+### 백엔드
+```
+Next.js API Routes
+├── MongoDB Atlas (데이터베이스)
+├── Cloudinary (이미지 저장)
+├── JWT + bcryptjs (인증)
+└── Google Places API (이미지 프록시)
+```
+
+### 인프라
+```
+Vercel
+├── Serverless Functions
+├── Edge Network (CDN)
+└── Auto Deploy (GitHub 연동)
+```
+
+## 핵심 파일 구조
+
+```
+src/
+├── app/
+│   ├── api/           # API 엔드포인트
+│   ├── globals.css    # 전역 스타일
+│   ├── layout.tsx     # 루트 레이아웃
+│   └── page.tsx       # 메인 SPA
+│
+├── components/
+│   ├── ui/            # shadcn/ui 기반
+│   └── *.tsx          # 비즈니스 컴포넌트
+│
+├── data/
+│   └── taiwan-food.ts # 맛집 정적 데이터
+│
+└── lib/
+    ├── mongodb.ts     # DB 연결
+    └── utils.ts       # 유틸리티
+```
+
+## 주요 컴포넌트 관계
+
+```
+page.tsx (메인 페이지)
+│
+├── 헤더
+│   └── AuthModal (로그인/회원가입)
+│
+├── 홈 화면
+│   ├── 검색바 (자동완성)
+│   ├── 카테고리 버튼
+│   ├── 인기 맛집 (RestaurantCard)
+│   └── 야시장별 맛집 (RestaurantCard)
+│
+├── 목록 화면 (RestaurantList)
+│   └── RestaurantCard
+│
+├── 상세 화면 (RestaurantDetail)
+│   └── ReviewSection
+│       └── ReviewModal
+│
+├── BottomNav (네비게이션)
+│
+└── CategorySheet (바텀 시트 모달)
+```
+
+## API 엔드포인트 요약
+
+| 메서드 | 경로 | 설명 |
+|--------|------|------|
+| POST | /api/auth/register | 회원가입 |
+| POST | /api/auth/login | 로그인 |
+| POST | /api/auth/logout | 로그아웃 |
+| GET | /api/auth/me | 현재 사용자 |
+| GET | /api/reviews | 리뷰 목록 |
+| POST | /api/reviews | 리뷰 작성 |
+| DELETE | /api/reviews/[id] | 리뷰 삭제 |
+| POST | /api/upload | 이미지 업로드 |
+| GET | /api/place-photo | Google 이미지 프록시 |
+
+## 데이터 카테고리
+
+### 음식 카테고리 (11개)
+- 전체, 면류, 밥류, 만두, 우육탕, 훠궈
+- 디저트, 길거리, 카페, 공차, 까르푸
+
+### 야시장 (6개)
+- 스린, 닝샤, 라오허제, 통화, 펑자, 단수이
+
+### 도심투어 (4개)
+- 시먼딩, 융캉제, 중산, 신이
+
+## 환경변수
+
+```env
+# MongoDB
+MONGODB_URI=mongodb+srv://...
+
+# Cloudinary
+CLOUDINARY_URL=cloudinary://...
+# 또는
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+# JWT
+JWT_SECRET=...
+
+# Google Places (선택)
+GOOGLE_PLACES_API_KEY=...
+```
+
+## 최근 변경사항
+
+### 2024-01-10
+- 카테고리 모달 스크롤 오버플로우 수정
+  - `sheet.tsx`: `max-h-[70vh]` 적용
+  - `category-sheet.tsx`: `overflow-y-auto` 추가
+
+## 알려진 이슈
+
+### 해결됨
+- ~~리뷰 사진 업로드 실패~~ → 클라이언트 리사이즈
+- ~~Cloudinary 환경변수~~ → URL 파싱
+- ~~리뷰 모달 버튼 가려짐~~ → 레이아웃 수정
+- ~~카테고리 모달 오버플로우~~ → 스크롤 추가
+
+### 진행 중
+- 없음
+
+## 개발 명령어
+
+```bash
+# 개발 서버
+npm run dev
+
+# 빌드
+npm run build
+
+# 린트
+npm run lint
+
+# 프로덕션
+npm start
+```
+
+## 배포 방법
+
+```bash
+# GitHub에 푸시하면 자동 배포
+git add .
+git commit -m "feat: 기능 설명"
+git push origin main
+```
+
+## 관련 문서
+
+- [README.md](../docs/README.md) - 프로젝트 개요
+- [ARCHITECTURE.md](../docs/ARCHITECTURE.md) - 아키텍처
+- [TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md) - 문제 해결
+- [FEATURES.md](../docs/FEATURES.md) - 기능 명세
+- [API.md](../docs/API.md) - API 명세
+
+## Cursor/Claude 연동 팁
+
+### 코드 검색
+```
+"검색 기능" → src/app/page.tsx (searchRestaurants)
+"리뷰 작성" → src/components/review-modal.tsx
+"인증" → src/app/api/auth/
+```
+
+### 자주 수정하는 파일
+- `src/app/page.tsx` - 메인 페이지 로직
+- `src/data/taiwan-food.ts` - 맛집 데이터
+- `src/components/ui/sheet.tsx` - 모달 스타일
