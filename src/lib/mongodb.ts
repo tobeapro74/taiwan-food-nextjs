@@ -31,4 +31,7 @@ export async function connectToDatabase(): Promise<Db> {
   }
 }
 
+// getDb 별칭 (여의도 맛집 호환)
+export const getDb = connectToDatabase;
+
 export { ObjectId };
