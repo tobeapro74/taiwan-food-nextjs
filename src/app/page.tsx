@@ -229,6 +229,27 @@ export default function Home() {
       <>
         <RestaurantDetail restaurant={selectedRestaurant} onBack={handleBack} />
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+        <CategorySheet
+          open={categorySheetOpen}
+          onOpenChange={setCategorySheetOpen}
+          title="카테고리 선택"
+          options={categories}
+          onSelect={handleCategorySelect}
+        />
+        <CategorySheet
+          open={marketSheetOpen}
+          onOpenChange={setMarketSheetOpen}
+          title="야시장 선택"
+          options={markets}
+          onSelect={handleMarketSelect}
+        />
+        <CategorySheet
+          open={tourSheetOpen}
+          onOpenChange={setTourSheetOpen}
+          title="도심투어 지역"
+          options={tourAreas}
+          onSelect={handleTourSelect}
+        />
       </>
     );
   }
@@ -244,6 +265,27 @@ export default function Home() {
           }}
         />
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+        <CategorySheet
+          open={categorySheetOpen}
+          onOpenChange={setCategorySheetOpen}
+          title="카테고리 선택"
+          options={categories}
+          onSelect={handleCategorySelect}
+        />
+        <CategorySheet
+          open={marketSheetOpen}
+          onOpenChange={setMarketSheetOpen}
+          title="야시장 선택"
+          options={markets}
+          onSelect={handleMarketSelect}
+        />
+        <CategorySheet
+          open={tourSheetOpen}
+          onOpenChange={setTourSheetOpen}
+          title="도심투어 지역"
+          options={tourAreas}
+          onSelect={handleTourSelect}
+        />
       </>
     );
   }
