@@ -16,7 +16,7 @@ export function RestaurantList({ title, restaurants, onBack, onSelect }: Restaur
   return (
     <div className="min-h-screen pb-20">
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-background border-b border-border shadow-sm">
+      <div className="sticky top-0 z-10 bg-background border-b border-border shadow-sm safe-area-top">
         <div className="flex items-center gap-2 p-3">
           <Button
             variant="ghost"
