@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { User, LogOut, Search, X, MapPin, ChevronDown, Key } from "lucide-react";
+import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { BottomNav } from "@/components/bottom-nav";
@@ -204,7 +205,7 @@ export default function Home() {
   };
 
   // 뒤로가기
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (currentView === "detail") {
       // 이전 화면이 홈이면 홈으로, nearby면 nearby로, 리스트면 리스트로
       if (previousView === "home") {
@@ -217,11 +218,19 @@ export default function Home() {
         setCurrentView("list");
       }
       setSelectedRestaurant(null);
-    } else {
+    } else if (currentView === "list" || currentView === "nearby") {
       setCurrentView("home");
       setActiveTab("home");
     }
-  };
+  }, [currentView, previousView]);
+
+  // 스와이프 뒤로가기 (홈이 아닌 화면에서만 활성화)
+  useSwipeBack({
+    onSwipeBack: handleBack,
+    enabled: currentView !== "home",
+    threshold: 80,
+    edgeWidth: 25,
+  });
 
   // 렌더링
   if (currentView === "detail" && selectedRestaurant) {

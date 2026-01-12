@@ -8,7 +8,6 @@ import { ArrowLeft, MapPin, Info, Map, Phone, Banknote, Building2 } from "lucide
 import { Restaurant, getGoogleMapsLink, getUnsplashImage } from "@/data/taiwan-food";
 import { ReviewSection } from "@/components/review-section";
 import { GoogleReviews } from "@/components/google-reviews";
-import { useSwipeBack } from "@/hooks/useSwipeBack";
 import Image from "next/image";
 
 interface RestaurantDetailProps {
@@ -116,9 +115,6 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
   }, [restaurant.이름, restaurant.가격대, restaurant.전화번호, restaurant.빌딩, cacheKey, infoCache]);
 
   const googleMapsUrl = getGoogleMapsLink(restaurant.이름, restaurant.위치);
-
-  // 스와이프 뒤로가기
-  useSwipeBack({ onSwipeBack: onBack });
 
   return (
     <div className="min-h-screen pb-20">
