@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Star } from "lucide-react";
+import { MapPin, Star, Building2 } from "lucide-react";
 import { Restaurant, getUnsplashImage } from "@/data/taiwan-food";
 import Image from "next/image";
 
@@ -111,6 +111,12 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
             <MapPin className="h-3 w-3" />
             <span className="truncate">{restaurant.위치?.substring(0, 12)}</span>
           </p>
+          {restaurant.빌딩 && (
+            <p className="text-xs text-blue-600 flex items-center gap-1 mt-1">
+              <Building2 className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">{restaurant.빌딩}</span>
+            </p>
+          )}
         </CardContent>
       </Card>
     );
@@ -155,10 +161,16 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
                 {restaurant.특징}
               </p>
             )}
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
               {restaurant.야시장 && (
                 <Badge variant="secondary" className="text-xs bg-accent/20 text-accent-foreground">
                   {restaurant.야시장}
+                </Badge>
+              )}
+              {restaurant.빌딩 && (
+                <Badge variant="outline" className="text-xs text-blue-600 border-blue-200 bg-blue-50">
+                  <Building2 className="h-3 w-3 mr-1" />
+                  {restaurant.빌딩}
                 </Badge>
               )}
               {restaurant.리뷰수 && (

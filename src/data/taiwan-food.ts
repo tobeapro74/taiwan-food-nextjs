@@ -6,6 +6,9 @@ export interface Restaurant {
   야시장?: string;
   평점?: number;
   리뷰수?: number;
+  빌딩?: string;
+  전화번호?: string;
+  가격대?: string;
 }
 
 export interface TaiwanFoodData {
