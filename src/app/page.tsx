@@ -11,6 +11,7 @@ import { RestaurantDetail } from "@/components/restaurant-detail";
 import { CategorySheet } from "@/components/category-sheet";
 import { AuthModal } from "@/components/auth-modal";
 import { ChangePasswordModal } from "@/components/change-password-modal";
+import { NearbyRestaurants } from "@/components/nearby-restaurants";
 import {
   Restaurant,
   categories,
@@ -24,8 +25,8 @@ import {
   searchRestaurants,
 } from "@/data/taiwan-food";
 
-type View = "home" | "list" | "detail";
-type TabType = "home" | "category" | "market" | "tour" | "places";
+type View = "home" | "list" | "detail" | "nearby";
+type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby";
 
 interface UserInfo {
   id: number;
@@ -151,6 +152,9 @@ export default function Home() {
       setCurrentView("home");
       setActiveTab("home");
       setSearchQuery("");
+    } else if (tab === "nearby") {
+      setCurrentView("nearby");
+      setActiveTab("nearby");
     } else if (tab === "category") {
       setCategorySheetOpen(true);
     } else if (tab === "market") {
@@ -202,10 +206,13 @@ export default function Home() {
   // 뒤로가기
   const handleBack = () => {
     if (currentView === "detail") {
-      // 이전 화면이 홈이면 홈으로, 리스트면 리스트로
+      // 이전 화면이 홈이면 홈으로, nearby면 nearby로, 리스트면 리스트로
       if (previousView === "home") {
         setCurrentView("home");
         setActiveTab("home");
+      } else if (previousView === "nearby") {
+        setCurrentView("nearby");
+        setActiveTab("nearby");
       } else {
         setCurrentView("list");
       }
@@ -221,6 +228,21 @@ export default function Home() {
     return (
       <>
         <RestaurantDetail restaurant={selectedRestaurant} onBack={handleBack} />
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+      </>
+    );
+  }
+
+  if (currentView === "nearby") {
+    return (
+      <>
+        <NearbyRestaurants
+          onSelectRestaurant={handleRestaurantSelect}
+          onBack={() => {
+            setCurrentView("home");
+            setActiveTab("home");
+          }}
+        />
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
       </>
     );
