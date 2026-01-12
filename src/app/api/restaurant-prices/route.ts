@@ -11,6 +11,7 @@ interface RestaurantPrice {
   priceLevel: string | null;
   priceRange: string | null;
   phoneNumber: string | null;
+  buildingName: string | null;
   updatedAt: Date;
 }
 
@@ -32,12 +33,13 @@ function priceLevelToRange(priceLevel: string | null): string | null {
   }
 }
 
-// 식당 이름으로 Google Places에서 가격대 및 전화번호 정보 조회
-async function fetchPriceInfo(restaurantName: string, location: string): Promise<{
+// 식당 이름으로 Google Places에서 가격대, 전화번호, 건물명 정보 조회
+export async function fetchPriceInfo(restaurantName: string, location: string): Promise<{
   placeId: string | null;
   priceLevel: string | null;
   priceRange: string | null;
   phoneNumber: string | null;
+  buildingName: string | null;
 }> {
   try {
     const searchUrl = "https://places.googleapis.com/v1/places:searchText";
@@ -46,7 +48,7 @@ async function fetchPriceInfo(restaurantName: string, location: string): Promise
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": GOOGLE_API_KEY!,
-        "X-Goog-FieldMask": "places.id,places.displayName,places.priceLevel,places.priceRange,places.nationalPhoneNumber,places.internationalPhoneNumber"
+        "X-Goog-FieldMask": "places.id,places.displayName,places.priceLevel,places.priceRange,places.nationalPhoneNumber,places.internationalPhoneNumber,places.formattedAddress,places.addressComponents"
       },
       body: JSON.stringify({
         textQuery: `${restaurantName} ${location} Taiwan`,
@@ -58,11 +60,22 @@ async function fetchPriceInfo(restaurantName: string, location: string): Promise
     const firstPlace = data.places?.[0];
 
     if (!firstPlace) {
-      return { placeId: null, priceLevel: null, priceRange: null, phoneNumber: null };
+      return { placeId: null, priceLevel: null, priceRange: null, phoneNumber: null, buildingName: null };
     }
 
     const priceLevel = firstPlace.priceLevel || null;
     const phoneNumber = firstPlace.nationalPhoneNumber || firstPlace.internationalPhoneNumber || null;
+
+    // 건물명 추출: addressComponents에서 premise, subpremise 찾기
+    let buildingName: string | null = null;
+    if (firstPlace.addressComponents) {
+      for (const comp of firstPlace.addressComponents) {
+        if (comp.types?.includes("premise") || comp.types?.includes("subpremise") || comp.types?.includes("establishment")) {
+          buildingName = comp.longText || comp.shortText || null;
+          break;
+        }
+      }
+    }
 
     // priceRange가 있으면 그것을 사용, 없으면 priceLevel로 변환
     let priceRange: string | null = null;
@@ -87,11 +100,12 @@ async function fetchPriceInfo(restaurantName: string, location: string): Promise
       placeId: firstPlace.id || null,
       priceLevel,
       priceRange,
-      phoneNumber
+      phoneNumber,
+      buildingName
     };
   } catch (error) {
     console.error(`Error fetching price info for ${restaurantName}:`, error);
-    return { placeId: null, priceLevel: null, priceRange: null, phoneNumber: null };
+    return { placeId: null, priceLevel: null, priceRange: null, phoneNumber: null, buildingName: null };
   }
 }
 
@@ -109,7 +123,8 @@ export async function GET() {
         restaurantName: p.restaurantName,
         priceLevel: p.priceLevel,
         priceRange: p.priceRange,
-        phoneNumber: p.phoneNumber
+        phoneNumber: p.phoneNumber,
+        buildingName: p.buildingName
       }))
     });
   } catch (error) {
@@ -154,7 +169,7 @@ export async function POST(request: NextRequest) {
       toProcess = restaurants.filter(r => !existingNames.has(r.이름));
     }
 
-    const results: { name: string; priceRange: string | null; phoneNumber: string | null; status: string }[] = [];
+    const results: { name: string; priceRange: string | null; phoneNumber: string | null; buildingName: string | null; status: string }[] = [];
     let processed = 0;
 
     // 배치 처리 (API 제한 고려, 한 번에 5개씩)
@@ -163,7 +178,7 @@ export async function POST(request: NextRequest) {
       const batch = toProcess.slice(i, i + batchSize);
 
       await Promise.all(batch.map(async (restaurant) => {
-        const { placeId, priceLevel, priceRange, phoneNumber } = await fetchPriceInfo(
+        const { placeId, priceLevel, priceRange, phoneNumber, buildingName } = await fetchPriceInfo(
           restaurant.이름,
           restaurant.위치
         );
@@ -177,6 +192,7 @@ export async function POST(request: NextRequest) {
               priceLevel,
               priceRange,
               phoneNumber,
+              buildingName,
               updatedAt: new Date()
             }
           },
@@ -187,6 +203,7 @@ export async function POST(request: NextRequest) {
           name: restaurant.이름,
           priceRange,
           phoneNumber,
+          buildingName,
           status: "saved"
         });
         processed++;

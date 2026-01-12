@@ -18,13 +18,13 @@ interface RestaurantDetailProps {
 // 이미지 URL 캐시
 const imageCache: Record<string, string> = {};
 
-// 가격대/전화번호 캐시
-const getRestaurantInfoCache = (): Record<string, { priceRange: string | null; phoneNumber: string | null }> => {
+// 가격대/전화번호/건물명 캐시
+const getRestaurantInfoCache = (): Record<string, { priceRange: string | null; phoneNumber: string | null; buildingName: string | null }> => {
   if (typeof window !== "undefined") {
-    if (!(window as unknown as { __restaurantInfoCache?: Record<string, { priceRange: string | null; phoneNumber: string | null }> }).__restaurantInfoCache) {
-      (window as unknown as { __restaurantInfoCache: Record<string, { priceRange: string | null; phoneNumber: string | null }> }).__restaurantInfoCache = {};
+    if (!(window as unknown as { __restaurantInfoCache?: Record<string, { priceRange: string | null; phoneNumber: string | null; buildingName: string | null }> }).__restaurantInfoCache) {
+      (window as unknown as { __restaurantInfoCache: Record<string, { priceRange: string | null; phoneNumber: string | null; buildingName: string | null }> }).__restaurantInfoCache = {};
     }
-    return (window as unknown as { __restaurantInfoCache: Record<string, { priceRange: string | null; phoneNumber: string | null }> }).__restaurantInfoCache;
+    return (window as unknown as { __restaurantInfoCache: Record<string, { priceRange: string | null; phoneNumber: string | null; buildingName: string | null }> }).__restaurantInfoCache;
   }
   return {};
 };
@@ -38,7 +38,8 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
   const infoCache = getRestaurantInfoCache();
   const [priceRange, setPriceRange] = useState<string | null>(restaurant.가격대 || infoCache[cacheKey]?.priceRange || null);
   const [phoneNumber, setPhoneNumber] = useState<string | null>(restaurant.전화번호 || infoCache[cacheKey]?.phoneNumber || null);
-  const [infoLoaded, setInfoLoaded] = useState(cacheKey in infoCache || !!restaurant.가격대 || !!restaurant.전화번호);
+  const [buildingName, setBuildingName] = useState<string | null>(restaurant.빌딩 || infoCache[cacheKey]?.buildingName || null);
+  const [infoLoaded, setInfoLoaded] = useState(cacheKey in infoCache || !!restaurant.가격대 || !!restaurant.전화번호 || !!restaurant.빌딩);
 
   useEffect(() => {
     // 캐시에 있으면 바로 사용
@@ -71,12 +72,13 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
     fetchImage();
   }, [restaurant.이름, restaurant.위치, fallbackUrl, cacheKey]);
 
-  // 가격대/전화번호 정보 가져오기
+  // 가격대/전화번호/건물명 정보 가져오기
   useEffect(() => {
     // 정적 데이터에 있으면 사용
-    if (restaurant.가격대 || restaurant.전화번호) {
+    if (restaurant.가격대 || restaurant.전화번호 || restaurant.빌딩) {
       setPriceRange(restaurant.가격대 || null);
       setPhoneNumber(restaurant.전화번호 || null);
+      setBuildingName(restaurant.빌딩 || null);
       setInfoLoaded(true);
       return;
     }
@@ -85,6 +87,7 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
     if (cacheKey in infoCache) {
       setPriceRange(infoCache[cacheKey].priceRange);
       setPhoneNumber(infoCache[cacheKey].phoneNumber);
+      setBuildingName(infoCache[cacheKey].buildingName);
       setInfoLoaded(true);
       return;
     }
@@ -95,19 +98,21 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
         const data = await res.json();
         const fetchedPrice = data.priceRange || null;
         const fetchedPhone = data.phoneNumber || null;
-        infoCache[cacheKey] = { priceRange: fetchedPrice, phoneNumber: fetchedPhone };
+        const fetchedBuilding = data.buildingName || null;
+        infoCache[cacheKey] = { priceRange: fetchedPrice, phoneNumber: fetchedPhone, buildingName: fetchedBuilding };
         setPriceRange(fetchedPrice);
         setPhoneNumber(fetchedPhone);
+        setBuildingName(fetchedBuilding);
       } catch (error) {
         console.error("Error fetching restaurant info:", error);
-        infoCache[cacheKey] = { priceRange: null, phoneNumber: null };
+        infoCache[cacheKey] = { priceRange: null, phoneNumber: null, buildingName: null };
       } finally {
         setInfoLoaded(true);
       }
     };
 
     fetchRestaurantInfo();
-  }, [restaurant.이름, restaurant.가격대, restaurant.전화번호, cacheKey, infoCache]);
+  }, [restaurant.이름, restaurant.가격대, restaurant.전화번호, restaurant.빌딩, cacheKey, infoCache]);
 
   const handleMapClick = () => {
     window.open(getGoogleMapsLink(restaurant.이름, restaurant.위치), "_blank");
@@ -155,10 +160,10 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
                   {restaurant.야시장}
                 </Badge>
               )}
-              {restaurant.빌딩 && (
+              {(restaurant.빌딩 || buildingName) && (
                 <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">
                   <Building2 className="h-3 w-3 mr-1" />
-                  {restaurant.빌딩}
+                  {restaurant.빌딩 || buildingName}
                 </Badge>
               )}
             </div>
