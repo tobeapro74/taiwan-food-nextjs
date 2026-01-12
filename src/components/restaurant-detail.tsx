@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MapPin, Info, Map, Phone, Banknote, Building2 } from "lucide-react";
 import { Restaurant, getGoogleMapsLink, getUnsplashImage } from "@/data/taiwan-food";
 import { ReviewSection } from "@/components/review-section";
+import { GoogleReviews } from "@/components/google-reviews";
 import Image from "next/image";
 
 interface RestaurantDetailProps {
@@ -216,7 +217,10 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
           </CardContent>
         </Card>
 
-        {/* 리뷰 섹션 */}
+        {/* Google 리뷰 섹션 */}
+        <GoogleReviews restaurantName={restaurant.이름} />
+
+        {/* 사용자 리뷰 섹션 */}
         <ReviewSection
           restaurantId={restaurant.이름}
           restaurantName={restaurant.이름}
