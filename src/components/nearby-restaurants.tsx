@@ -67,11 +67,11 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
       {/* 헤더 */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-        <div className="flex items-center gap-3">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 py-2 shadow-sm">
+        <div className="flex items-center gap-2">
           <button
             onClick={onBack}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+            className="h-11 w-11 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors bg-black/5 dark:bg-white/10"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>

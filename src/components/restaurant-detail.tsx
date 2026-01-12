@@ -119,9 +119,13 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
   return (
     <div className="min-h-screen pb-20">
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center gap-3 p-4">
-          <Button variant="ghost" size="icon" onClick={onBack}>
+      <div className="sticky top-0 z-10 bg-background border-b border-border shadow-sm">
+        <div className="flex items-center gap-2 p-3">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="font-semibold truncate">{restaurant.이름}</h1>
