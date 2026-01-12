@@ -70,14 +70,21 @@ src/
 │   ├── restaurant-card.tsx     # 맛집 카드
 │   ├── restaurant-detail.tsx   # 맛집 상세
 │   ├── restaurant-list.tsx     # 맛집 목록
+│   ├── nearby-restaurants.tsx  # 주변 맛집 찾기
+│   ├── google-reviews.tsx      # Google 리뷰 섹션
 │   ├── review-modal.tsx        # 리뷰 작성 모달
 │   └── review-section.tsx      # 리뷰 목록 섹션
+│
+├── hooks/
+│   ├── useSwipeBack.ts         # iOS 스타일 스와이프 뒤로가기
+│   └── useUserLocation.ts      # 사용자 위치 관리
 │
 ├── data/
 │   └── taiwan-food.ts          # 맛집 정적 데이터 + 헬퍼 함수
 │
 └── lib/
     ├── mongodb.ts              # MongoDB 연결
+    ├── geo-utils.ts            # 위치/거리 계산 유틸리티
     ├── types.ts                # TypeScript 타입 정의
     └── utils.ts                # 유틸리티 (cn 함수)
 ```
@@ -130,11 +137,11 @@ taiwan-food.ts ──► getRestaurantsByCategory() ──► 컴포넌트
 
 ```typescript
 // 뷰 상태
-currentView: "home" | "list" | "detail"
-previousView: "home" | "list"  // 뒤로가기 추적용
+currentView: "home" | "list" | "detail" | "nearby"
+previousView: "home" | "list" | "nearby"  // 뒤로가기 추적용
 
 // 탭 상태
-activeTab: "home" | "category" | "market" | "tour" | "places"
+activeTab: "home" | "category" | "market" | "tour" | "places" | "nearby"
 
 // 시트(모달) 상태
 categorySheetOpen: boolean
@@ -221,13 +228,30 @@ page.tsx (상태 관리)
 카테고리 ─► 목록 ─► 상세
 야시장 ───► 목록 ─► 상세
 도심투어 ─► 목록 ─► 상세
-갈만한곳 ─► 목록 ─► 상세
+맛집알리미 ─► 상세
 ```
 
 ### 뒤로가기 로직
 - `previousView` 상태로 이전 화면 추적
 - 홈 → 상세: 뒤로가기 시 홈으로
 - 목록 → 상세: 뒤로가기 시 목록으로
+- 맛집알리미 → 상세: 뒤로가기 시 맛집알리미로
+
+### 스와이프 뒤로가기 (useSwipeBack)
+```
+┌─────────────────────────────────────┐
+│  화면 왼쪽 가장자리 (30px)에서       │
+│  터치 시작                          │
+│                                     │
+│  ──────► 오른쪽으로 스와이프        │
+│                                     │
+│  페이지 전체 슬라이드 + 오버레이     │
+│                                     │
+│  threshold(100px) 초과 시           │
+│  → 뒤로가기 실행                    │
+│  미만 시 → 원위치 복귀              │
+└─────────────────────────────────────┘
+```
 
 ## 배포 아키텍처
 

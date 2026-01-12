@@ -268,3 +268,98 @@ Flexbox 자식 요소는 기본적으로 `min-height: auto`가 적용됨. 이로
 - 카테고리 11개(전체, 면류, 밥류, 만두, 우육탕, 훠궈, 디저트, 길거리, 카페, 공차, 까르푸) 모두 표시
 - 모달 내에서 스크롤하여 모든 옵션 선택 가능
 - 화면의 70% 이상 차지하지 않음
+
+---
+
+## 6. iOS Safe Area 헤더 겹침 문제
+
+### 문제 상황
+아이폰에서 서브페이지(상세, 목록, 맛집알리미) 헤더가 시간 표시/노치/다이나믹 아일랜드와 겹치는 현상
+
+### 원인 분석
+- 서브페이지 헤더에 `safe-area-top` 클래스가 적용되지 않음
+- iOS는 상단에 시스템 UI 영역이 있어 콘텐츠가 가려짐
+
+### 해결 방안
+```tsx
+// 모든 서브페이지 헤더에 safe-area-top 클래스 추가
+<div className="sticky top-0 z-10 bg-background border-b shadow-sm safe-area-top">
+  <div className="flex items-center gap-2 p-3">
+    {/* 뒤로가기 버튼 및 제목 */}
+  </div>
+</div>
+```
+
+```css
+/* globals.css */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+```
+
+**적용 파일**:
+- `restaurant-detail.tsx`
+- `restaurant-list.tsx`
+- `nearby-restaurants.tsx`
+
+---
+
+## 7. 뒤로가기 버튼 터치 영역 문제
+
+### 문제 상황
+모바일에서 뒤로가기 버튼 클릭이 잘 안 되는 현상
+
+### 원인 분석
+- 버튼 크기가 터치에 최적화되지 않음 (기본 40x40px)
+- Apple Human Interface Guidelines 권장 최소 터치 영역: 44x44px
+
+### 해결 방안
+```tsx
+<Button
+  variant="ghost"
+  onClick={onBack}
+  className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-black/10 hover:bg-black/20"
+>
+  <ArrowLeft className="h-5 w-5" />
+</Button>
+```
+
+**핵심 포인트**:
+- `min-w-[44px] min-h-[44px]`: 최소 터치 영역 보장
+- `bg-black/10`: 반투명 배경으로 이미지 위에서도 가시성 확보
+- `rounded-full`: 원형 버튼으로 터치 영역 명확화
+
+---
+
+## 8. 스와이프 뒤로가기 구현
+
+### 구현 목표
+iOS Safari의 스와이프 뒤로가기처럼 페이지 전체가 슬라이드되는 효과
+
+### 구현 방법
+```typescript
+// hooks/useSwipeBack.ts
+
+// 1. 터치 시작 감지 (화면 왼쪽 30px 영역)
+if (touch.clientX <= edgeWidth) {
+  isSwiping.current = true;
+}
+
+// 2. 터치 이동 시 페이지 슬라이드
+const translateX = Math.min(progress, screenWidth);
+pageContent.style.transform = `translateX(${translateX}px)`;
+
+// 3. 터치 종료 시 판정
+if (deltaX > threshold) {
+  // 뒤로가기 실행 + 페이지 밀어내기 애니메이션
+  animatePageOut(screenWidth, onSwipeBack);
+} else {
+  // 원위치 복귀
+  slidePageContent(0, false, screenWidth);
+}
+```
+
+**시각 효과**:
+- 페이지 왼쪽에 그림자 효과
+- 배경 오버레이 (스와이프할수록 밝아짐)
+- 부드러운 ease-out 애니메이션

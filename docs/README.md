@@ -43,12 +43,18 @@ src/
 │   ├── restaurant-card.tsx # 맛집 카드
 │   ├── restaurant-detail.tsx # 맛집 상세 페이지
 │   ├── restaurant-list.tsx # 맛집 목록
+│   ├── nearby-restaurants.tsx # 주변 맛집 찾기
+│   ├── google-reviews.tsx  # Google 리뷰 섹션
 │   ├── review-modal.tsx    # 리뷰 작성 모달
 │   └── review-section.tsx  # 리뷰 목록 섹션
+├── hooks/
+│   ├── useSwipeBack.ts     # iOS 스타일 스와이프 뒤로가기
+│   └── useUserLocation.ts  # 사용자 위치 관리
 ├── data/
 │   └── taiwan-food.ts      # 맛집 정적 데이터
 └── lib/
     ├── db.ts               # MongoDB 연결
+    ├── geo-utils.ts        # 위치/거리 계산 유틸리티
     └── utils.ts            # 유틸리티 함수
 ```
 
@@ -101,6 +107,16 @@ git push
 
 ## 관련 문서
 
-- [트러블슈팅 가이드](./TROUBLESHOOTING.md)
-- [기능 명세서](./FEATURES.md)
-- [API 명세서](./API.md)
+- [기능 명세서](./FEATURES.md) - 전체 기능 목록
+- [아키텍처 문서](./ARCHITECTURE.md) - 시스템 구조 및 데이터 흐름
+- [API 명세서](./API.md) - REST API 엔드포인트
+- [트러블슈팅 가이드](./TROUBLESHOOTING.md) - 문제 해결 가이드
+
+## 주요 기능
+
+- 카테고리/야시장/도심투어별 맛집 검색
+- 주변 맛집 찾기 (GPS/주소 기반)
+- Google 리뷰 연동
+- 사용자 리뷰 작성 (사진 첨부)
+- iOS 스타일 스와이프 뒤로가기
+- PWA 지원 (홈 화면 추가)

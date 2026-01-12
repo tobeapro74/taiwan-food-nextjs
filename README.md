@@ -11,15 +11,27 @@
 - 실시간 검색 자동완성
 - 인기 맛집 추천
 
+### 주변 맛집 찾기 (맛집알리미)
+- GPS 기반 현재 위치 탐지
+- 반경 선택 (500m ~ 5km)
+- 주소 검색으로 위치 설정
+- 거리순 맛집 정렬
+
 ### 리뷰 시스템
 - 별점 리뷰 작성 (음식, 서비스, 분위기)
 - 사진 첨부 기능 (Cloudinary 연동)
+- Google 리뷰 연동
 - 리뷰 수정/삭제
 
 ### 회원 시스템
 - 이메일 기반 회원가입/로그인
 - JWT 토큰 인증 (7일 유효)
 - 비밀번호 변경 기능
+
+### UX 개선
+- iOS 스타일 스와이프 뒤로가기
+- 터치 최적화 뒤로가기 버튼 (44px 터치 영역)
+- iOS Safe Area 지원 (노치/다이나믹 아일랜드)
 
 ## 기술 스택
 
@@ -53,13 +65,19 @@ src/
 │   ├── restaurant-card.tsx     # 맛집 카드 컴포넌트
 │   ├── restaurant-detail.tsx   # 맛집 상세 페이지
 │   ├── restaurant-list.tsx     # 맛집 목록 페이지
+│   ├── nearby-restaurants.tsx  # 주변 맛집 찾기 (맛집알리미)
+│   ├── google-reviews.tsx      # Google 리뷰 섹션
 │   ├── review-section.tsx      # 리뷰 섹션 컴포넌트
 │   ├── category-sheet.tsx      # 카테고리 선택 시트
 │   └── bottom-nav.tsx          # 하단 네비게이션
+├── hooks/
+│   ├── useSwipeBack.ts         # iOS 스타일 스와이프 뒤로가기
+│   └── useUserLocation.ts      # 사용자 위치 관리
 ├── data/
 │   └── taiwan-food.ts          # 맛집 데이터
 └── lib/
     ├── mongodb.ts              # MongoDB 연결
+    ├── geo-utils.ts            # 위치/거리 계산 유틸리티
     ├── types.ts                # TypeScript 타입 정의
     └── utils.ts                # 유틸리티 함수
 ```
