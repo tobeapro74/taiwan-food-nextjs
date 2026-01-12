@@ -114,9 +114,7 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
     fetchRestaurantInfo();
   }, [restaurant.이름, restaurant.가격대, restaurant.전화번호, restaurant.빌딩, cacheKey, infoCache]);
 
-  const handleMapClick = () => {
-    window.open(getGoogleMapsLink(restaurant.이름, restaurant.위치), "_blank");
-  };
+  const googleMapsUrl = getGoogleMapsLink(restaurant.이름, restaurant.위치);
 
   return (
     <div className="min-h-screen pb-20">
@@ -212,13 +210,15 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
               )}
             </div>
 
-            <Button
-              className="w-full h-12 text-base mt-4"
-              onClick={handleMapClick}
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full h-12 text-base mt-4 inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
             >
-              <Map className="h-5 w-5 mr-2" />
+              <Map className="h-5 w-5" />
               구글 지도에서 보기
-            </Button>
+            </a>
           </CardContent>
         </Card>
 
