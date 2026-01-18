@@ -196,6 +196,18 @@ export default function Home() {
       const data = await res.json();
 
       if (data.success && data.data?.length > 0) {
+        // 가격대 변환 함수
+        const getPriceRangeText = (level?: number): string | undefined => {
+          if (level === undefined) return undefined;
+          const priceMap: Record<number, string> = {
+            1: "저렴 (NT$100 이하)",
+            2: "보통 (NT$100~300)",
+            3: "비쌈 (NT$300~600)",
+            4: "매우 비쌈 (NT$600 이상)",
+          };
+          return priceMap[level];
+        };
+
         // CustomRestaurant를 Restaurant 형식으로 변환
         const customRestaurants: Restaurant[] = data.data.map((item: {
           name: string;
@@ -205,6 +217,7 @@ export default function Home() {
           google_reviews_count?: number;
           coordinates?: { lat: number; lng: number };
           price_level?: number;
+          phone_number?: string;
         }) => ({
           이름: item.name,
           위치: item.address,
@@ -212,6 +225,8 @@ export default function Home() {
           평점: item.google_rating,
           리뷰수: item.google_reviews_count,
           coordinates: item.coordinates,
+          전화번호: item.phone_number,
+          가격대: getPriceRangeText(item.price_level),
         }));
 
         // 정적 데이터와 병합 (사용자 등록 맛집을 앞에 배치)
