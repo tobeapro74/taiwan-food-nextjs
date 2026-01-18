@@ -170,6 +170,81 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// 맛집 카테고리 수정 (등록자 또는 관리자만)
+export async function PATCH(request: NextRequest) {
+  try {
+    // JWT 토큰 확인
+    const token = request.cookies.get('auth_token')?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: '로그인이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    // 토큰 검증
+    let decoded: JWTPayload;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: '인증이 만료되었습니다. 다시 로그인해주세요.' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { place_id, category } = body;
+
+    if (!place_id || !category) {
+      return NextResponse.json(
+        { success: false, error: 'place_id와 category가 필요합니다.' },
+        { status: 400 }
+      );
+    }
+
+    const db = await connectToDatabase();
+    const collection = db.collection<CustomRestaurant>('custom_restaurants');
+
+    // 맛집 찾기
+    const restaurant = await collection.findOne({ place_id });
+
+    if (!restaurant) {
+      return NextResponse.json(
+        { success: false, error: '맛집을 찾을 수 없습니다.' },
+        { status: 404 }
+      );
+    }
+
+    // 권한 확인 (등록자 또는 관리자만 수정 가능)
+    if (restaurant.registered_by !== decoded.userId && !decoded.is_admin) {
+      return NextResponse.json(
+        { success: false, error: '수정 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
+
+    // 카테고리 업데이트
+    await collection.updateOne(
+      { place_id },
+      { $set: { category, updated_at: new Date().toISOString() } }
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: '카테고리가 수정되었습니다.',
+      data: { place_id, category },
+    });
+  } catch (error) {
+    console.error('맛집 카테고리 수정 오류:', error);
+    return NextResponse.json(
+      { success: false, error: '카테고리 수정 중 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
 // 맛집 삭제 (등록자 본인만)
 export async function DELETE(request: NextRequest) {
   try {

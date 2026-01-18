@@ -43,7 +43,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
 
   // 모든 맛집 데이터를 하나의 배열로 합침
   const allRestaurants = useMemo(() => {
-    const categories = ["면류", "만두", "밥류", "디저트", "길거리음식", "카페", "훠궈", "공차", "까르푸"] as const;
+    const categories = ["면류", "만두", "밥류", "탕류", "디저트", "길거리음식", "카페", "까르푸"] as const;
     const restaurants: Restaurant[] = [];
 
     categories.forEach((category) => {

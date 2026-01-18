@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { X, LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, LogIn, UserPlus, Eye, EyeOff, Mail, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface AuthModalProps {
@@ -23,7 +23,92 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // 이메일 인증 관련 상태
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+  const [codeSentMessage, setCodeSentMessage] = useState("");
+  const [countdown, setCountdown] = useState(0);
+
+  // 카운트다운 타이머
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
   if (!isOpen) return null;
+
+  // 인증 코드 발송
+  const handleSendVerification = async () => {
+    if (!email) {
+      setError("이메일을 입력해주세요.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("올바른 이메일 형식이 아닙니다.");
+      return;
+    }
+
+    setIsSendingCode(true);
+    setError("");
+    setCodeSentMessage("");
+
+    try {
+      const res = await fetch("/api/auth/send-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setCodeSentMessage("인증 코드가 발송되었습니다. 이메일을 확인해주세요.");
+        setCountdown(60); // 60초 후 재발송 가능
+      } else {
+        setError(data.error || "인증 코드 발송에 실패했습니다.");
+      }
+    } catch {
+      setError("인증 코드 발송 중 오류가 발생했습니다.");
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  // 인증 코드 확인
+  const handleVerifyCode = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      setError("6자리 인증 코드를 입력해주세요.");
+      return;
+    }
+
+    setIsVerifyingCode(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: verificationCode }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setIsEmailVerified(true);
+        setCodeSentMessage("");
+      } else {
+        setError(data.error || "인증 코드가 올바르지 않습니다.");
+      }
+    } catch {
+      setError("인증 확인 중 오류가 발생했습니다.");
+    } finally {
+      setIsVerifyingCode(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +122,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
     } else {
       if (!name || !email || !password) {
         setError("모든 필드를 입력해주세요.");
+        return;
+      }
+      if (!isEmailVerified) {
+        setError("이메일 인증이 필요합니다.");
         return;
       }
       if (password.length < 6) {
@@ -109,6 +198,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
     setEmail("");
     setPassword("");
     setConfirmPassword("");
+    setVerificationCode("");
+    setIsEmailVerified(false);
+    setCodeSentMessage("");
+    setCountdown(0);
     setError("");
     setMode("login");
   };
@@ -120,9 +213,9 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-background w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in">
+      <div className="bg-background w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in max-h-[90vh] overflow-y-auto">
         {/* 헤더 */}
-        <div className="bg-primary px-4 py-4 flex items-center justify-between">
+        <div className="bg-primary px-4 py-4 flex items-center justify-between sticky top-0">
           <h2 className="text-lg font-semibold text-primary-foreground">
             {mode === "login" ? "로그인" : "회원가입"}
           </h2>
@@ -154,6 +247,14 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
             </div>
           )}
 
+          {/* 성공 메시지 */}
+          {codeSentMessage && (
+            <div className="bg-green-500/10 text-green-600 text-sm p-3 rounded-lg flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              {codeSentMessage}
+            </div>
+          )}
+
           {/* 이름 입력 (회원가입 시) */}
           {mode === "register" && (
             <div>
@@ -172,15 +273,76 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
           {/* 이메일 입력 */}
           <div>
             <label className="block text-sm font-medium mb-1.5">이메일</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="이메일을 입력하세요"
-              className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
-              autoComplete="email"
-            />
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (mode === "register") {
+                    setIsEmailVerified(false);
+                    setVerificationCode("");
+                    setCodeSentMessage("");
+                  }
+                }}
+                placeholder="이메일을 입력하세요"
+                className="flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
+                autoComplete="email"
+                disabled={mode === "register" && isEmailVerified}
+              />
+              {mode === "register" && !isEmailVerified && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSendVerification}
+                  disabled={isSendingCode || countdown > 0}
+                  className="whitespace-nowrap px-3"
+                >
+                  {isSendingCode ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : countdown > 0 ? (
+                    `${countdown}초`
+                  ) : (
+                    "인증"
+                  )}
+                </Button>
+              )}
+              {mode === "register" && isEmailVerified && (
+                <div className="flex items-center px-3 text-green-600">
+                  <CheckCircle className="w-5 h-5" />
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* 인증 코드 입력 (회원가입 시, 코드 발송 후) */}
+          {mode === "register" && !isEmailVerified && codeSentMessage && (
+            <div>
+              <label className="block text-sm font-medium mb-1.5">인증 코드 (6자리)</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="인증 코드 입력"
+                  className="flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background text-center tracking-widest font-mono text-lg"
+                  maxLength={6}
+                />
+                <Button
+                  type="button"
+                  onClick={handleVerifyCode}
+                  disabled={isVerifyingCode || verificationCode.length !== 6}
+                  className="whitespace-nowrap px-4"
+                >
+                  {isVerifyingCode ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    "확인"
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* 비밀번호 입력 */}
           <div>
@@ -233,7 +395,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
           {/* 제출 버튼 */}
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || (mode === "register" && !isEmailVerified)}
             className="w-full py-6 text-base"
           >
             {isLoading
@@ -253,6 +415,9 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
                   onClick={() => {
                     setMode("register");
                     setError("");
+                    setIsEmailVerified(false);
+                    setVerificationCode("");
+                    setCodeSentMessage("");
                   }}
                   className="text-primary font-medium hover:underline"
                 >
@@ -267,6 +432,9 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
                   onClick={() => {
                     setMode("login");
                     setError("");
+                    setIsEmailVerified(false);
+                    setVerificationCode("");
+                    setCodeSentMessage("");
                   }}
                   className="text-primary font-medium hover:underline"
                 >

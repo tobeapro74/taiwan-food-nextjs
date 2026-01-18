@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { User, LogOut, Search, X, MapPin, ChevronDown, Key } from "lucide-react";
+import { User, LogOut, Search, X, MapPin, ChevronDown, Key, UserMinus } from "lucide-react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -14,6 +14,7 @@ import { AuthModal } from "@/components/auth-modal";
 import { ChangePasswordModal } from "@/components/change-password-modal";
 import { NearbyRestaurants } from "@/components/nearby-restaurants";
 import { AddRestaurantModal } from "@/components/add-restaurant-modal";
+import { DeleteAccountModal } from "@/components/delete-account-modal";
 import {
   Restaurant,
   categories,
@@ -68,11 +69,15 @@ export default function Home() {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
+  const [deleteAccountModalOpen, setDeleteAccountModalOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   // 맛집 등록 모달 상태
   const [addRestaurantModalOpen, setAddRestaurantModalOpen] = useState(false);
+
+  // 실시간 평점 상태
+  const [liveRatings, setLiveRatings] = useState<Record<string, { rating: number | null; userRatingsTotal: number | null }>>({});
 
   // 로그인 상태 확인
   useEffect(() => {
@@ -114,15 +119,68 @@ export default function Home() {
     }
   };
 
-  // 인기 맛집 (카테고리별 최고 평점 맛집)
-  const popularRestaurants = useMemo(() => {
+  // 인기 맛집 (카테고리별 최고 평점 맛집) - 기본 데이터
+  const basePopularRestaurants = useMemo(() => {
     return getPopularRestaurants();
   }, []);
 
-  // 야시장별 맛집
-  const marketRestaurants = useMemo(() => {
-    return getRestaurantsByMarket(selectedMarket).slice(0, 6);
+  // 야시장별 맛집 - 기본 데이터
+  const baseMarketRestaurants = useMemo(() => {
+    return getRestaurantsByMarket(selectedMarket);
   }, [selectedMarket]);
+
+  // 실시간 평점 조회
+  useEffect(() => {
+    const fetchLiveRatings = async () => {
+      // 인기 맛집 + 야시장 맛집 이름 수집
+      const names = [
+        ...basePopularRestaurants.map(r => r.이름),
+        ...baseMarketRestaurants.map(r => r.이름)
+      ];
+      const uniqueNames = [...new Set(names)];
+
+      if (uniqueNames.length === 0) return;
+
+      try {
+        const res = await fetch("/api/ratings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ names: uniqueNames })
+        });
+        const data = await res.json();
+        if (data.ratings) {
+          setLiveRatings(data.ratings);
+        }
+      } catch (error) {
+        console.error("Failed to fetch live ratings:", error);
+      }
+    };
+
+    fetchLiveRatings();
+  }, [basePopularRestaurants, baseMarketRestaurants]);
+
+  // 실시간 평점 적용된 인기 맛집 (평점 높은 순 정렬)
+  const popularRestaurants = useMemo(() => {
+    return basePopularRestaurants
+      .map(r => ({
+        ...r,
+        평점: liveRatings[r.이름]?.rating ?? r.평점,
+        리뷰수: liveRatings[r.이름]?.userRatingsTotal ?? r.리뷰수
+      }))
+      .sort((a, b) => (b.평점 || 0) - (a.평점 || 0));
+  }, [basePopularRestaurants, liveRatings]);
+
+  // 실시간 평점 적용된 야시장별 맛집 (평점 높은 순 정렬, 상위 6개)
+  const marketRestaurants = useMemo(() => {
+    return baseMarketRestaurants
+      .map(r => ({
+        ...r,
+        평점: liveRatings[r.이름]?.rating ?? r.평점,
+        리뷰수: liveRatings[r.이름]?.userRatingsTotal ?? r.리뷰수
+      }))
+      .sort((a, b) => (b.평점 || 0) - (a.평점 || 0))
+      .slice(0, 6);
+  }, [baseMarketRestaurants, liveRatings]);
 
   // 검색 처리
   const handleSearch = useCallback((query: string) => {
@@ -161,10 +219,10 @@ export default function Home() {
       setCurrentView("nearby");
       setActiveTab("nearby");
     } else if (tab === "add") {
-      // 맛집 등록 - 로그인 필요
+      // 맛집 등록 - 관리자 또는 박병철만 가능
       if (!user) {
         setAuthModalOpen(true);
-      } else {
+      } else if (user.is_admin || user.name === "박병철") {
         setAddRestaurantModalOpen(true);
       }
     } else if (tab === "category") {
@@ -208,16 +266,19 @@ export default function Home() {
           return priceMap[level];
         };
 
-        // CustomRestaurant를 Restaurant 형식으로 변환
+        // CustomRestaurant를 Restaurant 형식으로 변환 (place_id, category, registered_by 포함)
         const customRestaurants: Restaurant[] = data.data.map((item: {
+          place_id: string;
           name: string;
           address: string;
+          category: string;
           feature?: string;
           google_rating?: number;
           google_reviews_count?: number;
           coordinates?: { lat: number; lng: number };
           price_level?: number;
           phone_number?: string;
+          registered_by?: number;
         }) => ({
           이름: item.name,
           위치: item.address,
@@ -227,7 +288,13 @@ export default function Home() {
           coordinates: item.coordinates,
           전화번호: item.phone_number,
           가격대: getPriceRangeText(item.price_level),
+          // 사용자 등록 맛집 추가 정보
+          place_id: item.place_id,
+          category: item.category,
+          registered_by: item.registered_by,
         }));
+
+        console.log("Custom restaurants:", customRestaurants.map(r => ({ name: r.이름, place_id: r.place_id })));
 
         // 정적 데이터와 병합 (사용자 등록 맛집을 앞에 배치)
         setListItems([...customRestaurants, ...staticRestaurants]);
@@ -263,6 +330,7 @@ export default function Home() {
 
   // 맛집 선택
   const handleRestaurantSelect = (restaurant: Restaurant) => {
+    console.log("Selected restaurant:", { name: restaurant.이름, place_id: restaurant.place_id, category: restaurant.category });
     setPreviousView(currentView); // 현재 화면 저장
     setSelectedRestaurant(restaurant);
     setCurrentView("detail");
@@ -300,8 +368,8 @@ export default function Home() {
   if (currentView === "detail" && selectedRestaurant) {
     return (
       <>
-        <RestaurantDetail restaurant={selectedRestaurant} onBack={handleBack} />
-        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+        <RestaurantDetail restaurant={selectedRestaurant} onBack={handleBack} user={user} />
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
         <CategorySheet
           open={categorySheetOpen}
           onOpenChange={setCategorySheetOpen}
@@ -348,7 +416,7 @@ export default function Home() {
             setActiveTab("home");
           }}
         />
-        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
         <CategorySheet
           open={categorySheetOpen}
           onOpenChange={setCategorySheetOpen}
@@ -394,7 +462,7 @@ export default function Home() {
           onBack={handleBack}
           onSelect={handleRestaurantSelect}
         />
-        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
         <CategorySheet
           open={categorySheetOpen}
           onOpenChange={setCategorySheetOpen}
@@ -435,9 +503,9 @@ export default function Home() {
     <>
       <div className="min-h-screen pb-20">
         {/* 헤더 */}
-        <header className="bg-gradient-to-br from-orange-500 via-red-500 to-rose-600 safe-area-top relative overflow-hidden">
+        <header className="bg-gradient-to-br from-orange-500 via-red-500 to-rose-600 safe-area-top relative z-20">
           {/* 배경 장식 */}
-          <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute -top-4 -left-4 w-24 h-24 bg-white/10 rounded-full blur-xl" />
             <div className="absolute top-2 right-10 w-16 h-16 bg-yellow-300/20 rounded-full blur-lg" />
             <div className="absolute -bottom-2 right-1/4 w-20 h-20 bg-white/5 rounded-full blur-xl" />
@@ -468,7 +536,7 @@ export default function Home() {
                   <ChevronDown className="w-3 h-3 absolute bottom-0 right-0" />
                 </button>
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-12 bg-card rounded-lg shadow-lg border border-border min-w-[160px] py-1 z-50">
+                  <div className="absolute right-0 top-12 bg-card rounded-lg shadow-xl border border-border min-w-[160px] py-1 z-[100]">
                     <div className="px-3 py-2 border-b border-border">
                       <p className="text-sm font-medium text-foreground">{user.name}님</p>
                     </div>
@@ -487,10 +555,21 @@ export default function Home() {
                         handleLogout();
                         setUserMenuOpen(false);
                       }}
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2 text-destructive"
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2"
                     >
                       <LogOut className="w-4 h-4" />
                       로그아웃
+                    </button>
+                    <div className="border-t border-border my-1" />
+                    <button
+                      onClick={() => {
+                        setDeleteAccountModalOpen(true);
+                        setUserMenuOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2 text-destructive"
+                    >
+                      <UserMinus className="w-4 h-4" />
+                      회원탈퇴
                     </button>
                   </div>
                 )}
@@ -658,7 +737,7 @@ export default function Home() {
         </div>
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
 
       {/* 시트들 */}
       <CategorySheet
@@ -694,6 +773,13 @@ export default function Home() {
       <ChangePasswordModal
         isOpen={changePasswordModalOpen}
         onClose={() => setChangePasswordModalOpen(false)}
+      />
+
+      {/* 회원탈퇴 모달 */}
+      <DeleteAccountModal
+        isOpen={deleteAccountModalOpen}
+        onClose={() => setDeleteAccountModalOpen(false)}
+        onSuccess={() => setUser(null)}
       />
 
       {/* 맛집 등록 모달 */}

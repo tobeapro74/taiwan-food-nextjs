@@ -5,24 +5,45 @@ import { cn } from "@/lib/utils";
 
 type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add";
 
+interface User {
+  id: number;
+  name: string;
+  is_admin: boolean;
+}
+
 interface BottomNavProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
+  user?: User | null;
 }
 
 const navItems = [
   { id: "home" as const, label: "홈", icon: Home },
   { id: "nearby" as const, label: "주변맛집", icon: Navigation },
-  { id: "add" as const, label: "등록", icon: PlusCircle },
+  { id: "add" as const, label: "등록", icon: PlusCircle, adminOnly: true },
   { id: "category" as const, label: "카테고리", icon: Grid3X3 },
   { id: "market" as const, label: "야시장", icon: Store },
 ];
 
-export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+// 등록 권한 체크 (관리자 또는 박병철)
+const canAddRestaurant = (user?: User | null): boolean => {
+  if (!user) return false;
+  return user.is_admin || user.name === "박병철";
+};
+
+export function BottomNav({ activeTab, onTabChange, user }: BottomNavProps) {
+  // 권한에 따라 보여줄 메뉴 필터링
+  const visibleItems = navItems.filter((item) => {
+    if (item.adminOnly) {
+      return canAddRestaurant(user);
+    }
+    return true;
+  });
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-bottom z-50">
       <div className="max-w-md mx-auto flex justify-around items-center py-2">
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
 

@@ -4,15 +4,31 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, Info, Map, Phone, Banknote, Building2 } from "lucide-react";
-import { Restaurant, getGoogleMapsLink, getUnsplashImage } from "@/data/taiwan-food";
+import { ArrowLeft, MapPin, Info, Map, Phone, Banknote, Building2, Edit3, Tag } from "lucide-react";
+import { Restaurant, getGoogleMapsLink, getUnsplashImage, categories } from "@/data/taiwan-food";
 import { ReviewSection } from "@/components/review-section";
 import { GoogleReviews } from "@/components/google-reviews";
+import { CategoryEditModal } from "@/components/category-edit-modal";
 import Image from "next/image";
 
+// 사용자 등록 맛집용 확장 인터페이스
+interface ExtendedRestaurant extends Restaurant {
+  place_id?: string;
+  category?: string;
+  registered_by?: number;
+}
+
+interface UserInfo {
+  id: number;
+  name: string;
+  is_admin: boolean;
+}
+
 interface RestaurantDetailProps {
-  restaurant: Restaurant;
+  restaurant: ExtendedRestaurant;
   onBack: () => void;
+  user?: UserInfo | null;
+  onCategoryChange?: (newCategory: string) => void;
 }
 
 // 이미지 URL 캐시
@@ -29,7 +45,7 @@ const getRestaurantInfoCache = (): Record<string, { priceRange: string | null; p
   return {};
 };
 
-export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) {
+export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange }: RestaurantDetailProps) {
   const fallbackUrl = getUnsplashImage(restaurant.이름);
   const [imageUrl, setImageUrl] = useState<string>(fallbackUrl);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,6 +56,24 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
   const [phoneNumber, setPhoneNumber] = useState<string | null>(restaurant.전화번호 || infoCache[cacheKey]?.phoneNumber || null);
   const [buildingName, setBuildingName] = useState<string | null>(restaurant.빌딩 || infoCache[cacheKey]?.buildingName || null);
   const [infoLoaded, setInfoLoaded] = useState(cacheKey in infoCache || !!restaurant.가격대 || !!restaurant.전화번호 || !!restaurant.빌딩);
+
+  // 카테고리 수정 모달 상태
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [currentCategory, setCurrentCategory] = useState(restaurant.category || "");
+
+  // 사용자 등록 맛집인지 확인 (place_id가 있으면 사용자 등록 맛집)
+  const isCustomRestaurant = !!restaurant.place_id;
+
+  // 수정 권한 확인 (등록자 본인 또는 관리자)
+  const canEdit = user && isCustomRestaurant && (
+    user.is_admin || restaurant.registered_by === user.id
+  );
+
+  // 카테고리 아이콘 및 이름 가져오기
+  const getCategoryInfo = (categoryId: string) => {
+    const cat = categories.find(c => c.id === categoryId);
+    return cat ? { icon: cat.icon, name: cat.name } : { icon: "🍽️", name: categoryId };
+  };
 
   useEffect(() => {
     // 캐시에 있으면 바로 사용
@@ -156,7 +190,18 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
             </div>
 
             {/* 배지 영역 */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
+              {/* 카테고리 배지 (사용자 등록 맛집인 경우) */}
+              {isCustomRestaurant && currentCategory && (
+                <Badge
+                  className="bg-primary/10 text-primary border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors"
+                  onClick={() => canEdit && setCategoryModalOpen(true)}
+                >
+                  <Tag className="h-3 w-3 mr-1" />
+                  {getCategoryInfo(currentCategory).icon} {getCategoryInfo(currentCategory).name}
+                  {canEdit && <Edit3 className="h-3 w-3 ml-1" />}
+                </Badge>
+              )}
               {restaurant.야시장 && (
                 <Badge className="bg-accent text-accent-foreground">
                   {restaurant.야시장}
@@ -235,6 +280,21 @@ export function RestaurantDetail({ restaurant, onBack }: RestaurantDetailProps) 
           restaurantName={restaurant.이름}
         />
       </div>
+
+      {/* 카테고리 수정 모달 */}
+      {isCustomRestaurant && restaurant.place_id && (
+        <CategoryEditModal
+          isOpen={categoryModalOpen}
+          onClose={() => setCategoryModalOpen(false)}
+          currentCategory={currentCategory}
+          placeId={restaurant.place_id}
+          restaurantName={restaurant.이름}
+          onSuccess={(newCategory) => {
+            setCurrentCategory(newCategory);
+            onCategoryChange?.(newCategory);
+          }}
+        />
+      )}
     </div>
   );
 }
