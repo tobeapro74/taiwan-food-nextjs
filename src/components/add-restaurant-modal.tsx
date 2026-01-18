@@ -41,10 +41,11 @@ const categories = [
   { id: "면류", name: "면류", icon: "🍜" },
   { id: "만두", name: "만두", icon: "🥟" },
   { id: "밥류", name: "밥류", icon: "🍚" },
+  { id: "탕류", name: "탕류", icon: "🍲" },
   { id: "디저트", name: "디저트", icon: "🧁" },
   { id: "길거리음식", name: "길거리음식", icon: "🍢" },
   { id: "카페", name: "카페", icon: "☕" },
-  { id: "훠궈", name: "훠궈", icon: "🍲" },
+  { id: "훠궈", name: "훠궈", icon: "🫕" },
   { id: "기타", name: "기타", icon: "🍽️" },
 ];
 
