@@ -17,6 +17,9 @@ function formatReviewCount(count: number): string {
 // 이미지 URL 캐시 (세션 동안 유지)
 const imageCache: Record<string, string> = {};
 
+// 구글 평점 캐시 (세션 동안 유지)
+const ratingCache: Record<string, { rating: number | null; reviewsCount: number | null }> = {};
+
 // 카테고리 아이콘 매핑
 const categoryIcons: Record<string, string> = {
   "면류": "🍜",
@@ -39,9 +42,12 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
   const [imageUrl, setImageUrl] = useState<string>(fallbackUrl);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const cacheKey = restaurant.이름;
+  // 구글 평점 상태 (캐시에서 초기값 가져오기)
+  const cacheKey = restaurant.이름;
+  const [googleRating, setGoogleRating] = useState<number | null>(ratingCache[cacheKey]?.rating ?? null);
+  const [googleReviewsCount, setGoogleReviewsCount] = useState<number | null>(ratingCache[cacheKey]?.reviewsCount ?? null);
 
+  useEffect(() => {
     // 캐시에 있으면 바로 사용
     if (imageCache[cacheKey]) {
       setImageUrl(imageCache[cacheKey]);
@@ -70,7 +76,40 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
     };
 
     fetchImage();
-  }, [restaurant.이름, restaurant.위치, fallbackUrl]);
+  }, [cacheKey, restaurant.이름, restaurant.위치, fallbackUrl]);
+
+  // 구글 평점 가져오기
+  useEffect(() => {
+    // 이미 캐시에 있으면 사용
+    if (ratingCache[cacheKey]) {
+      setGoogleRating(ratingCache[cacheKey].rating);
+      setGoogleReviewsCount(ratingCache[cacheKey].reviewsCount);
+      return;
+    }
+
+    const fetchRating = async () => {
+      try {
+        const res = await fetch(`/api/google-reviews/${encodeURIComponent(restaurant.이름)}`);
+        const data = await res.json();
+
+        ratingCache[cacheKey] = {
+          rating: data.rating || null,
+          reviewsCount: data.userRatingsTotal || null
+        };
+
+        setGoogleRating(data.rating || null);
+        setGoogleReviewsCount(data.userRatingsTotal || null);
+      } catch {
+        ratingCache[cacheKey] = { rating: null, reviewsCount: null };
+      }
+    };
+
+    fetchRating();
+  }, [cacheKey, restaurant.이름]);
+
+  // 표시할 평점과 리뷰수 (구글 평점 우선, 없으면 정적 데이터)
+  const displayRating = googleRating ?? restaurant.평점;
+  const displayReviewsCount = googleReviewsCount ?? restaurant.리뷰수;
 
   if (variant === "horizontal") {
     return (
@@ -98,12 +137,12 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
         </div>
         <CardContent className="p-3">
           <h3 className="font-semibold text-sm truncate">{restaurant.이름}</h3>
-          {restaurant.평점 && (
+          {displayRating && (
             <p className="text-xs flex items-center gap-1 mt-1">
               <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-              <span className="font-medium">{restaurant.평점}</span>
-              {restaurant.리뷰수 && (
-                <span className="text-muted-foreground">({formatReviewCount(restaurant.리뷰수)})</span>
+              <span className="font-medium">{displayRating}</span>
+              {displayReviewsCount && (
+                <span className="text-muted-foreground">({formatReviewCount(displayReviewsCount)})</span>
               )}
             </p>
           )}
@@ -145,10 +184,10 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
           <div className="flex-1 p-3 min-w-0">
             <div className="flex items-center justify-between gap-2">
               <h3 className="font-semibold truncate">{restaurant.이름}</h3>
-              {restaurant.평점 && (
+              {displayRating && (
                 <span className="text-xs flex items-center gap-0.5 flex-shrink-0">
                   <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                  <span className="font-medium">{restaurant.평점}</span>
+                  <span className="font-medium">{displayRating}</span>
                 </span>
               )}
             </div>
@@ -173,9 +212,9 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
                   {restaurant.빌딩}
                 </Badge>
               )}
-              {restaurant.리뷰수 && (
+              {displayReviewsCount && (
                 <span className="text-xs text-muted-foreground">
-                  리뷰 {formatReviewCount(restaurant.리뷰수)}
+                  리뷰 {formatReviewCount(displayReviewsCount)}
                 </span>
               )}
             </div>
