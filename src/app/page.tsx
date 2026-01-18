@@ -435,18 +435,33 @@ export default function Home() {
     <>
       <div className="min-h-screen pb-20">
         {/* 헤더 */}
-        <header className="bg-gradient-to-r from-primary to-primary/80 safe-area-top">
-          <div className="px-4 py-3 flex items-center justify-between">
+        <header className="bg-gradient-to-br from-orange-500 via-red-500 to-rose-600 safe-area-top relative overflow-hidden">
+          {/* 배경 장식 */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-4 -left-4 w-24 h-24 bg-white/10 rounded-full blur-xl" />
+            <div className="absolute top-2 right-10 w-16 h-16 bg-yellow-300/20 rounded-full blur-lg" />
+            <div className="absolute -bottom-2 right-1/4 w-20 h-20 bg-white/5 rounded-full blur-xl" />
+          </div>
+          <div className="px-4 py-4 flex items-center justify-between relative z-10">
             <div className="w-10" /> {/* 왼쪽 여백 */}
-            <h1 className="text-xl font-bold text-primary-foreground text-center">
-              🍜 대만맛집정보
-            </h1>
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl drop-shadow-lg">🍜</span>
+                <h1 className="text-xl font-bold text-white drop-shadow-md tracking-wide">
+                  대만맛집
+                </h1>
+                <span className="text-2xl drop-shadow-lg">🏯</span>
+              </div>
+              <span className="text-xs text-white/80 font-medium tracking-widest mt-0.5">
+                TAIPEI FOOD GUIDE
+              </span>
+            </div>
             {/* 로그인/사용자 버튼 */}
             {user ? (
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-primary-foreground hover:bg-white/30 transition-colors"
+                  className="w-10 h-10 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/35 transition-all shadow-lg border border-white/20"
                   title={`${user.name}님`}
                 >
                   <User className="w-5 h-5" />
@@ -483,7 +498,7 @@ export default function Home() {
             ) : (
               <button
                 onClick={() => setAuthModalOpen(true)}
-                className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-primary-foreground hover:bg-white/30 transition-colors"
+                className="w-10 h-10 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/35 transition-all shadow-lg border border-white/20"
                 title="로그인"
               >
                 <User className="w-5 h-5" />

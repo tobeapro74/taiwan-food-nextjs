@@ -1,7 +1,7 @@
 {
-  "name": "대만맛집 가이드",
+  "name": "대만맛집 (타이페이)",
   "short_name": "대만맛집",
-  "description": "대만 여행객을 위한 맛집 정보 가이드",
+  "description": "대만 타이페이 여행객을 위한 맛집 정보 가이드",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FF6B6B",

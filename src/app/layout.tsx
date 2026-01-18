@@ -13,13 +13,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "대만맛집정보",
+  title: "대만맛집 (타이페이)",
   description: "대만 여행 필수! 맛집, 야시장, 관광지 정보를 한눈에",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "대만맛집",
+    title: "대만맛집 (타이페이)",
   },
   icons: {
     icon: [
