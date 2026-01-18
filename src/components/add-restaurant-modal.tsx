@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { X, Search, MapPin, Star, Clock, Phone, Globe, ChevronRight, Loader2, Check } from "lucide-react";
+import { X, Search, MapPin, Star, Clock, Phone, Globe, ChevronRight, Loader2, Check, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -64,6 +64,7 @@ export function AddRestaurantModal({
   const [selectedCategory, setSelectedCategory] = useState("");
   const [feature, setFeature] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 모달 닫힐 때 초기화
@@ -75,6 +76,7 @@ export function AddRestaurantModal({
       setSelectedPlace(null);
       setSelectedCategory("");
       setFeature("");
+      setIsAlreadyRegistered(false);
     }
   }, [isOpen]);
 
@@ -110,7 +112,9 @@ export function AddRestaurantModal({
   // 장소 선택 시 상세 정보 조회
   const handleSelectPlace = async (placeId: string) => {
     setIsLoadingDetails(true);
+    setIsAlreadyRegistered(false);
     try {
+      // 장소 상세 정보 조회
       const res = await fetch("/api/google-place-details", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -121,6 +125,22 @@ export function AddRestaurantModal({
       if (data.success && data.data) {
         setSelectedPlace(data.data);
         setSelectedCategory(data.data.suggested_category || "밥류");
+
+        // 이미 등록된 맛집인지 확인 (좌표 기반)
+        try {
+          const { lat, lng } = data.data.coordinates;
+          const checkRes = await fetch(`/api/custom-restaurants?lat=${lat}&lng=${lng}`);
+          const checkData = await checkRes.json();
+          console.log("중복 확인 결과:", checkData, "coordinates:", lat, lng);
+          if (checkData.success && checkData.data && checkData.data.length > 0) {
+            console.log("이미 등록된 맛집!");
+            setIsAlreadyRegistered(true);
+          }
+        } catch (err) {
+          console.error("중복 확인 오류:", err);
+          // 확인 실패해도 계속 진행
+        }
+
         setStep("details");
       } else {
         alert(data.error || "장소 정보를 가져올 수 없습니다.");
@@ -386,9 +406,16 @@ export function AddRestaurantModal({
 
             {/* 버튼 영역 */}
             <div className="flex-shrink-0 border-t p-4 bg-background rounded-b-2xl space-y-2">
+              {/* 이미 등록된 맛집 안내 */}
+              {isAlreadyRegistered && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-sm">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                  <span>이미 등록된 맛집입니다.</span>
+                </div>
+              )}
               <Button
                 onClick={handleSubmit}
-                disabled={!selectedCategory || isSubmitting}
+                disabled={!selectedCategory || isSubmitting || isAlreadyRegistered}
                 className="w-full py-5 text-lg"
               >
                 {isSubmitting ? (
@@ -396,6 +423,8 @@ export function AddRestaurantModal({
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     등록 중...
                   </>
+                ) : isAlreadyRegistered ? (
+                  "이미 등록됨"
                 ) : (
                   "맛집 등록하기"
                 )}
@@ -405,6 +434,7 @@ export function AddRestaurantModal({
                 onClick={() => {
                   setStep("search");
                   setSelectedPlace(null);
+                  setIsAlreadyRegistered(false);
                 }}
                 className="w-full"
               >

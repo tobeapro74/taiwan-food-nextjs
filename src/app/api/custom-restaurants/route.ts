@@ -11,12 +11,38 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const registeredBy = searchParams.get('registeredBy');
+    const placeId = searchParams.get('place_id');
+    const lat = searchParams.get('lat');
+    const lng = searchParams.get('lng');
 
     const db = await connectToDatabase();
     const collection = db.collection<CustomRestaurant>('custom_restaurants');
 
+    // 좌표 기반 검색 (100m 반경 내 중복 체크)
+    if (lat && lng) {
+      const targetLat = parseFloat(lat);
+      const targetLng = parseFloat(lng);
+      const threshold = 0.001; // 약 100m
+
+      const nearbyRestaurants = await collection
+        .find({
+          'coordinates.lat': { $gte: targetLat - threshold, $lte: targetLat + threshold },
+          'coordinates.lng': { $gte: targetLng - threshold, $lte: targetLng + threshold },
+        })
+        .toArray();
+
+      return NextResponse.json({
+        success: true,
+        data: nearbyRestaurants,
+      });
+    }
+
     // 쿼리 빌드
     const query: Record<string, unknown> = {};
+    if (placeId) {
+      // place_id로 검색 (중복 확인용)
+      query.place_id = placeId;
+    }
     if (category && category !== '전체') {
       query.category = category;
     }
