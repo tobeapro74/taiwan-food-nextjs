@@ -181,11 +181,49 @@ export default function Home() {
     }
   };
 
-  // 카테고리 선택
-  const handleCategorySelect = (categoryId: string) => {
+  // 카테고리 선택 (사용자 등록 맛집도 포함)
+  const handleCategorySelect = async (categoryId: string) => {
     const category = categories.find((c) => c.id === categoryId);
     setListTitle(categoryId === "전체" ? "전체 맛집" : `${category?.name || categoryId} 맛집`);
-    setListItems(getRestaurantsByCategory(categoryId));
+
+    // 정적 데이터 가져오기
+    const staticRestaurants = getRestaurantsByCategory(categoryId);
+
+    // 사용자 등록 맛집 가져오기
+    try {
+      const categoryParam = categoryId === "전체" ? "" : `?category=${encodeURIComponent(categoryId)}`;
+      const res = await fetch(`/api/custom-restaurants${categoryParam}`);
+      const data = await res.json();
+
+      if (data.success && data.data?.length > 0) {
+        // CustomRestaurant를 Restaurant 형식으로 변환
+        const customRestaurants: Restaurant[] = data.data.map((item: {
+          name: string;
+          address: string;
+          feature?: string;
+          google_rating?: number;
+          google_reviews_count?: number;
+          coordinates?: { lat: number; lng: number };
+          price_level?: number;
+        }) => ({
+          이름: item.name,
+          위치: item.address,
+          특징: item.feature || "",
+          평점: item.google_rating,
+          리뷰수: item.google_reviews_count,
+          coordinates: item.coordinates,
+        }));
+
+        // 정적 데이터와 병합 (사용자 등록 맛집을 앞에 배치)
+        setListItems([...customRestaurants, ...staticRestaurants]);
+      } else {
+        setListItems(staticRestaurants);
+      }
+    } catch (error) {
+      console.error("사용자 등록 맛집 조회 오류:", error);
+      setListItems(staticRestaurants);
+    }
+
     setCurrentView("list");
     setActiveTab("category");
   };
