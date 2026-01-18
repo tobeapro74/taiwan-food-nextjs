@@ -31,7 +31,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
     setManualCoordinates,
   } = useUserLocation();
 
-  const [selectedRadius, setSelectedRadius] = useState(1000); // 기본 1km
+  const [selectedRadius, setSelectedRadius] = useState(500); // 기본 500m
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [addressInput, setAddressInput] = useState("");
   const [showManualInput, setShowManualInput] = useState(false);

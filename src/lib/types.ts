@@ -71,3 +71,29 @@ export interface JWTPayload {
   name: string;
   is_admin: boolean;
 }
+
+// 사용자 등록 맛집 타입 (구글맵에서 가져온 정보)
+export interface CustomRestaurant {
+  _id?: string;
+  place_id: string; // Google Place ID
+  name: string; // 식당 이름
+  address: string; // 주소
+  category: string; // 카테고리 (면류, 만두, 밥류 등)
+  feature: string; // 특징/메모
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  google_rating?: number; // 구글 평점
+  google_reviews_count?: number; // 구글 리뷰 수
+  price_level?: number; // 가격대 (1-4)
+  phone_number?: string; // 전화번호
+  opening_hours?: string[]; // 영업시간
+  photos?: string[]; // 사진 URL 목록
+  website?: string; // 웹사이트
+  google_map_url: string; // 구글맵 URL
+  registered_by: number; // 등록한 사용자 ID
+  registered_by_name: string; // 등록한 사용자 이름
+  created_at: string;
+  updated_at?: string;
+}

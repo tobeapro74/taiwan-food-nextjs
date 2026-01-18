@@ -1,9 +1,9 @@
 "use client";
 
-import { Home, Grid3X3, Store, MapPin, Navigation } from "lucide-react";
+import { Home, Grid3X3, Store, Navigation, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby";
+type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add";
 
 interface BottomNavProps {
   activeTab: TabType;
@@ -13,9 +13,9 @@ interface BottomNavProps {
 const navItems = [
   { id: "home" as const, label: "홈", icon: Home },
   { id: "nearby" as const, label: "주변맛집", icon: Navigation },
+  { id: "add" as const, label: "등록", icon: PlusCircle },
   { id: "category" as const, label: "카테고리", icon: Grid3X3 },
   { id: "market" as const, label: "야시장", icon: Store },
-  { id: "tour" as const, label: "도심투어", icon: MapPin },
 ];
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
@@ -32,11 +32,20 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               onClick={() => onTabChange(item.id)}
               className={cn(
                 "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all hover:scale-[1.1] active:scale-[0.95]",
-                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                isActive
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className={cn("h-5 w-5 transition-transform", isActive && "fill-primary/20")} />
-              <span className="text-xs font-medium">{item.label}</span>
+              <Icon
+                className={cn(
+                  "h-5 w-5 transition-transform",
+                  isActive && "fill-primary/20"
+                )}
+              />
+              <span className="text-xs font-medium">
+                {item.label}
+              </span>
             </button>
           );
         })}

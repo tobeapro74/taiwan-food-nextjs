@@ -1,0 +1,215 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { connectToDatabase } from '@/lib/mongodb';
+import jwt from 'jsonwebtoken';
+import { CustomRestaurant, JWTPayload } from '@/lib/types';
+
+const JWT_SECRET = process.env.JWT_SECRET || "taiwan-food-secret-key";
+
+// 사용자 등록 맛집 목록 조회
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category');
+    const registeredBy = searchParams.get('registeredBy');
+
+    const db = await connectToDatabase();
+    const collection = db.collection<CustomRestaurant>('custom_restaurants');
+
+    // 쿼리 빌드
+    const query: Record<string, unknown> = {};
+    if (category && category !== '전체') {
+      query.category = category;
+    }
+    if (registeredBy) {
+      query.registered_by = parseInt(registeredBy);
+    }
+
+    const restaurants = await collection
+      .find(query)
+      .sort({ created_at: -1 })
+      .toArray();
+
+    return NextResponse.json({
+      success: true,
+      data: restaurants,
+    });
+  } catch (error) {
+    console.error('맛집 목록 조회 오류:', error);
+    return NextResponse.json(
+      { success: false, error: '맛집 목록 조회 중 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
+// 새 맛집 등록
+export async function POST(request: NextRequest) {
+  try {
+    // JWT 토큰 확인
+    const token = request.cookies.get('auth_token')?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: '로그인이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    // 토큰 검증
+    let decoded: JWTPayload;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: '인증이 만료되었습니다. 다시 로그인해주세요.' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const {
+      place_id,
+      name,
+      address,
+      category,
+      feature,
+      coordinates,
+      google_rating,
+      google_reviews_count,
+      price_level,
+      phone_number,
+      opening_hours,
+      photos,
+      website,
+      google_map_url,
+    } = body;
+
+    // 필수 필드 검증
+    if (!place_id || !name || !address || !category || !coordinates) {
+      return NextResponse.json(
+        { success: false, error: '필수 정보가 누락되었습니다.' },
+        { status: 400 }
+      );
+    }
+
+    const db = await connectToDatabase();
+    const collection = db.collection<CustomRestaurant>('custom_restaurants');
+
+    // 중복 체크 (같은 place_id로 이미 등록된 경우)
+    const existing = await collection.findOne({ place_id });
+    if (existing) {
+      return NextResponse.json(
+        { success: false, error: '이미 등록된 맛집입니다.', existingId: existing._id },
+        { status: 409 }
+      );
+    }
+
+    // 새 맛집 데이터 생성
+    const newRestaurant: Omit<CustomRestaurant, '_id'> = {
+      place_id,
+      name,
+      address,
+      category,
+      feature: feature || '',
+      coordinates,
+      google_rating,
+      google_reviews_count,
+      price_level,
+      phone_number,
+      opening_hours,
+      photos,
+      website,
+      google_map_url,
+      registered_by: decoded.userId,
+      registered_by_name: decoded.name,
+      created_at: new Date().toISOString(),
+    };
+
+    const result = await collection.insertOne(newRestaurant as CustomRestaurant);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        _id: result.insertedId,
+        ...newRestaurant,
+      },
+      message: '맛집이 등록되었습니다!',
+    });
+  } catch (error) {
+    console.error('맛집 등록 오류:', error);
+    return NextResponse.json(
+      { success: false, error: '맛집 등록 중 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
+// 맛집 삭제 (등록자 본인만)
+export async function DELETE(request: NextRequest) {
+  try {
+    // JWT 토큰 확인
+    const token = request.cookies.get('auth_token')?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: '로그인이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    // 토큰 검증
+    let decoded: JWTPayload;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: '인증이 만료되었습니다. 다시 로그인해주세요.' },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const placeId = searchParams.get('placeId');
+
+    if (!placeId) {
+      return NextResponse.json(
+        { success: false, error: 'placeId가 필요합니다.' },
+        { status: 400 }
+      );
+    }
+
+    const db = await connectToDatabase();
+    const collection = db.collection<CustomRestaurant>('custom_restaurants');
+
+    // 맛집 찾기
+    const restaurant = await collection.findOne({ place_id: placeId });
+
+    if (!restaurant) {
+      return NextResponse.json(
+        { success: false, error: '맛집을 찾을 수 없습니다.' },
+        { status: 404 }
+      );
+    }
+
+    // 권한 확인 (등록자 또는 관리자만 삭제 가능)
+    if (restaurant.registered_by !== decoded.userId && !decoded.is_admin) {
+      return NextResponse.json(
+        { success: false, error: '삭제 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
+
+    await collection.deleteOne({ place_id: placeId });
+
+    return NextResponse.json({
+      success: true,
+      message: '맛집이 삭제되었습니다.',
+    });
+  } catch (error) {
+    console.error('맛집 삭제 오류:', error);
+    return NextResponse.json(
+      { success: false, error: '맛집 삭제 중 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
+}

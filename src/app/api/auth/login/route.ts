@@ -29,7 +29,12 @@ export async function POST(request: NextRequest) {
     }
 
     // 비밀번호 확인
+    console.log("Login attempt:", { email, passwordLength: password?.length });
+    console.log("Member password field:", member.password ? "exists" : "missing");
+
     const isValidPassword = await bcrypt.compare(password, member.password);
+    console.log("Password valid:", isValidPassword);
+
     if (!isValidPassword) {
       return NextResponse.json(
         { success: false, error: "이메일 또는 비밀번호가 일치하지 않습니다." },

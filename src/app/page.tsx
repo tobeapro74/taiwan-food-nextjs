@@ -13,6 +13,7 @@ import { CategorySheet } from "@/components/category-sheet";
 import { AuthModal } from "@/components/auth-modal";
 import { ChangePasswordModal } from "@/components/change-password-modal";
 import { NearbyRestaurants } from "@/components/nearby-restaurants";
+import { AddRestaurantModal } from "@/components/add-restaurant-modal";
 import {
   Restaurant,
   categories,
@@ -27,7 +28,7 @@ import {
 } from "@/data/taiwan-food";
 
 type View = "home" | "list" | "detail" | "nearby";
-type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby";
+type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add";
 
 interface UserInfo {
   id: number;
@@ -69,6 +70,9 @@ export default function Home() {
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // 맛집 등록 모달 상태
+  const [addRestaurantModalOpen, setAddRestaurantModalOpen] = useState(false);
 
   // 로그인 상태 확인
   useEffect(() => {
@@ -156,6 +160,13 @@ export default function Home() {
     } else if (tab === "nearby") {
       setCurrentView("nearby");
       setActiveTab("nearby");
+    } else if (tab === "add") {
+      // 맛집 등록 - 로그인 필요
+      if (!user) {
+        setAuthModalOpen(true);
+      } else {
+        setAddRestaurantModalOpen(true);
+      }
     } else if (tab === "category") {
       setCategorySheetOpen(true);
     } else if (tab === "market") {
@@ -259,6 +270,17 @@ export default function Home() {
           options={tourAreas}
           onSelect={handleTourSelect}
         />
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onLoginSuccess={(userData) => setUser(userData)}
+        />
+        <AddRestaurantModal
+          isOpen={addRestaurantModalOpen}
+          onClose={() => setAddRestaurantModalOpen(false)}
+          user={user}
+          onSuccess={() => {}}
+        />
       </>
     );
   }
@@ -295,6 +317,17 @@ export default function Home() {
           options={tourAreas}
           onSelect={handleTourSelect}
         />
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onLoginSuccess={(userData) => setUser(userData)}
+        />
+        <AddRestaurantModal
+          isOpen={addRestaurantModalOpen}
+          onClose={() => setAddRestaurantModalOpen(false)}
+          user={user}
+          onSuccess={() => {}}
+        />
       </>
     );
   }
@@ -329,6 +362,17 @@ export default function Home() {
           title="도심투어 지역"
           options={tourAreas}
           onSelect={handleTourSelect}
+        />
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onLoginSuccess={(userData) => setUser(userData)}
+        />
+        <AddRestaurantModal
+          isOpen={addRestaurantModalOpen}
+          onClose={() => setAddRestaurantModalOpen(false)}
+          user={user}
+          onSuccess={() => {}}
         />
       </>
     );
@@ -582,6 +626,16 @@ export default function Home() {
       <ChangePasswordModal
         isOpen={changePasswordModalOpen}
         onClose={() => setChangePasswordModalOpen(false)}
+      />
+
+      {/* 맛집 등록 모달 */}
+      <AddRestaurantModal
+        isOpen={addRestaurantModalOpen}
+        onClose={() => setAddRestaurantModalOpen(false)}
+        user={user}
+        onSuccess={() => {
+          // 등록 성공 시 처리 (필요하면 목록 새로고침 등)
+        }}
       />
     </>
   );
