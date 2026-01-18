@@ -45,7 +45,6 @@ const categories = [
   { id: "디저트", name: "디저트", icon: "🧁" },
   { id: "길거리음식", name: "길거리음식", icon: "🍢" },
   { id: "카페", name: "카페", icon: "☕" },
-  { id: "기타", name: "기타", icon: "🍽️" },
 ];
 
 export function AddRestaurantModal({
