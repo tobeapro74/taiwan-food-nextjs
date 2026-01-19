@@ -245,6 +245,111 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
+// 맛집 장소 정보 수정 (관리자만 - 잘못 등록된 장소 수정용)
+export async function PUT(request: NextRequest) {
+  try {
+    // JWT 토큰 확인
+    const token = request.cookies.get('auth_token')?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: '로그인이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    // 토큰 검증
+    let decoded: JWTPayload;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: '인증이 만료되었습니다. 다시 로그인해주세요.' },
+        { status: 401 }
+      );
+    }
+
+    // 관리자만 장소 정보 수정 가능
+    if (!decoded.is_admin) {
+      return NextResponse.json(
+        { success: false, error: '관리자만 장소 정보를 수정할 수 있습니다.' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const {
+      old_place_id,  // 기존 place_id (수정 대상 식별용)
+      new_place_id,  // 새로운 place_id
+      name,
+      address,
+      coordinates,
+      google_rating,
+      google_reviews_count,
+      phone_number,
+      opening_hours,
+      photos,
+      website,
+      google_map_url,
+    } = body;
+
+    if (!old_place_id) {
+      return NextResponse.json(
+        { success: false, error: '수정할 맛집의 place_id가 필요합니다.' },
+        { status: 400 }
+      );
+    }
+
+    const db = await connectToDatabase();
+    const collection = db.collection<CustomRestaurant>('custom_restaurants');
+
+    // 기존 맛집 찾기
+    const restaurant = await collection.findOne({ place_id: old_place_id });
+
+    if (!restaurant) {
+      return NextResponse.json(
+        { success: false, error: '맛집을 찾을 수 없습니다.' },
+        { status: 404 }
+      );
+    }
+
+    // 업데이트할 필드 준비
+    const updateFields: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (new_place_id) updateFields.place_id = new_place_id;
+    if (name) updateFields.name = name;
+    if (address) updateFields.address = address;
+    if (coordinates) updateFields.coordinates = coordinates;
+    if (google_rating !== undefined) updateFields.google_rating = google_rating;
+    if (google_reviews_count !== undefined) updateFields.google_reviews_count = google_reviews_count;
+    if (phone_number !== undefined) updateFields.phone_number = phone_number;
+    if (opening_hours !== undefined) updateFields.opening_hours = opening_hours;
+    if (photos !== undefined) updateFields.photos = photos;
+    if (website !== undefined) updateFields.website = website;
+    if (google_map_url) updateFields.google_map_url = google_map_url;
+
+    // 업데이트 실행
+    await collection.updateOne(
+      { place_id: old_place_id },
+      { $set: updateFields }
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: '맛집 장소 정보가 수정되었습니다.',
+      data: { old_place_id, ...updateFields },
+    });
+  } catch (error) {
+    console.error('맛집 장소 정보 수정 오류:', error);
+    return NextResponse.json(
+      { success: false, error: '장소 정보 수정 중 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
 // 맛집 삭제 (등록자 본인만)
 export async function DELETE(request: NextRequest) {
   try {

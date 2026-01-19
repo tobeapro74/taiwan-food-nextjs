@@ -26,12 +26,19 @@ interface GoogleReview {
   language?: string;
 }
 
-// MongoDB에서 캐시된 리뷰 조회
-async function getCachedReviews(restaurantName: string): Promise<ReviewCache | null> {
+// MongoDB에서 캐시된 리뷰 조회 (placeId 우선, 없으면 restaurantName으로)
+async function getCachedReviews(restaurantName: string, placeId?: string): Promise<ReviewCache | null> {
   try {
     const db = await connectToDatabase();
     const collection = db.collection<ReviewCache>("google_reviews_cache");
-    const cached = await collection.findOne({ restaurantName });
+
+    // placeId가 있으면 placeId로 먼저 검색
+    let cached = placeId ? await collection.findOne({ placeId }) : null;
+
+    // placeId로 못 찾으면 restaurantName으로 검색
+    if (!cached) {
+      cached = await collection.findOne({ restaurantName });
+    }
 
     // 캐시가 24시간 이상 오래된 경우 null 반환
     if (cached) {
@@ -66,16 +73,37 @@ async function saveReviewCache(data: Omit<ReviewCache, "createdAt" | "updatedAt"
   }
 }
 
+// 등록된 맛집에서 place_id 조회
+async function getRegisteredPlaceId(restaurantName: string): Promise<string | null> {
+  try {
+    const db = await connectToDatabase();
+    const collection = db.collection("custom_restaurants");
+    const restaurant = await collection.findOne({ name: restaurantName });
+    return restaurant?.place_id || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
 ) {
   try {
     const { name } = await params;
     const restaurantName = decodeURIComponent(name);
 
-    // 1. 캐시 확인
-    const cached = await getCachedReviews(restaurantName);
+    // URL 쿼리에서 place_id 확인 (프론트엔드에서 전달)
+    const urlPlaceId = request.nextUrl.searchParams.get("placeId");
+
+    // 1. 등록된 맛집에서 place_id 조회 (가장 신뢰할 수 있는 소스)
+    const registeredPlaceId = await getRegisteredPlaceId(restaurantName);
+
+    // place_id 결정: URL 파라미터 > 등록된 맛집 > Google 검색
+    let placeId = urlPlaceId || registeredPlaceId;
+
+    // 2. 캐시 확인 (placeId로 먼저 검색)
+    const cached = await getCachedReviews(restaurantName, placeId || undefined);
     if (cached) {
       return NextResponse.json({
         reviews: cached.reviews,
@@ -85,25 +113,27 @@ export async function GET(
       });
     }
 
-    // 2. API 키 확인
+    // 3. API 키 확인
     if (!GOOGLE_API_KEY) {
       return NextResponse.json({ error: "API key not configured" }, { status: 500 });
     }
 
-    // 3. Place ID 검색 (대만 타이베이 기준)
-    const searchQuery = `${restaurantName} Taipei Taiwan`;
-    const searchUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(
-      searchQuery
-    )}&inputtype=textquery&fields=place_id&key=${GOOGLE_API_KEY}`;
+    // 4. place_id가 없으면 Google에서 검색 (fallback)
+    if (!placeId) {
+      const searchQuery = `${restaurantName} Taiwan`;
+      const searchUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(
+        searchQuery
+      )}&inputtype=textquery&fields=place_id&key=${GOOGLE_API_KEY}`;
 
-    const searchRes = await fetch(searchUrl);
-    const searchData = await searchRes.json();
+      const searchRes = await fetch(searchUrl);
+      const searchData = await searchRes.json();
 
-    if (!searchData.candidates || searchData.candidates.length === 0) {
-      return NextResponse.json({ reviews: [], rating: null, userRatingsTotal: null });
+      if (!searchData.candidates || searchData.candidates.length === 0) {
+        return NextResponse.json({ reviews: [], rating: null, userRatingsTotal: null });
+      }
+
+      placeId = searchData.candidates[0].place_id;
     }
-
-    const placeId = searchData.candidates[0].place_id;
 
     // 4. Place Details에서 리뷰 가져오기 (최신순 정렬)
     const detailUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&language=ko&reviews_sort=newest&key=${GOOGLE_API_KEY}`;
@@ -116,14 +146,16 @@ export async function GET(
     const rating = detailData.result?.rating || null;
     const userRatingsTotal = detailData.result?.user_ratings_total || null;
 
-    // 5. 캐시 저장
-    await saveReviewCache({
-      restaurantName,
-      placeId,
-      reviews,
-      rating,
-      userRatingsTotal
-    });
+    // 5. 캐시 저장 (placeId가 있을 때만)
+    if (placeId) {
+      await saveReviewCache({
+        restaurantName,
+        placeId,
+        reviews,
+        rating,
+        userRatingsTotal
+      });
+    }
 
     return NextResponse.json({
       reviews,

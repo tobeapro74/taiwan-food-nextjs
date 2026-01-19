@@ -161,11 +161,13 @@ export async function POST(request: NextRequest) {
 /**
  * Google Places API를 사용하여 식당 검색 (자동완성)
  * GET /api/google-place-details?q=검색어
+ * GET /api/google-place-details?q=검색어&mode=textsearch (Text Search - 리뷰 수 포함)
  */
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get("q");
+    const mode = searchParams.get("mode");
 
     if (!query) {
       return NextResponse.json(
@@ -183,7 +185,42 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Place Autocomplete API 호출 (식당 유형만)
+    // Text Search 모드 - 리뷰 수 포함하여 모든 결과 반환 (관리자용)
+    if (mode === "textsearch") {
+      const textSearchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
+        query + " Taiwan"
+      )}&language=ko&key=${apiKey}`;
+
+      const textSearchResponse = await fetch(textSearchUrl);
+      const textSearchData = await textSearchResponse.json();
+
+      if (textSearchData.status !== "OK") {
+        return NextResponse.json({ results: [] });
+      }
+
+      // Text Search 결과에는 rating, user_ratings_total이 포함됨
+      const results = textSearchData.results.map(
+        (place: {
+          place_id: string;
+          name: string;
+          formatted_address: string;
+          geometry: { location: { lat: number; lng: number } };
+          rating?: number;
+          user_ratings_total?: number;
+        }) => ({
+          place_id: place.place_id,
+          name: place.name,
+          address: place.formatted_address,
+          coordinates: place.geometry.location,
+          rating: place.rating,
+          reviews_count: place.user_ratings_total,
+        })
+      );
+
+      return NextResponse.json({ results });
+    }
+
+    // 기본 모드 - Autocomplete (자동완성)
     const autocompleteUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
       query
     )}&components=country:tw&types=establishment&language=ko&key=${apiKey}`;

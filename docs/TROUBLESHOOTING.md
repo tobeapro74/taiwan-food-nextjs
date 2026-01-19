@@ -363,3 +363,224 @@ if (deltaX > threshold) {
 - 페이지 왼쪽에 그림자 효과
 - 배경 오버레이 (스와이프할수록 밝아짐)
 - 부드러운 ease-out 애니메이션
+
+---
+
+## 9. 동일 이름 맛집의 잘못된 리뷰 표시 문제
+
+### 1. 발생 현상
+
+**증상**: "Dark Palace Taiwanese Gourmet" 맛집을 등록했는데, 다른 지점의 리뷰가 표시됨
+
+| 구분 | 올바른 장소 | 잘못 표시된 장소 |
+|------|-------------|------------------|
+| 주소 | No. 11-10號, Zhongzheng Rd | No. 8號, Lane 62, Section 1, Zhongzheng Rd |
+| 리뷰 수 | 15,543개 | 28,987개 |
+| place_id | `ChIJFSbFVlilQjQRdX_8QpjPxc0` | `ChIJp8_h80ilQjQRPPqVtqEu46w` |
+
+**발생 원인 분석**:
+1. 맛집 등록 시 사용자가 선택한 장소의 `place_id`가 `custom_restaurants` 테이블에 올바르게 저장됨
+2. 하지만 리뷰 조회 API(`/api/google-reviews/[name]`)가 **맛집 이름으로 Google에서 다시 검색**
+3. Google 검색 결과 중 **첫 번째 결과**를 무조건 사용 (리뷰 수가 많은 다른 지점이 먼저 나옴)
+4. 잘못된 `place_id`로 리뷰를 가져와 캐시에 저장
+
+```
+등록 시: "Dark Palace" 선택 → place_id A 저장 (올바름)
+리뷰 조회 시: "Dark Palace" 검색 → place_id B 반환 (잘못됨) → 캐시 저장
+```
+
+---
+
+### 2. 시도한 조치 방법들
+
+#### 시도 1: MongoDB에서 직접 데이터 확인
+```bash
+# custom_restaurants 테이블 확인
+python3 << 'EOF'
+from pymongo import MongoClient
+client = MongoClient("mongodb+srv://...")
+db = client["taiwan_food"]
+collection = db["custom_restaurants"]
+restaurant = collection.find_one({"name": {"$regex": "Dark Palace", "$options": "i"}})
+print(restaurant)  # place_id가 올바른지 확인
+EOF
+```
+**결과**: `custom_restaurants`에는 올바른 `place_id`가 저장되어 있음을 확인
+
+#### 시도 2: 리뷰 캐시 테이블 확인
+```bash
+# google_reviews_cache 테이블 확인
+cache = db["google_reviews_cache"]
+result = cache.find_one({"restaurantName": {"$regex": "Dark", "$options": "i"}})
+print(result.get("placeId"))  # 잘못된 place_id 발견!
+```
+**결과**: 캐시에 잘못된 `place_id`의 리뷰가 저장되어 있음
+
+#### 시도 3: 기존 리뷰 조회 로직 분석
+```typescript
+// 문제의 코드 (src/app/api/google-reviews/[name]/route.ts)
+const searchQuery = `${restaurantName} Taipei Taiwan`;
+const searchUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?...`;
+const placeId = searchData.candidates[0].place_id;  // ❌ 첫 번째 결과 무조건 사용
+```
+**결과**: 등록된 맛집의 `place_id`를 사용하지 않고, 이름으로 다시 검색하는 것이 근본 원인
+
+---
+
+### 3. 최종 조치 방법
+
+#### 3.1 잘못된 리뷰 캐시 삭제
+```bash
+python3 << 'EOF'
+from pymongo import MongoClient
+client = MongoClient("mongodb+srv://...")
+db = client["taiwan_food"]
+cache = db["google_reviews_cache"]
+
+# 잘못된 캐시 삭제
+wrong_place_id = "ChIJp8_h80ilQjQRPPqVtqEu46w"
+result = cache.delete_one({"placeId": wrong_place_id})
+print(f"삭제된 캐시: {result.deleted_count}개")
+EOF
+```
+
+#### 3.2 리뷰 조회 API 수정 (`src/app/api/google-reviews/[name]/route.ts`)
+
+**핵심 변경**: 등록된 맛집의 `place_id`를 우선 사용하도록 수정
+
+```typescript
+// 등록된 맛집에서 place_id 조회하는 함수 추가
+async function getRegisteredPlaceId(restaurantName: string): Promise<string | null> {
+  try {
+    const db = await connectToDatabase();
+    const collection = db.collection("custom_restaurants");
+    const restaurant = await collection.findOne({ name: restaurantName });
+    return restaurant?.place_id || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function GET(request: NextRequest, { params }) {
+  const restaurantName = decodeURIComponent((await params).name);
+
+  // URL 쿼리에서 place_id 확인 (프론트엔드에서 전달)
+  const urlPlaceId = request.nextUrl.searchParams.get("placeId");
+
+  // 1. 등록된 맛집에서 place_id 조회 (가장 신뢰할 수 있는 소스)
+  const registeredPlaceId = await getRegisteredPlaceId(restaurantName);
+
+  // place_id 결정 우선순위: URL 파라미터 > 등록된 맛집 > Google 검색
+  let placeId = urlPlaceId || registeredPlaceId;
+
+  // 2. 캐시 확인 (placeId로 먼저 검색)
+  const cached = await getCachedReviews(restaurantName, placeId || undefined);
+  if (cached) {
+    return NextResponse.json({ reviews: cached.reviews, ... });
+  }
+
+  // 3. place_id가 없으면 Google에서 검색 (fallback)
+  if (!placeId) {
+    const searchQuery = `${restaurantName} Taiwan`;
+    // ... Google 검색 로직 (기존 코드)
+    placeId = searchData.candidates[0].place_id;
+  }
+
+  // 4. Place Details에서 리뷰 가져오기
+  const detailUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&...`;
+  // ... 리뷰 조회 및 캐시 저장
+}
+```
+
+#### 3.3 캐시 조회 함수 수정
+
+```typescript
+// placeId를 우선으로 캐시 검색
+async function getCachedReviews(restaurantName: string, placeId?: string): Promise<ReviewCache | null> {
+  const db = await connectToDatabase();
+  const collection = db.collection<ReviewCache>("google_reviews_cache");
+
+  // placeId가 있으면 placeId로 먼저 검색
+  let cached = placeId ? await collection.findOne({ placeId }) : null;
+
+  // placeId로 못 찾으면 restaurantName으로 검색 (하위 호환)
+  if (!cached) {
+    cached = await collection.findOne({ restaurantName });
+  }
+
+  // 24시간 캐시 만료 체크
+  if (cached) {
+    const cacheAge = Date.now() - new Date(cached.updatedAt).getTime();
+    if (cacheAge > 24 * 60 * 60 * 1000) return null;
+  }
+
+  return cached;
+}
+```
+
+---
+
+### 4. 향후 대처 방안
+
+#### 4.1 place_id 일관성 유지
+- **원칙**: 맛집 등록 시 저장된 `place_id`를 모든 API에서 일관되게 사용
+- **적용**: 리뷰 조회, 평점 조회, 가격 정보 등 모든 Google API 호출에 동일 `place_id` 사용
+
+```
+[올바른 흐름]
+맛집 등록 → place_id 저장 → 리뷰 조회 시 저장된 place_id 사용
+                         → 평점 조회 시 저장된 place_id 사용
+                         → 가격 조회 시 저장된 place_id 사용
+```
+
+#### 4.2 관리자용 장소 수정 API 추가
+잘못된 장소가 등록된 경우를 대비한 수정 API 추가 완료:
+
+```typescript
+// PUT /api/custom-restaurants
+// 관리자만 사용 가능
+{
+  "old_place_id": "잘못된_place_id",
+  "new_place_id": "올바른_place_id",
+  "address": "새 주소",
+  "coordinates": { "lat": 25.169, "lng": 121.443 },
+  "google_reviews_count": 15543
+}
+```
+
+#### 4.3 Text Search API 추가 (관리자용)
+동일 이름의 맛집을 구분하기 위해 리뷰 수를 포함한 검색 API 추가:
+
+```
+GET /api/google-place-details?q=Dark Palace&mode=textsearch
+
+Response:
+{
+  "results": [
+    { "name": "Dark Palace", "address": "No. 8號...", "reviews_count": 28987 },
+    { "name": "Dark Palace", "address": "No. 11-10號...", "reviews_count": 15543 }  // ← 이게 맞는 곳
+  ]
+}
+```
+
+#### 4.4 캐시 무효화 전략
+- 캐시의 `placeId`가 등록된 맛집의 `place_id`와 다르면 캐시 무효화
+- 24시간 캐시 만료 시 올바른 `place_id`로 새로 조회
+
+#### 4.5 프론트엔드에서 place_id 전달 (선택적)
+```typescript
+// 맛집 상세 페이지에서 리뷰 조회 시
+const response = await fetch(
+  `/api/google-reviews/${encodeURIComponent(restaurant.name)}?placeId=${restaurant.place_id}`
+);
+```
+
+---
+
+### 관련 파일
+- `src/app/api/google-reviews/[name]/route.ts` - 리뷰 조회 API (수정됨)
+- `src/app/api/custom-restaurants/route.ts` - PUT 메서드 추가됨
+- `src/app/api/google-place-details/route.ts` - textsearch 모드 추가됨
+
+### 교훈
+> **동일 이름의 장소가 여러 개 있을 수 있으므로, 이름 기반 검색이 아닌 고유 식별자(place_id)를 사용해야 한다.**
