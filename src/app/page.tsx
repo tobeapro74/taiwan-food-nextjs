@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { User, LogOut, Search, X, MapPin, ChevronDown, Key, UserMinus } from "lucide-react";
+import { User, LogOut, Search, X, MapPin, ChevronDown, Key, UserMinus, History } from "lucide-react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -15,6 +15,7 @@ import { ChangePasswordModal } from "@/components/change-password-modal";
 import { NearbyRestaurants } from "@/components/nearby-restaurants";
 import { AddRestaurantModal } from "@/components/add-restaurant-modal";
 import { DeleteAccountModal } from "@/components/delete-account-modal";
+import { RestaurantHistoryList } from "@/components/restaurant-history";
 import {
   Restaurant,
   categories,
@@ -28,7 +29,7 @@ import {
   searchRestaurants,
 } from "@/data/taiwan-food";
 
-type View = "home" | "list" | "detail" | "nearby";
+type View = "home" | "list" | "detail" | "nearby" | "history";
 type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add";
 
 interface UserInfo {
@@ -350,7 +351,7 @@ export default function Home() {
         setCurrentView("list");
       }
       setSelectedRestaurant(null);
-    } else if (currentView === "list" || currentView === "nearby") {
+    } else if (currentView === "list" || currentView === "nearby" || currentView === "history") {
       setCurrentView("home");
       setActiveTab("home");
     }
@@ -402,6 +403,20 @@ export default function Home() {
           user={user}
           onSuccess={() => {}}
         />
+      </>
+    );
+  }
+
+  if (currentView === "history") {
+    return (
+      <>
+        <RestaurantHistoryList
+          onBack={() => {
+            setCurrentView("home");
+            setActiveTab("home");
+          }}
+        />
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
       </>
     );
   }
@@ -540,6 +555,16 @@ export default function Home() {
                     <div className="px-3 py-2 border-b border-border">
                       <p className="text-sm font-medium text-foreground">{user.name}님</p>
                     </div>
+                    <button
+                      onClick={() => {
+                        setCurrentView("history");
+                        setUserMenuOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                    >
+                      <History className="w-4 h-4" />
+                      등록 히스토리
+                    </button>
                     <button
                       onClick={() => {
                         setChangePasswordModalOpen(true);

@@ -97,3 +97,18 @@ export interface CustomRestaurant {
   created_at: string;
   updated_at?: string;
 }
+
+// 맛집 등록 히스토리 타입
+export interface RestaurantHistory {
+  _id?: string;
+  seq: number; // 순번 (자동 증가)
+  place_id: string; // Google Place ID
+  name: string; // 식당 이름
+  short_address: string; // 간단한 장소 (구/동 단위)
+  category: string; // 카테고리
+  registered_by: number; // 등록한 사용자 ID
+  registered_by_name: string; // 등록한 사용자 이름
+  registered_at: string; // 등록 일시
+  action: 'register' | 'delete' | 'update'; // 액션 유형
+  memo?: string; // 메모 (삭제 사유 등)
+}
