@@ -300,6 +300,18 @@ export async function PATCH(request: NextRequest) {
       { $set: { category, updated_at: new Date().toISOString() } }
     );
 
+    // 히스토리 기록
+    await recordHistory({
+      place_id,
+      name: restaurant.name,
+      address: restaurant.address,
+      category,
+      registered_by: decoded.userId,
+      registered_by_name: decoded.name,
+      action: 'update',
+      memo: `카테고리 변경: ${restaurant.category} → ${category}`,
+    });
+
     return NextResponse.json({
       success: true,
       message: '카테고리가 수정되었습니다.',
@@ -314,7 +326,7 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// 맛집 장소 정보 수정 (관리자만 - 잘못 등록된 장소 수정용)
+// 맛집 장소 정보 수정 (등록자 또는 관리자)
 export async function PUT(request: NextRequest) {
   try {
     // JWT 토큰 확인
@@ -338,20 +350,13 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // 관리자만 장소 정보 수정 가능
-    if (!decoded.is_admin) {
-      return NextResponse.json(
-        { success: false, error: '관리자만 장소 정보를 수정할 수 있습니다.' },
-        { status: 403 }
-      );
-    }
-
     const body = await request.json();
     const {
       old_place_id,  // 기존 place_id (수정 대상 식별용)
       new_place_id,  // 새로운 place_id
       name,
       address,
+      feature,
       coordinates,
       google_rating,
       google_reviews_count,
@@ -382,19 +387,52 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // 권한 확인 (등록자 또는 관리자만 수정 가능)
+    if (restaurant.registered_by !== decoded.userId && !decoded.is_admin) {
+      return NextResponse.json(
+        { success: false, error: '수정 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
+
     // 업데이트할 필드 준비
     const updateFields: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
 
-    if (new_place_id) updateFields.place_id = new_place_id;
-    if (name) updateFields.name = name;
-    if (address) updateFields.address = address;
-    if (coordinates) updateFields.coordinates = coordinates;
+    // 변경된 필드 목록 (히스토리용)
+    const changedFields: string[] = [];
+
+    if (new_place_id) {
+      updateFields.place_id = new_place_id;
+      changedFields.push('place_id');
+    }
+    if (name) {
+      updateFields.name = name;
+      changedFields.push('이름');
+    }
+    if (address) {
+      updateFields.address = address;
+      changedFields.push('주소');
+    }
+    if (feature !== undefined) {
+      updateFields.feature = feature;
+      changedFields.push('특징');
+    }
+    if (coordinates) {
+      updateFields.coordinates = coordinates;
+      changedFields.push('좌표');
+    }
     if (google_rating !== undefined) updateFields.google_rating = google_rating;
     if (google_reviews_count !== undefined) updateFields.google_reviews_count = google_reviews_count;
-    if (phone_number !== undefined) updateFields.phone_number = phone_number;
-    if (opening_hours !== undefined) updateFields.opening_hours = opening_hours;
+    if (phone_number !== undefined) {
+      updateFields.phone_number = phone_number;
+      changedFields.push('전화번호');
+    }
+    if (opening_hours !== undefined) {
+      updateFields.opening_hours = opening_hours;
+      changedFields.push('영업시간');
+    }
     if (photos !== undefined) updateFields.photos = photos;
     if (website !== undefined) updateFields.website = website;
     if (google_map_url) updateFields.google_map_url = google_map_url;
@@ -405,15 +443,29 @@ export async function PUT(request: NextRequest) {
       { $set: updateFields }
     );
 
+    // 히스토리 기록 (변경된 필드가 있을 때만)
+    if (changedFields.length > 0) {
+      await recordHistory({
+        place_id: new_place_id || old_place_id,
+        name: name || restaurant.name,
+        address: address || restaurant.address,
+        category: restaurant.category,
+        registered_by: decoded.userId,
+        registered_by_name: decoded.name,
+        action: 'update',
+        memo: `정보 수정: ${changedFields.join(', ')}`,
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      message: '맛집 장소 정보가 수정되었습니다.',
+      message: '맛집 정보가 수정되었습니다.',
       data: { old_place_id, ...updateFields },
     });
   } catch (error) {
     console.error('맛집 장소 정보 수정 오류:', error);
     return NextResponse.json(
-      { success: false, error: '장소 정보 수정 중 오류가 발생했습니다.' },
+      { success: false, error: '정보 수정 중 오류가 발생했습니다.' },
       { status: 500 }
     );
   }

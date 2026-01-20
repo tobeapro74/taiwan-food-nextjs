@@ -4,11 +4,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, Info, Map, Phone, Banknote, Building2, Edit3, Tag } from "lucide-react";
+import { ArrowLeft, MapPin, Info, Map, Phone, Banknote, Building2, Edit3, Tag, Settings, Trash2 } from "lucide-react";
 import { Restaurant, getGoogleMapsLink, getUnsplashImage, categories } from "@/data/taiwan-food";
 import { ReviewSection } from "@/components/review-section";
 import { GoogleReviews } from "@/components/google-reviews";
 import { CategoryEditModal } from "@/components/category-edit-modal";
+import { RestaurantEditModal } from "@/components/restaurant-edit-modal";
 import Image from "next/image";
 
 // 사용자 등록 맛집용 확장 인터페이스
@@ -16,6 +17,11 @@ interface ExtendedRestaurant extends Restaurant {
   place_id?: string;
   category?: string;
   registered_by?: number;
+  feature?: string;
+  phone_number?: string;
+  opening_hours?: string[];
+  google_map_url?: string;
+  address?: string;
 }
 
 interface UserInfo {
@@ -29,6 +35,8 @@ interface RestaurantDetailProps {
   onBack: () => void;
   user?: UserInfo | null;
   onCategoryChange?: (newCategory: string) => void;
+  onDelete?: () => void;
+  onUpdate?: (updatedData: Partial<ExtendedRestaurant>) => void;
 }
 
 // 이미지 URL 캐시
@@ -45,7 +53,7 @@ const getRestaurantInfoCache = (): Record<string, { priceRange: string | null; p
   return {};
 };
 
-export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange }: RestaurantDetailProps) {
+export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, onDelete, onUpdate }: RestaurantDetailProps) {
   const fallbackUrl = getUnsplashImage(restaurant.이름);
   const [imageUrl, setImageUrl] = useState<string>(fallbackUrl);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,6 +69,12 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange }:
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(restaurant.category || "");
 
+  // 상세 정보 수정 모달 상태
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [currentFeature, setCurrentFeature] = useState(restaurant.feature || restaurant.특징 || "");
+  const [currentPhoneNumber, setCurrentPhoneNumber] = useState(restaurant.phone_number || "");
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // 사용자 등록 맛집인지 확인 (place_id가 있으면 사용자 등록 맛집)
   const isCustomRestaurant = !!restaurant.place_id;
 
@@ -73,6 +87,31 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange }:
   const getCategoryInfo = (categoryId: string) => {
     const cat = categories.find(c => c.id === categoryId);
     return cat ? { icon: cat.icon, name: cat.name } : { icon: "🍽️", name: categoryId };
+  };
+
+  // 맛집 삭제 핸들러
+  const handleDelete = async () => {
+    if (!restaurant.place_id) return;
+    if (!confirm(`"${restaurant.이름}"을(를) 삭제하시겠습니까?\n\n삭제된 맛집은 복구할 수 없습니다.`)) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/custom-restaurants?placeId=${encodeURIComponent(restaurant.place_id)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("맛집이 삭제되었습니다.");
+        onDelete?.();
+        onBack();
+      } else {
+        alert(data.error || "삭제에 실패했습니다.");
+      }
+    } catch {
+      alert("삭제 중 오류가 발생했습니다.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   useEffect(() => {
@@ -162,7 +201,31 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange }:
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="font-semibold truncate">{restaurant.이름}</h1>
+          <h1 className="font-semibold truncate flex-1">{restaurant.이름}</h1>
+          {/* 수정/삭제 버튼 (사용자 등록 맛집 + 권한 있는 경우) */}
+          {canEdit && (
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setEditModalOpen(true)}
+                className="h-9 w-9 text-muted-foreground hover:text-primary"
+                title="맛집 정보 수정"
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                title="맛집 삭제"
+              >
+                <Trash2 className="h-5 w-5" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -292,6 +355,38 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange }:
           onSuccess={(newCategory) => {
             setCurrentCategory(newCategory);
             onCategoryChange?.(newCategory);
+          }}
+        />
+      )}
+
+      {/* 상세 정보 수정 모달 */}
+      {isCustomRestaurant && restaurant.place_id && (
+        <RestaurantEditModal
+          isOpen={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          restaurant={{
+            place_id: restaurant.place_id,
+            name: restaurant.이름,
+            address: restaurant.address || restaurant.위치 || "",
+            category: currentCategory,
+            feature: currentFeature,
+            phone_number: currentPhoneNumber,
+            opening_hours: restaurant.opening_hours,
+            google_map_url: restaurant.google_map_url,
+          }}
+          onSuccess={(updatedData) => {
+            if (updatedData.category) {
+              setCurrentCategory(updatedData.category);
+              onCategoryChange?.(updatedData.category);
+            }
+            if (updatedData.feature !== undefined) {
+              setCurrentFeature(updatedData.feature || "");
+            }
+            if (updatedData.phone_number !== undefined) {
+              setCurrentPhoneNumber(updatedData.phone_number || "");
+              setPhoneNumber(updatedData.phone_number || null);
+            }
+            onUpdate?.(updatedData);
           }}
         />
       )}
