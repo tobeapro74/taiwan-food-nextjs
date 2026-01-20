@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
-import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
+import { JWTPayload } from '@/lib/types';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'taiwan-food-secret-key';
 
 // 리뷰 상세 조회
 export async function GET(
@@ -40,20 +43,30 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 로그인 확인
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session');
-
-    if (!sessionCookie?.value) {
+    // 인증 확인
+    const token = request.cookies.get('auth_token')?.value;
+    if (!token) {
       return NextResponse.json(
         { success: false, error: '로그인이 필요합니다.' },
         { status: 401 }
       );
     }
 
-    const sessionData = JSON.parse(
-      Buffer.from(sessionCookie.value, 'base64').toString('utf-8')
-    );
+    let decoded: JWTPayload;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: '인증이 만료되었습니다. 다시 로그인해주세요.' },
+        { status: 401 }
+      );
+    }
+
+    const sessionData = {
+      id: decoded.userId,
+      name: decoded.name,
+      is_admin: decoded.is_admin,
+    };
 
     const { id } = await params;
     const db = await connectToDatabase();
@@ -108,20 +121,30 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 로그인 확인
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session');
-
-    if (!sessionCookie?.value) {
+    // 인증 확인
+    const token = request.cookies.get('auth_token')?.value;
+    if (!token) {
       return NextResponse.json(
         { success: false, error: '로그인이 필요합니다.' },
         { status: 401 }
       );
     }
 
-    const sessionData = JSON.parse(
-      Buffer.from(sessionCookie.value, 'base64').toString('utf-8')
-    );
+    let decoded: JWTPayload;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: '인증이 만료되었습니다. 다시 로그인해주세요.' },
+        { status: 401 }
+      );
+    }
+
+    const sessionData = {
+      id: decoded.userId,
+      name: decoded.name,
+      is_admin: decoded.is_admin,
+    };
 
     const { id } = await params;
     const db = await connectToDatabase();

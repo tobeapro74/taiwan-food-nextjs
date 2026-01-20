@@ -70,6 +70,7 @@ export interface JWTPayload {
   email: string;
   name: string;
   is_admin: boolean;
+  profile_image?: string;
 }
 
 // 사용자 등록 맛집 타입 (구글맵에서 가져온 정보)
