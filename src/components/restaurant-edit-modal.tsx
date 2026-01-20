@@ -35,6 +35,7 @@ export function RestaurantEditModal({
   const [openingHours, setOpeningHours] = useState(restaurant.opening_hours?.join("\n") || "");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // 모달이 열릴 때 초기값 설정
   useEffect(() => {
@@ -52,7 +53,26 @@ export function RestaurantEditModal({
   // "전체" 카테고리 제외
   const availableCategories = categories.filter((cat) => cat.id !== "전체");
 
+  // 저장 버튼 클릭 시 확인 모달 표시
+  const handleSaveClick = () => {
+    // 변경사항이 있는지 확인
+    const hasChanges =
+      category !== restaurant.category ||
+      feature !== (restaurant.feature || "") ||
+      phoneNumber !== (restaurant.phone_number || "") ||
+      JSON.stringify(openingHours.split("\n").filter(h => h.trim())) !==
+        JSON.stringify(restaurant.opening_hours || []);
+
+    if (!hasChanges) {
+      onClose();
+      return;
+    }
+
+    setShowConfirm(true);
+  };
+
   const handleSubmit = async () => {
+    setShowConfirm(false);
     setIsLoading(true);
     setError("");
 
@@ -242,7 +262,7 @@ export function RestaurantEditModal({
             취소
           </Button>
           <Button
-            onClick={handleSubmit}
+            onClick={handleSaveClick}
             className="flex-1"
             disabled={isLoading}
           >
@@ -254,6 +274,35 @@ export function RestaurantEditModal({
           </Button>
         </div>
       </div>
+
+      {/* 확인 모달 */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-[110] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-background w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in">
+            <div className="p-6 text-center">
+              <h3 className="text-lg font-semibold mb-2">수정 확인</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                맛집 정보를 수정하시겠습니까?
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowConfirm(false)}
+                  className="flex-1"
+                >
+                  취소
+                </Button>
+                <Button
+                  onClick={handleSubmit}
+                  className="flex-1"
+                >
+                  확인
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes scale-in {
