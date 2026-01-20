@@ -82,14 +82,14 @@ export function RestaurantHistoryList({ onBack, onSelectRestaurant }: Restaurant
       </div>
 
       {/* 테이블 헤더 - 데스크탑에서만 표시 */}
-      <div className="sticky top-[60px] z-10 bg-muted/50 border-b border-border hidden md:block">
+      <div className="sticky top-[60px] z-10 bg-muted/50 border-b border-border hidden md:block overflow-hidden">
         <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs font-medium text-muted-foreground">
-          <div className="col-span-1 text-center">#</div>
-          <div className="col-span-2">날짜</div>
-          <div className="col-span-3">맛집명</div>
-          <div className="col-span-3">지역</div>
-          <div className="col-span-2">카테고리</div>
-          <div className="col-span-1 text-center">상태</div>
+          <div className="col-span-1 text-center overflow-hidden">#</div>
+          <div className="col-span-2 overflow-hidden">날짜</div>
+          <div className="col-span-3 overflow-hidden">맛집명</div>
+          <div className="col-span-3 overflow-hidden">지역</div>
+          <div className="col-span-2 overflow-hidden">카테고리</div>
+          <div className="col-span-1 text-center overflow-hidden">상태</div>
         </div>
       </div>
 
@@ -152,19 +152,19 @@ export function RestaurantHistoryList({ onBack, onSelectRestaurant }: Restaurant
                   </div>
 
                   {/* 데스크탑 레이아웃 (테이블 형식) */}
-                  <div className="hidden md:block">
+                  <div className="hidden md:block overflow-hidden">
                     <div className="grid grid-cols-12 gap-2 items-center">
-                      <div className="col-span-1 text-center text-sm font-medium text-muted-foreground">
+                      <div className="col-span-1 text-center text-sm font-medium text-muted-foreground overflow-hidden">
                         {item.seq}
                       </div>
-                      <div className="col-span-2 text-xs text-muted-foreground">
+                      <div className="col-span-2 text-xs text-muted-foreground overflow-hidden whitespace-nowrap">
                         {formatDate(item.registered_at)}
                       </div>
-                      <div className="col-span-3 min-w-0">
+                      <div className="col-span-3 min-w-0 overflow-hidden">
                         {item.action !== "delete" ? (
                           <button
                             onClick={() => onSelectRestaurant?.(item.place_id)}
-                            className="text-sm font-medium text-primary hover:underline flex items-center gap-1 max-w-full"
+                            className="text-sm font-medium text-primary hover:underline flex items-center gap-1 max-w-full overflow-hidden"
                             title={`${item.name} 상세보기`}
                           >
                             <span className="truncate">{item.name}</span>
@@ -176,15 +176,15 @@ export function RestaurantHistoryList({ onBack, onSelectRestaurant }: Restaurant
                           </span>
                         )}
                       </div>
-                      <div className="col-span-3 text-xs text-muted-foreground truncate" title={item.short_address}>
+                      <div className="col-span-3 text-xs text-muted-foreground truncate overflow-hidden" title={item.short_address}>
                         {item.short_address || "-"}
                       </div>
-                      <div className="col-span-2">
-                        <Badge variant="outline" className="text-xs">
+                      <div className="col-span-2 overflow-hidden">
+                        <Badge variant="outline" className="text-xs truncate max-w-full">
                           {item.category}
                         </Badge>
                       </div>
-                      <div className="col-span-1 flex justify-center">
+                      <div className="col-span-1 flex justify-center overflow-hidden">
                         {getActionBadge(item.action)}
                       </div>
                     </div>
