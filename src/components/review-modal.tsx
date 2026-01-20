@@ -1,10 +1,26 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { X, Star, ImagePlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+
+interface Review {
+  id: number;
+  restaurant_id: string;
+  member_id: number;
+  member_name: string;
+  member_profile_image?: string;
+  rating: number;
+  food_rating?: number;
+  service_rating?: number;
+  atmosphere_rating?: number;
+  content: string;
+  photos?: string[];
+  meal_type?: string;
+  created_at: string;
+}
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -13,6 +29,7 @@ interface ReviewModalProps {
   restaurantName: string;
   user: { id: number; name: string; profile_image?: string } | null;
   onSubmit: () => void;
+  editReview?: Review | null;
 }
 
 const mealTypes = ["아침 식사", "브런치", "점심 식사", "저녁 식사", "기타"];
@@ -27,6 +44,7 @@ export function ReviewModal({
   restaurantName,
   user,
   onSubmit,
+  editReview,
 }: ReviewModalProps) {
   const [rating, setRating] = useState(0);
   const [foodRating, setFoodRating] = useState(0);
@@ -38,6 +56,30 @@ export function ReviewModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isEditMode = !!editReview;
+
+  // 수정 모드일 때 기존 데이터로 폼 초기화
+  useEffect(() => {
+    if (isOpen && editReview) {
+      setRating(editReview.rating);
+      setFoodRating(editReview.food_rating || 0);
+      setServiceRating(editReview.service_rating || 0);
+      setAtmosphereRating(editReview.atmosphere_rating || 0);
+      setContent(editReview.content || "");
+      setPhotos(editReview.photos || []);
+      setMealType(editReview.meal_type || null);
+    } else if (isOpen && !editReview) {
+      // 새 리뷰 작성 시 폼 초기화
+      setRating(0);
+      setFoodRating(0);
+      setServiceRating(0);
+      setAtmosphereRating(0);
+      setContent("");
+      setPhotos([]);
+      setMealType(null);
+    }
+  }, [isOpen, editReview]);
 
   if (!isOpen) return null;
 
@@ -180,8 +222,11 @@ export function ReviewModal({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/reviews", {
-        method: "POST",
+      const url = isEditMode ? `/api/reviews/${editReview.id}` : "/api/reviews";
+      const method = isEditMode ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -200,7 +245,7 @@ export function ReviewModal({
       const result = await response.json();
 
       if (result.success) {
-        alert("리뷰가 등록되었습니다.");
+        alert(isEditMode ? "리뷰가 수정되었습니다." : "리뷰가 등록되었습니다.");
         onSubmit();
         onClose();
         // 초기화
@@ -212,11 +257,11 @@ export function ReviewModal({
         setPhotos([]);
         setMealType(null);
       } else {
-        alert(result.error || "리뷰 등록에 실패했습니다.");
+        alert(result.error || (isEditMode ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다."));
       }
     } catch (error) {
       console.error("리뷰 작성 오류:", error);
-      alert("리뷰 등록 중 오류가 발생했습니다.");
+      alert(isEditMode ? "리뷰 수정 중 오류가 발생했습니다." : "리뷰 등록 중 오류가 발생했습니다.");
     } finally {
       setIsSubmitting(false);
     }
@@ -258,7 +303,7 @@ export function ReviewModal({
       <div className="bg-background w-full max-w-lg rounded-2xl max-h-[80vh] flex flex-col">
         {/* 헤더 */}
         <div className="flex-shrink-0 border-b px-4 py-3 flex items-center justify-between rounded-t-2xl">
-          <h2 className="text-lg font-semibold">{restaurantName}</h2>
+          <h2 className="text-lg font-semibold">{isEditMode ? "리뷰 수정" : restaurantName}</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-muted"
@@ -387,7 +432,7 @@ export function ReviewModal({
             disabled={rating === 0 || isSubmitting || isUploading}
             className="w-full py-5 text-lg"
           >
-            {isSubmitting ? "게시 중..." : "게시"}
+            {isSubmitting ? (isEditMode ? "수정 중..." : "게시 중...") : (isEditMode ? "수정" : "게시")}
           </Button>
         </div>
       </div>

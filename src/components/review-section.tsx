@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Star, Plus, User } from "lucide-react";
+import { Star, Plus, User, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReviewModal } from "@/components/review-modal";
@@ -42,6 +42,7 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
 
   // 사용자 정보 가져오기
   useEffect(() => {
@@ -92,6 +93,35 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
       month: "long",
       day: "numeric",
     });
+  };
+
+  // 리뷰 수정
+  const handleEditReview = (review: Review) => {
+    setEditingReview(review);
+    setIsModalOpen(true);
+  };
+
+  // 리뷰 삭제
+  const handleDeleteReview = async (reviewId: number) => {
+    if (!confirm("리뷰를 삭제하시겠습니까?")) return;
+
+    try {
+      const res = await fetch(`/api/reviews/${reviewId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        setReviews((prev) => prev.filter((r) => r.id !== reviewId));
+      } else {
+        alert(data.error || "삭제에 실패했습니다.");
+      }
+    } catch {
+      alert("삭제 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 모달 닫기
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingReview(null);
   };
 
   // 별점 표시
@@ -152,24 +182,47 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
               {reviews.map((review) => (
                 <div key={review.id} className="border-b border-border pb-4 last:border-0">
                   {/* 작성자 정보 */}
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                      {review.member_profile_image ? (
-                        <img
-                          src={review.member_profile_image}
-                          alt={review.member_name}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <User className="w-5 h-5 text-primary" />
-                      )}
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        {review.member_profile_image ? (
+                          <img
+                            src={review.member_profile_image}
+                            alt={review.member_name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <User className="w-5 h-5 text-primary" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium">{review.member_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(review.created_at)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{review.member_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(review.created_at)}
-                      </p>
-                    </div>
+                    {/* 수정/삭제 버튼 (본인 또는 관리자만) */}
+                    {user && (user.id === review.member_id || user.is_admin) && (
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          onClick={() => handleEditReview(review)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => handleDeleteReview(review.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {/* 별점 */}
@@ -216,14 +269,18 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
         </CardContent>
       </Card>
 
-      {/* 리뷰 작성 모달 */}
+      {/* 리뷰 작성/수정 모달 */}
       <ReviewModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         restaurantId={restaurantId}
         restaurantName={restaurantName}
         user={user}
-        onSubmit={fetchReviews}
+        onSubmit={() => {
+          fetchReviews();
+          setEditingReview(null);
+        }}
+        editReview={editingReview}
       />
 
       {/* 로그인 모달 */}
