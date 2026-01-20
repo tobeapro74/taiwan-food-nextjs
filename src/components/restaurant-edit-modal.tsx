@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, Loader2, Check } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { X, Loader2, Check, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { categories } from "@/data/taiwan-food";
+
+// 좌표 형식 감지 정규식: (25.055701, 121.519953) 또는 25.055701, 121.519953
+const COORDINATE_REGEX = /^\s*\(?\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*\)?\s*$/;
 
 interface RestaurantData {
   place_id: string;
@@ -14,6 +17,7 @@ interface RestaurantData {
   phone_number?: string;
   opening_hours?: string[];
   google_map_url?: string;
+  coordinates?: { lat: number; lng: number };
 }
 
 interface RestaurantEditModalProps {
@@ -33,7 +37,12 @@ export function RestaurantEditModal({
   const [feature, setFeature] = useState(restaurant.feature || "");
   const [phoneNumber, setPhoneNumber] = useState(restaurant.phone_number || "");
   const [openingHours, setOpeningHours] = useState(restaurant.opening_hours?.join("\n") || "");
+  const [address, setAddress] = useState(restaurant.address);
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(
+    restaurant.coordinates || null
+  );
   const [isLoading, setIsLoading] = useState(false);
+  const [isConvertingAddress, setIsConvertingAddress] = useState(false);
   const [error, setError] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -44,9 +53,51 @@ export function RestaurantEditModal({
       setFeature(restaurant.feature || "");
       setPhoneNumber(restaurant.phone_number || "");
       setOpeningHours(restaurant.opening_hours?.join("\n") || "");
+      setAddress(restaurant.address);
+      setCoordinates(restaurant.coordinates || null);
       setError("");
     }
   }, [isOpen, restaurant]);
+
+  // 좌표를 주소로 변환하는 함수
+  const convertCoordinatesToAddress = useCallback(async (lat: number, lng: number) => {
+    setIsConvertingAddress(true);
+    try {
+      const res = await fetch("/api/reverse-geocode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat, lng }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAddress(data.data.address);
+        setCoordinates({ lat, lng });
+      } else {
+        setError(data.error || "주소 변환에 실패했습니다.");
+      }
+    } catch {
+      setError("주소 변환 중 오류가 발생했습니다.");
+    } finally {
+      setIsConvertingAddress(false);
+    }
+  }, []);
+
+  // 주소 입력 처리 (좌표 감지 포함)
+  const handleAddressChange = useCallback((value: string) => {
+    setAddress(value);
+
+    // 좌표 형식인지 확인
+    const match = value.match(COORDINATE_REGEX);
+    if (match) {
+      const lat = parseFloat(match[1]);
+      const lng = parseFloat(match[2]);
+
+      // 유효한 좌표인지 확인 (대만 근처 범위)
+      if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        convertCoordinatesToAddress(lat, lng);
+      }
+    }
+  }, [convertCoordinatesToAddress]);
 
   if (!isOpen) return null;
 
@@ -60,6 +111,7 @@ export function RestaurantEditModal({
       category !== restaurant.category ||
       feature !== (restaurant.feature || "") ||
       phoneNumber !== (restaurant.phone_number || "") ||
+      address !== restaurant.address ||
       JSON.stringify(openingHours.split("\n").filter(h => h.trim())) !==
         JSON.stringify(restaurant.opening_hours || []);
 
@@ -88,6 +140,13 @@ export function RestaurantEditModal({
       }
       if (phoneNumber !== (restaurant.phone_number || "")) {
         updates.phone_number = phoneNumber || null;
+      }
+      if (address !== restaurant.address) {
+        updates.address = address;
+        // 좌표도 함께 업데이트
+        if (coordinates) {
+          updates.coordinates = coordinates;
+        }
       }
 
       const newOpeningHours = openingHours.split("\n").filter(h => h.trim());
@@ -172,12 +231,32 @@ export function RestaurantEditModal({
             </div>
           </div>
 
-          {/* 주소 (읽기 전용) */}
+          {/* 주소 */}
           <div>
-            <label className="block text-sm font-medium mb-2">주소</label>
-            <div className="px-3 py-2 bg-muted rounded-lg text-sm text-muted-foreground">
-              {restaurant.address}
+            <label className="block text-sm font-medium mb-2">
+              <span className="flex items-center gap-1">
+                <MapPin className="w-4 h-4" />
+                주소
+              </span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => handleAddressChange(e.target.value)}
+                placeholder="주소 또는 좌표를 입력하세요"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+                disabled={isConvertingAddress}
+              />
+              {isConvertingAddress && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                </div>
+              )}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              💡 구글맵에서 복사한 좌표 (25.xxx, 121.xxx) 붙여넣기 시 자동 변환
+            </p>
           </div>
 
           {/* 에러 메시지 */}
