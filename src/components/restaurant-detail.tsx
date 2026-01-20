@@ -194,7 +194,11 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
     fetchRestaurantInfo();
   }, [restaurant.이름, restaurant.가격대, restaurant.전화번호, restaurant.빌딩, cacheKey, infoCache]);
 
-  const googleMapsUrl = getGoogleMapsLink(restaurant.이름, restaurant.위치);
+  // 구글 지도 URL 생성: 사용자 등록 맛집은 google_map_url 또는 address 사용
+  const googleMapsUrl = isCustomRestaurant
+    ? restaurant.google_map_url ||
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address || restaurant.이름)}`
+    : getGoogleMapsLink(restaurant.이름, restaurant.위치);
 
   return (
     <div className="min-h-screen pb-20">
