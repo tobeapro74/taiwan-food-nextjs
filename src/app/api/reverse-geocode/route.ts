@@ -51,8 +51,17 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
 
     if (data.status !== "OK" || !data.results || data.results.length === 0) {
+      console.error("Geocoding API response:", data);
       return NextResponse.json(
-        { success: false, error: "해당 좌표의 주소를 찾을 수 없습니다." },
+        {
+          success: false,
+          error: data.status === "REQUEST_DENIED"
+            ? "API 권한이 거부되었습니다. Geocoding API가 활성화되어 있는지 확인해주세요."
+            : data.status === "OVER_QUERY_LIMIT"
+            ? "API 요청 한도를 초과했습니다."
+            : `해당 좌표의 주소를 찾을 수 없습니다. (${data.status})`,
+          details: data.error_message || data.status
+        },
         { status: 404 }
       );
     }
@@ -60,10 +69,20 @@ export async function POST(request: NextRequest) {
     // 가장 정확한 주소 선택 (첫 번째 결과)
     const result = data.results[0];
 
+    // Plus Code 추출 (compound_code가 더 상세한 주소 역할)
+    // plus_code는 응답의 최상위 레벨에 있음
+    const plusCode = data.plus_code;
+    // compound_code: "7QQ2+JQR 산충구 신베이시 대만" 형식
+    // global_code: "7QQ27QQ2+JQR" 형식
+    const compoundCode = plusCode?.compound_code || "";
+
     return NextResponse.json({
       success: true,
       data: {
-        address: result.formatted_address,
+        address: compoundCode || result.formatted_address,
+        formatted_address: result.formatted_address,
+        plus_code: compoundCode,
+        global_code: plusCode?.global_code || "",
         coordinates: {
           lat: latitude,
           lng: longitude,
