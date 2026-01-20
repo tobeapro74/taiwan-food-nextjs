@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, Info, Map, Phone, Banknote, Building2, Tag, Settings, Trash2 } from "lucide-react";
+import { ArrowLeft, MapPin, Info, Map, Phone, Banknote, Building2, Tag, Settings, Trash2, Clock, Star } from "lucide-react";
 import { Restaurant, getGoogleMapsLink, getUnsplashImage, categories } from "@/data/taiwan-food";
 import { ReviewSection } from "@/components/review-section";
 import { GoogleReviews } from "@/components/google-reviews";
@@ -22,6 +22,8 @@ interface ExtendedRestaurant extends Restaurant {
   opening_hours?: string[];
   google_map_url?: string;
   address?: string;
+  google_rating?: number;
+  google_reviews_count?: number;
 }
 
 interface UserInfo {
@@ -276,29 +278,60 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
 
             {/* 상세 정보 목록 */}
             <div className="space-y-3 bg-muted/30 rounded-xl p-4">
-              {restaurant.위치 && (
+              {/* 주소 - 사용자 등록 맛집은 address, 정적 데이터는 위치 */}
+              {(restaurant.address || restaurant.위치) && (
                 <div className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">{restaurant.위치}</span>
+                  <span className="text-sm">{restaurant.address || restaurant.위치}</span>
                 </div>
               )}
 
-              {restaurant.특징 && (
+              {/* Google 평점 (사용자 등록 맛집) */}
+              {isCustomRestaurant && restaurant.google_rating && (
+                <div className="flex items-center gap-3">
+                  <Star className="h-5 w-5 text-yellow-500 flex-shrink-0 fill-yellow-500" />
+                  <span className="text-sm">
+                    {restaurant.google_rating.toFixed(1)}
+                    {restaurant.google_reviews_count && (
+                      <span className="text-muted-foreground ml-1">
+                        ({restaurant.google_reviews_count.toLocaleString()}개 리뷰)
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+
+              {/* 특징/메모 - 사용자 등록 맛집은 feature, 정적 데이터는 특징 */}
+              {(currentFeature || restaurant.특징) && (
                 <div className="flex items-start gap-3">
                   <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">{restaurant.특징}</span>
+                  <span className="text-sm">{currentFeature || restaurant.특징}</span>
                 </div>
               )}
 
-              {/* 전화번호 - DB에서 가져온 전화번호 표시 */}
-              {phoneNumber && (
+              {/* 전화번호 - 사용자 등록 맛집은 phone_number 우선 사용 */}
+              {(currentPhoneNumber || phoneNumber) && (
                 <a
-                  href={`tel:${phoneNumber}`}
+                  href={`tel:${currentPhoneNumber || phoneNumber}`}
                   className="flex items-center gap-3 hover:text-primary transition-colors"
                 >
                   <Phone className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                  <span className="text-sm">{phoneNumber}</span>
+                  <span className="text-sm">{currentPhoneNumber || phoneNumber}</span>
                 </a>
+              )}
+
+              {/* 영업시간 (사용자 등록 맛집) */}
+              {isCustomRestaurant && restaurant.opening_hours && restaurant.opening_hours.length > 0 && (
+                <div className="flex items-start gap-3">
+                  <Clock className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                  <div className="text-sm space-y-0.5">
+                    {restaurant.opening_hours.map((hour, index) => (
+                      <div key={index} className={hour.includes("휴무") ? "text-red-500" : ""}>
+                        {hour}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {/* 가격대 - DB에서 가져온 가격대 표시 */}
@@ -309,8 +342,8 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
                 </div>
               )}
 
-              {/* 로딩 표시 */}
-              {!infoLoaded && (
+              {/* 로딩 표시 (정적 데이터 맛집에서만) */}
+              {!isCustomRestaurant && !infoLoaded && (
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <div className="h-5 w-5 animate-pulse bg-muted rounded" />
                   <span className="text-sm animate-pulse">정보 불러오는 중...</span>
