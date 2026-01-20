@@ -116,6 +116,11 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
     }
   };
 
+  // 컴포넌트 마운트 시 스크롤 상단으로 이동
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     // 캐시에 있으면 바로 사용
     if (imageCache[cacheKey]) {
