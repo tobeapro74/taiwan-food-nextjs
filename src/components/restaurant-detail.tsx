@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, Info, Map, Phone, Banknote, Building2, Edit3, Tag, Settings, Trash2 } from "lucide-react";
+import { ArrowLeft, MapPin, Info, Map, Phone, Banknote, Building2, Tag, Settings, Trash2 } from "lucide-react";
 import { Restaurant, getGoogleMapsLink, getUnsplashImage, categories } from "@/data/taiwan-food";
 import { ReviewSection } from "@/components/review-section";
 import { GoogleReviews } from "@/components/google-reviews";
@@ -256,13 +256,9 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
             <div className="flex flex-wrap gap-2 items-center">
               {/* 카테고리 배지 (사용자 등록 맛집인 경우) */}
               {isCustomRestaurant && currentCategory && (
-                <Badge
-                  className="bg-primary/10 text-primary border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors"
-                  onClick={() => canEdit && setCategoryModalOpen(true)}
-                >
+                <Badge className="bg-primary/10 text-primary border-primary/20">
                   <Tag className="h-3 w-3 mr-1" />
                   {getCategoryInfo(currentCategory).icon} {getCategoryInfo(currentCategory).name}
-                  {canEdit && <Edit3 className="h-3 w-3 ml-1" />}
                 </Badge>
               )}
               {restaurant.야시장 && (
