@@ -94,6 +94,67 @@
 
 ---
 
+### POST /api/auth/send-verification
+이메일 인증 코드 발송 (Resend API)
+
+**Request Body**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "인증 코드가 발송되었습니다."
+}
+```
+
+---
+
+### POST /api/auth/verify-code
+이메일 인증 코드 확인
+
+**Request Body**
+```json
+{
+  "email": "user@example.com",
+  "code": "123456"
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "이메일이 인증되었습니다."
+}
+```
+
+---
+
+### DELETE /api/auth/delete-account
+계정 삭제 (인증 필요)
+
+**Request Body**
+```json
+{
+  "password": "현재비밀번호"
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "계정이 삭제되었습니다."
+}
+```
+
+---
+
 ## 리뷰 API
 
 ### GET /api/reviews
@@ -158,6 +219,33 @@
 
 ---
 
+### PUT /api/reviews/[id]
+리뷰 수정 (본인 리뷰만)
+
+**Request Body**
+```json
+{
+  "restaurant_id": "맛집ID",
+  "rating": 4,
+  "food_rating": 4,
+  "service_rating": 4,
+  "atmosphere_rating": 4,
+  "content": "수정된 리뷰 내용",
+  "photos": ["https://cloudinary.com/..."],
+  "meal_type": "저녁 식사"
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "리뷰가 수정되었습니다."
+}
+```
+
+---
+
 ### DELETE /api/reviews/[id]
 리뷰 삭제 (본인 리뷰만)
 
@@ -214,6 +302,254 @@ Google Places 이미지 프록시
 
 ---
 
+## 사용자 등록 맛집 API
+
+### GET /api/custom-restaurants
+사용자 등록 맛집 목록 조회
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| category | X | 카테고리 필터 |
+
+**Response**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "place_id": "ChIJ...",
+      "name": "맛집명",
+      "address": "주소",
+      "category": "면류",
+      "feature": "특징",
+      "google_rating": 4.5,
+      "google_reviews_count": 100,
+      "coordinates": { "lat": 25.0, "lng": 121.5 },
+      "price_level": 2,
+      "phone_number": "+886...",
+      "registered_by": 1,
+      "registered_by_name": "사용자명",
+      "created_at": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### POST /api/custom-restaurants
+맛집 등록 (인증 필요, 관리자만)
+
+**Request Body**
+```json
+{
+  "place_id": "ChIJ...",
+  "name": "맛집명",
+  "address": "주소",
+  "category": "면류",
+  "feature": "특징 메모",
+  "coordinates": { "lat": 25.0, "lng": 121.5 },
+  "google_rating": 4.5,
+  "google_reviews_count": 100,
+  "price_level": 2,
+  "phone_number": "+886...",
+  "opening_hours": ["월-금 10:00-22:00"],
+  "photos": ["https://..."],
+  "website": "https://...",
+  "google_map_url": "https://maps.google.com/..."
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "맛집이 등록되었습니다.",
+  "data": { "insertedId": "..." }
+}
+```
+
+**에러 응답 (중복 등록)**
+```json
+{
+  "success": false,
+  "error": "이미 등록된 맛집입니다."
+}
+```
+
+---
+
+### PATCH /api/custom-restaurants
+카테고리 수정 (등록자 또는 관리자만)
+
+**Request Body**
+```json
+{
+  "place_id": "ChIJ...",
+  "category": "카페"
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "카테고리가 수정되었습니다.",
+  "data": { "place_id": "...", "category": "카페" }
+}
+```
+
+---
+
+### PUT /api/custom-restaurants
+맛집 정보 수정 (등록자 또는 관리자만)
+
+**Request Body**
+```json
+{
+  "old_place_id": "ChIJ...",
+  "address": "새 주소",
+  "feature": "새 특징/메모",
+  "coordinates": { "lat": 25.0, "lng": 121.5 },
+  "phone_number": "+886...",
+  "opening_hours": ["월-금 10:00-22:00"]
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "맛집 정보가 수정되었습니다.",
+  "data": { "old_place_id": "...", "address": "..." }
+}
+```
+
+**히스토리 자동 기록**
+- 변경된 필드가 있으면 자동으로 `restaurant_history`에 기록
+- memo: "정보 수정: 주소, 좌표" 형식으로 변경 내용 기록
+
+---
+
+### DELETE /api/custom-restaurants
+맛집 삭제 (등록자 본인만)
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| place_id | O | 삭제할 맛집의 place_id |
+
+**Response**
+```json
+{
+  "success": true
+}
+```
+
+---
+
+## 실시간 평점 API
+
+### POST /api/ratings
+여러 맛집의 실시간 평점 조회 (Google Places API)
+
+**Request Body**
+```json
+{
+  "names": ["맛집1", "맛집2", "맛집3"]
+}
+```
+
+**Response**
+```json
+{
+  "ratings": {
+    "맛집1": { "rating": 4.5, "userRatingsTotal": 150 },
+    "맛집2": { "rating": 4.2, "userRatingsTotal": 80 },
+    "맛집3": { "rating": null, "userRatingsTotal": null }
+  }
+}
+```
+
+---
+
+## 맛집 등록 히스토리 API
+
+### GET /api/restaurant-history
+히스토리 목록 조회
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| page | X | 페이지 번호 (기본: 1) |
+| limit | X | 페이지당 항목 수 (기본: 20) |
+| action | X | 액션 필터 (register/delete/update) |
+
+**Response**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "seq": 8,
+      "place_id": "ChIJ...",
+      "name": "LA VILLA DANSHUI",
+      "short_address": "Zhongzheng District",
+      "category": "카페",
+      "registered_by": 2,
+      "registered_by_name": "박병철",
+      "registered_at": "2024-01-15T10:30:00.000Z",
+      "action": "register"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 8,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+### POST /api/restaurant-history
+히스토리 수동 추가 (인증 필요)
+
+**Request Body**
+```json
+{
+  "place_id": "ChIJ...",
+  "name": "맛집명",
+  "short_address": "지역명",
+  "category": "면류",
+  "action": "register",
+  "memo": "메모 (선택)"
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "히스토리가 추가되었습니다.",
+  "data": {
+    "seq": 9,
+    "place_id": "ChIJ...",
+    "name": "맛집명",
+    "short_address": "지역명",
+    "category": "면류",
+    "registered_by": 2,
+    "registered_by_name": "박병철",
+    "registered_at": "2024-01-15T11:00:00.000Z",
+    "action": "register"
+  }
+}
+```
+
+---
+
 ## 에러 응답 형식
 
 모든 API는 에러 발생 시 다음 형식으로 응답합니다:
@@ -234,3 +570,136 @@ Google Places 이미지 프록시
 | 403 | 권한 없음 |
 | 404 | 리소스 없음 |
 | 500 | 서버 오류 |
+
+---
+
+## 역지오코딩 API
+
+### POST /api/reverse-geocode
+좌표를 주소로 변환 (Google Geocoding API)
+
+**Request Body**
+```json
+{
+  "lat": 25.055701,
+  "lng": 121.519953
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "data": {
+    "address": "3F4M+5G6 大安區 臺北市 대만",
+    "formatted_address": "No. 123, Section 4, Zhongxiao East Road, Da'an District, Taipei City, Taiwan 106",
+    "plus_code": "3F4M+5G6 大安區 臺北市 대만",
+    "global_code": "7QQ23F4M+5G6",
+    "coordinates": { "lat": 25.055701, "lng": 121.519953 },
+    "place_id": "ChIJ..."
+  }
+}
+```
+
+**특징**
+- **Plus Code 우선 반환**: `compound_code`를 기본 주소로 사용
+- Plus Code는 Google Maps에서 직접 검색 가능한 형식
+- Plus Code가 없으면 `formatted_address` 사용
+
+**에러 응답**
+```json
+{
+  "success": false,
+  "error": "API 권한이 거부되었습니다. Geocoding API가 활성화되어 있는지 확인해주세요.",
+  "details": "REQUEST_DENIED"
+}
+```
+
+**유효성 검사**
+- 위도: -90 ~ 90
+- 경도: -180 ~ 180
+
+---
+
+## Google Place Details API
+
+### POST /api/google-place-details
+장소 상세 정보 조회
+
+**Request Body**
+```json
+{
+  "placeId": "ChIJ..."
+}
+```
+또는
+```json
+{
+  "query": "장소 검색어"
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "data": {
+    "place_id": "ChIJ...",
+    "name": "장소명",
+    "address": "주소",
+    "coordinates": { "lat": 25.0, "lng": 121.5 },
+    "rating": 4.5,
+    "reviews_count": 100,
+    "price_level": 2,
+    "price_level_text": "보통 (NT$100~300)",
+    "phone_number": "+886...",
+    "opening_hours": ["월: 10:00-22:00", ...],
+    "photos": ["https://..."],
+    "website": "https://...",
+    "google_map_url": "https://maps.google.com/...",
+    "suggested_category": "밥류",
+    "types": ["restaurant", "food"]
+  }
+}
+```
+
+---
+
+### GET /api/google-place-details
+장소 검색 (자동완성)
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| q | O | 검색어 |
+| mode | X | "textsearch" - 리뷰 수 포함 검색 |
+
+**Response (기본 - Autocomplete)**
+```json
+{
+  "results": [
+    {
+      "place_id": "ChIJ...",
+      "description": "장소명, 주소",
+      "name": "장소명",
+      "secondary_text": "주소"
+    }
+  ]
+}
+```
+
+**Response (mode=textsearch)**
+```json
+{
+  "results": [
+    {
+      "place_id": "ChIJ...",
+      "name": "장소명",
+      "address": "주소",
+      "coordinates": { "lat": 25.0, "lng": 121.5 },
+      "rating": 4.5,
+      "reviews_count": 100
+    }
+  ]
+}
+```

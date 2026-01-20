@@ -30,10 +30,10 @@
 └───────┼─────────────┼─────────────┼─────────────┼───────────────┘
         │             │             │             │
         ▼             ▼             ▼             ▼
-┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐
-│  MongoDB  │  │  MongoDB  │  │Cloudinary │  │  Google   │
-│  (Users)  │  │ (Reviews) │  │  (Image)  │  │  Places   │
-└───────────┘  └───────────┘  └───────────┘  └───────────┘
+┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐
+│  MongoDB  │  │  MongoDB  │  │  MongoDB  │  │Cloudinary │  │  Google   │  │  Resend   │
+│  (Users)  │  │ (Reviews) │  │ (History) │  │  (Image)  │  │  Places   │  │  (Email)  │
+└───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘
 ```
 
 ## 컴포넌트 구조
@@ -41,58 +41,76 @@
 ```
 src/
 ├── app/
-│   ├── api/                    # API Routes (Serverless Functions)
+│   ├── api/                       # API Routes (Serverless Functions)
 │   │   ├── auth/
-│   │   │   ├── login/route.ts     # POST: 로그인
-│   │   │   ├── logout/route.ts    # POST: 로그아웃
-│   │   │   ├── register/route.ts  # POST: 회원가입
-│   │   │   └── me/route.ts        # GET: 현재 사용자
+│   │   │   ├── login/route.ts        # POST: 로그인
+│   │   │   ├── logout/route.ts       # POST: 로그아웃
+│   │   │   ├── register/route.ts     # POST: 회원가입
+│   │   │   ├── me/route.ts           # GET: 현재 사용자
+│   │   │   ├── delete-account/route.ts # DELETE: 계정 삭제
+│   │   │   ├── send-verification/route.ts # POST: 인증 코드 발송
+│   │   │   └── verify-code/route.ts  # POST: 인증 코드 확인
 │   │   ├── reviews/
-│   │   │   ├── route.ts           # GET/POST: 리뷰 목록/작성
-│   │   │   └── [id]/route.ts      # DELETE: 리뷰 삭제
-│   │   ├── upload/route.ts        # POST: 이미지 업로드
-│   │   └── place-photo/route.ts   # GET: Google Places 이미지 프록시
-│   ├── globals.css             # 전역 스타일
-│   ├── layout.tsx              # 루트 레이아웃
-│   └── page.tsx                # 메인 페이지 (SPA 라우팅)
+│   │   │   ├── route.ts              # GET/POST: 리뷰 목록/작성
+│   │   │   └── [id]/route.ts         # PUT/DELETE: 리뷰 수정/삭제
+│   │   ├── custom-restaurants/
+│   │   │   └── route.ts              # GET/POST/PATCH/PUT/DELETE: 사용자 맛집
+│   │   ├── reverse-geocode/
+│   │   │   └── route.ts              # POST: 좌표→주소 변환 (역지오코딩)
+│   │   ├── google-place-details/
+│   │   │   └── route.ts              # GET/POST: Google Places 장소 검색/상세
+│   │   ├── restaurant-history/
+│   │   │   └── route.ts              # GET/POST: 등록 히스토리
+│   │   ├── ratings/route.ts          # POST: 실시간 평점 조회
+│   │   ├── upload/route.ts           # POST: 이미지 업로드
+│   │   ├── place-photo/route.ts      # GET: Google Places 이미지 프록시
+│   │   └── restaurant-prices/[name]/route.ts # GET: 가격/전화번호 조회
+│   ├── globals.css                # 전역 스타일
+│   ├── layout.tsx                 # 루트 레이아웃
+│   └── page.tsx                   # 메인 페이지 (SPA 라우팅)
 │
 ├── components/
-│   ├── ui/                     # shadcn/ui 컴포넌트
+│   ├── ui/                        # shadcn/ui 컴포넌트
 │   │   ├── button.tsx
 │   │   ├── card.tsx
 │   │   ├── dialog.tsx
-│   │   ├── sheet.tsx           # 바텀 시트 (모달)
+│   │   ├── sheet.tsx              # 바텀 시트 (모달)
 │   │   ├── scroll-area.tsx
 │   │   └── ...
-│   ├── auth-modal.tsx          # 로그인/회원가입 모달
-│   ├── bottom-nav.tsx          # 하단 네비게이션 (5탭)
-│   ├── category-sheet.tsx      # 카테고리 선택 시트
-│   ├── restaurant-card.tsx     # 맛집 카드
-│   ├── restaurant-detail.tsx   # 맛집 상세
-│   ├── restaurant-list.tsx     # 맛집 목록
-│   ├── nearby-restaurants.tsx  # 주변 맛집 찾기
-│   ├── google-reviews.tsx      # Google 리뷰 섹션
-│   ├── review-modal.tsx        # 리뷰 작성 모달
-│   └── review-section.tsx      # 리뷰 목록 섹션
+│   ├── auth-modal.tsx             # 로그인/회원가입 모달 (이메일 인증)
+│   ├── bottom-nav.tsx             # 하단 네비게이션 (5탭)
+│   ├── category-sheet.tsx         # 카테고리 선택 시트
+│   ├── category-edit-modal.tsx    # 카테고리 수정 모달
+│   ├── restaurant-edit-modal.tsx  # 맛집 정보 수정 모달 (주소/좌표 자동변환)
+│   ├── add-restaurant-modal.tsx   # 맛집 등록 모달
+│   ├── restaurant-card.tsx        # 맛집 카드
+│   ├── restaurant-detail.tsx      # 맛집 상세
+│   ├── restaurant-list.tsx        # 맛집 목록 (실시간 평점)
+│   ├── nearby-restaurants.tsx     # 주변 맛집 찾기
+│   ├── restaurant-history.tsx     # 등록 히스토리 목록
+│   ├── google-reviews.tsx         # Google 리뷰 섹션
+│   ├── review-modal.tsx           # 리뷰 작성 모달
+│   └── review-section.tsx         # 리뷰 목록 섹션
 │
 ├── hooks/
-│   ├── useSwipeBack.ts         # iOS 스타일 스와이프 뒤로가기
-│   └── useUserLocation.ts      # 사용자 위치 관리
+│   ├── useSwipeBack.ts            # iOS 스타일 스와이프 뒤로가기
+│   └── useUserLocation.ts         # 사용자 위치 관리
 │
 ├── data/
-│   └── taiwan-food.ts          # 맛집 정적 데이터 + 헬퍼 함수
+│   └── taiwan-food.ts             # 맛집 정적 데이터 + 헬퍼 함수
 │
 └── lib/
-    ├── mongodb.ts              # MongoDB 연결
-    ├── geo-utils.ts            # 위치/거리 계산 유틸리티
-    ├── types.ts                # TypeScript 타입 정의
-    └── utils.ts                # 유틸리티 (cn 함수)
+    ├── mongodb.ts                 # MongoDB 연결
+    ├── geo-utils.ts               # 위치/거리 계산 유틸리티
+    ├── types.ts                   # TypeScript 타입 정의
+    └── utils.ts                   # 유틸리티 (cn 함수)
 ```
 
 ## 데이터 흐름
 
-### 1. 맛집 데이터 (정적)
+### 1. 맛집 데이터
 
+#### 1.1 정적 데이터
 ```
 taiwan-food.ts ──► getRestaurantsByCategory() ──► 컴포넌트
                  ──► getRestaurantsByMarket()
@@ -102,9 +120,21 @@ taiwan-food.ts ──► getRestaurantsByCategory() ──► 컴포넌트
 ```
 
 - 맛집 데이터는 `taiwan-food.ts`에 정적으로 저장
-- 카테고리: 면류, 밥류, 만두, 우육탕, 훠궈, 디저트, 길거리음식, 카페, 공차, 까르푸
+- 카테고리: 면류, 밥류, 탕류, 만두, 디저트, 길거리음식, 카페, 까르푸
 - 야시장: 스린, 닝샤, 라오허제, 통화, 펑자, 단수이
 - 도심투어: 시먼딩, 융캉제, 중산, 신이
+
+#### 1.2 사용자 등록 맛집 (동적)
+```
+┌──────────┐   GET /api/custom-restaurants  ┌──────────────────┐
+│ 클라이언트│ ──────────────────────────────► │ MongoDB          │
+│          │ ◄────────────────────────────── │ custom_restaurants│
+└──────────┘                                 └──────────────────┘
+```
+
+- MongoDB `custom_restaurants` 컬렉션에 저장
+- Google Places API로 장소 정보 자동 조회
+- 정적 데이터와 병합하여 표시
 
 ### 2. 리뷰 데이터 (동적)
 
@@ -137,7 +167,7 @@ taiwan-food.ts ──► getRestaurantsByCategory() ──► 컴포넌트
 
 ```typescript
 // 뷰 상태
-currentView: "home" | "list" | "detail" | "nearby"
+currentView: "home" | "list" | "detail" | "nearby" | "history"
 previousView: "home" | "list" | "nearby"  // 뒤로가기 추적용
 
 // 탭 상태
@@ -205,10 +235,27 @@ page.tsx (상태 관리)
 ### JWT 토큰 구조
 ```json
 {
-  "id": 1,
+  "userId": 1,
   "email": "user@example.com",
+  "name": "사용자명",
+  "is_admin": false,
   "exp": 1234567890
 }
+```
+
+### 이메일 인증 흐름 (Resend API)
+```
+┌─────────┐  POST /send-verification  ┌─────────┐  API 호출   ┌─────────┐
+│ 클라이언트│ ───────────────────────► │   API   │ ──────────► │ Resend  │
+│         │                           │         │             │  Email  │
+└─────────┘                           └────┬────┘             └─────────┘
+                                           │
+                                           ▼
+                                    ┌─────────────────┐
+                                    │ MongoDB         │
+                                    │ email_verifications│
+                                    │ (code, expires) │
+                                    └─────────────────┘
 ```
 
 ## UI/UX 패턴
@@ -229,6 +276,8 @@ page.tsx (상태 관리)
 야시장 ───► 목록 ─► 상세
 도심투어 ─► 목록 ─► 상세
 맛집알리미 ─► 상세
+
+사용자메뉴 ─► 등록 히스토리
 ```
 
 ### 뒤로가기 로직
@@ -284,6 +333,7 @@ GitHub Repository
 │ MongoDB Atlas   │
 │ Cloudinary      │
 │ Google Places   │
+│ Resend (Email)  │
 └─────────────────┘
 ```
 
@@ -302,3 +352,138 @@ GitHub Repository
 ### 번들 최적화
 - 컴포넌트 동적 임포트 (필요시)
 - Tree shaking (Lucide Icons)
+
+---
+
+## 주요 기능 구현 패턴
+
+### 좌표→주소 자동 변환 (역지오코딩)
+
+맛집 수정 모달에서 사용자가 좌표를 붙여넣으면 자동으로 주소로 변환됩니다.
+
+```typescript
+// 좌표 형식 감지 정규식
+const COORDINATE_REGEX = /^\s*\(?\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*\)?\s*$/;
+
+// 지원 형식
+// - (25.055701, 121.519953)  // 괄호 포함
+// - 25.055701, 121.519953    // 괄호 없음
+
+// 사용 예시
+const handleAddressChange = useCallback((value: string) => {
+  setAddress(value);
+
+  const match = value.match(COORDINATE_REGEX);
+  if (match) {
+    const lat = parseFloat(match[1]);
+    const lng = parseFloat(match[2]);
+
+    // 유효한 좌표인지 확인
+    if (!isNaN(lat) && !isNaN(lng) &&
+        lat >= -90 && lat <= 90 &&
+        lng >= -180 && lng <= 180) {
+      convertCoordinatesToAddress(lat, lng);
+    }
+  }
+}, [convertCoordinatesToAddress]);
+
+// API 호출
+const convertCoordinatesToAddress = async (lat: number, lng: number) => {
+  const res = await fetch("/api/reverse-geocode", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ lat, lng }),
+  });
+  const data = await res.json();
+  if (data.success) {
+    setAddress(data.data.address);  // Plus Code 반환
+    setCoordinates({ lat, lng });
+  }
+};
+```
+
+### Plus Code 활용
+
+Google Geocoding API의 `compound_code`를 기본 주소로 사용합니다.
+
+```typescript
+// Plus Code 형식
+// compound_code: "3F4M+5G6 大安區 臺北市 대만"
+// global_code: "7QQ23F4M+5G6"
+
+// API 응답 처리
+const plusCode = data.plus_code;
+const compoundCode = plusCode?.compound_code || "";
+
+return {
+  address: compoundCode || result.formatted_address,
+  plus_code: compoundCode,
+  global_code: plusCode?.global_code || "",
+};
+```
+
+**Plus Code 장점:**
+- Google Maps에서 직접 검색 가능
+- 정확한 위치 표시
+- 짧고 기억하기 쉬운 형식
+
+### 히스토리 자동 기록
+
+맛집 정보 변경 시 자동으로 히스토리가 기록됩니다.
+
+```typescript
+// 변경된 필드 추적
+const changedFields: string[] = [];
+if (address) changedFields.push('주소');
+if (feature !== undefined) changedFields.push('특징');
+if (coordinates) changedFields.push('좌표');
+
+// 히스토리 기록
+if (changedFields.length > 0) {
+  await recordHistory({
+    place_id,
+    name,
+    address,
+    category,
+    registered_by: userId,
+    registered_by_name: userName,
+    action: 'update',
+    memo: `정보 수정: ${changedFields.join(', ')}`,
+  });
+}
+```
+
+### 반응형 테이블/카드 레이아웃
+
+히스토리 목록에서 화면 크기에 따라 다른 레이아웃을 표시합니다.
+
+```typescript
+// 모바일: 카드 형식
+<div className="md:hidden">
+  <div className="flex items-start justify-between gap-2">
+    {/* 카드 내용 */}
+  </div>
+</div>
+
+// 데스크탑: 테이블 형식
+<div className="hidden md:block overflow-hidden">
+  <div className="grid grid-cols-12 gap-2 items-center">
+    {/* 테이블 행 */}
+  </div>
+</div>
+```
+
+**텍스트 오버플로우 방지:**
+```css
+/* 각 셀에 적용 */
+.cell {
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* 텍스트에 적용 */
+.text {
+  truncate;  /* text-overflow: ellipsis */
+  whitespace-nowrap;
+}
+```

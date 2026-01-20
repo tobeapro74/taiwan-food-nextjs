@@ -584,3 +584,390 @@ const response = await fetch(
 
 ### 교훈
 > **동일 이름의 장소가 여러 개 있을 수 있으므로, 이름 기반 검색이 아닌 고유 식별자(place_id)를 사용해야 한다.**
+
+---
+
+## 10. 히스토리 테이블 텍스트 겹침 문제
+
+### 문제 상황
+맛집 등록 히스토리 페이지에서 테이블 칼럼별로 텍스트가 겹쳐서 표시되는 현상 발생. 특히 '맛집명' 및 '지역' 칼럼에서 심하게 발생.
+
+### 원인 분석
+1. CSS Grid 레이아웃에서 `overflow-hidden`이 적용되지 않음
+2. 긴 텍스트가 셀 영역을 벗어나 다음 칼럼과 겹침
+3. 모바일과 데스크탑에서 동일한 레이아웃 사용으로 가독성 저하
+
+### 해결 방안
+
+#### 1단계: 모바일/데스크탑 레이아웃 분리
+```tsx
+// src/components/restaurant-history.tsx
+
+{/* 모바일 레이아웃 (카드 형식) */}
+<div className="md:hidden">
+  <div className="flex items-start justify-between gap-2">
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-xs text-muted-foreground">#{item.seq}</span>
+        {getActionBadge(item.action)}
+        <Badge variant="outline" className="text-xs">{item.category}</Badge>
+      </div>
+      <button className="text-sm font-medium text-primary hover:underline">
+        <span className="truncate">{item.name}</span>
+      </button>
+      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+        {item.short_address}
+      </p>
+    </div>
+    <span className="text-xs text-muted-foreground whitespace-nowrap">
+      {formatDate(item.registered_at)}
+    </span>
+  </div>
+</div>
+
+{/* 데스크탑 레이아웃 (테이블 형식) */}
+<div className="hidden md:block overflow-hidden">
+  <div className="grid grid-cols-12 gap-2 items-center">
+    <div className="col-span-1 text-center overflow-hidden">
+      {item.seq}
+    </div>
+    <div className="col-span-2 overflow-hidden whitespace-nowrap">
+      {formatDate(item.registered_at)}
+    </div>
+    <div className="col-span-3 min-w-0 overflow-hidden">
+      <span className="truncate">{item.name}</span>
+    </div>
+    <div className="col-span-3 truncate overflow-hidden">
+      {item.short_address}
+    </div>
+    <div className="col-span-2 overflow-hidden">
+      <Badge variant="outline" className="text-xs truncate max-w-full">
+        {item.category}
+      </Badge>
+    </div>
+    <div className="col-span-1 flex justify-center overflow-hidden">
+      {getActionBadge(item.action)}
+    </div>
+  </div>
+</div>
+```
+
+#### 2단계: 테이블 헤더에도 동일하게 적용
+```tsx
+{/* 테이블 헤더 - 데스크탑에서만 표시 */}
+<div className="sticky top-[60px] z-10 bg-muted/50 border-b hidden md:block overflow-hidden">
+  <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs font-medium">
+    <div className="col-span-1 text-center overflow-hidden">#</div>
+    <div className="col-span-2 overflow-hidden">날짜</div>
+    <div className="col-span-3 overflow-hidden">맛집명</div>
+    <div className="col-span-3 overflow-hidden">지역</div>
+    <div className="col-span-2 overflow-hidden">카테고리</div>
+    <div className="col-span-1 text-center overflow-hidden">상태</div>
+  </div>
+</div>
+```
+
+### 핵심 CSS 클래스
+
+| 클래스 | 용도 |
+|--------|------|
+| `overflow-hidden` | 셀 영역 밖으로 텍스트 넘침 방지 |
+| `min-w-0` | flexbox에서 자식 요소 축소 허용 |
+| `truncate` | 텍스트 말줄임표(`...`) 처리 |
+| `whitespace-nowrap` | 텍스트 줄바꿈 방지 |
+| `md:hidden` / `hidden md:block` | 반응형 레이아웃 전환 |
+
+### 반응형 레이아웃 패턴
+
+```
+┌─────────────────────────────────────┐
+│         모바일 (카드 형식)           │
+│  ┌─────────────────────────────┐   │
+│  │ #1 [등록] [면류]    2024.01.15│   │
+│  │ Dark Palace                  │   │
+│  │ Zhongzheng District         │   │
+│  └─────────────────────────────┘   │
+└─────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────┐
+│                  데스크탑 (테이블 형식)                      │
+│ # │   날짜     │   맛집명      │    지역      │카테고리│상태│
+│ 1 │ 2024.01.15│ Dark Palace  │ Zhongzheng...│ 면류  │등록│
+└────────────────────────────────────────────────────────────┘
+```
+
+### 결과
+- 모바일: 카드 형식으로 깔끔하게 정보 표시
+- 데스크탑: 테이블 형식으로 한눈에 여러 항목 비교 가능
+- 모든 화면 크기에서 텍스트 겹침 없이 정상 표시
+
+---
+
+## 11. 좌표 붙여넣기 시 주소 자동 변환 구현
+
+### 구현 목표
+맛집 수정 모달에서 구글맵에서 복사한 좌표를 붙여넣으면 자동으로 주소로 변환
+
+### 구현 방법
+
+#### 1단계: 좌표 형식 감지 정규식
+```typescript
+// 지원하는 좌표 형식
+// - (25.055701, 121.519953)  // 괄호 포함
+// - 25.055701, 121.519953    // 괄호 없음
+
+const COORDINATE_REGEX = /^\s*\(?\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*\)?\s*$/;
+```
+
+#### 2단계: 주소 입력 필드 onChange 핸들러
+```typescript
+// src/components/restaurant-edit-modal.tsx
+
+const handleAddressChange = useCallback((value: string) => {
+  setAddress(value);
+
+  // 좌표 형식인지 확인
+  const match = value.match(COORDINATE_REGEX);
+  if (match) {
+    const lat = parseFloat(match[1]);
+    const lng = parseFloat(match[2]);
+
+    // 유효한 좌표인지 확인
+    if (!isNaN(lat) && !isNaN(lng) &&
+        lat >= -90 && lat <= 90 &&
+        lng >= -180 && lng <= 180) {
+      // 역지오코딩 API 호출
+      convertCoordinatesToAddress(lat, lng);
+    }
+  }
+}, [convertCoordinatesToAddress]);
+```
+
+#### 3단계: 역지오코딩 API 호출
+```typescript
+const convertCoordinatesToAddress = useCallback(async (lat: number, lng: number) => {
+  setIsConverting(true);
+  try {
+    const res = await fetch("/api/reverse-geocode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lat, lng }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      // Plus Code 형식의 주소로 설정
+      setAddress(data.data.address);  // 예: "3F4M+5G6 大安區 臺北市 대만"
+      setCoordinates({ lat, lng });
+    }
+  } catch (error) {
+    console.error("좌표 변환 실패:", error);
+  } finally {
+    setIsConverting(false);
+  }
+}, []);
+```
+
+#### 4단계: 역지오코딩 API 구현
+```typescript
+// src/app/api/reverse-geocode/route.ts
+
+export async function POST(request: NextRequest) {
+  const { lat, lng } = await request.json();
+
+  // 유효성 검사
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    return NextResponse.json(
+      { success: false, error: "유효하지 않은 좌표입니다." },
+      { status: 400 }
+    );
+  }
+
+  // Google Geocoding API 호출
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_API_KEY}&language=ko`;
+  const response = await fetch(url);
+  const data = await response.json();
+
+  // Plus Code 추출 (compound_code가 더 상세한 주소 역할)
+  const plusCode = data.plus_code;
+  const compoundCode = plusCode?.compound_code || "";
+
+  return NextResponse.json({
+    success: true,
+    data: {
+      address: compoundCode || result.formatted_address,
+      plus_code: compoundCode,
+      global_code: plusCode?.global_code || "",
+      coordinates: { lat, lng },
+      place_id: result.place_id,
+    },
+  });
+}
+```
+
+### Plus Code 사용 이유
+
+| 특징 | 설명 |
+|------|------|
+| Google Maps 호환 | Plus Code를 검색창에 입력하면 정확한 위치로 이동 |
+| 짧고 간결 | `3F4M+5G6 大安區` vs `No. 123, Section 4, Zhongxiao East Road...` |
+| 정확한 위치 | 약 14m x 14m 영역을 고유하게 식별 |
+
+### 사용자 경험 (UX) 흐름
+
+```
+1. 사용자가 구글맵에서 좌표 복사: "(25.055701, 121.519953)"
+2. 맛집 수정 모달의 주소 필드에 붙여넣기
+3. 시스템이 자동으로 좌표 형식 감지
+4. 역지오코딩 API 호출 (로딩 표시)
+5. Plus Code 주소로 자동 변환: "3F4M+5G6 大安區 臺北市 대만"
+6. 좌표도 함께 업데이트
+```
+
+### 관련 파일
+- `src/components/restaurant-edit-modal.tsx` - 주소 입력 및 좌표 변환 UI
+- `src/app/api/reverse-geocode/route.ts` - 역지오코딩 API
+- `src/app/api/custom-restaurants/route.ts` - PUT 메서드 (정보 수정)
+
+---
+
+## 12. 리뷰 수정/삭제 기능 구현
+
+### 구현 목표
+사용자가 자신의 리뷰를 수정하거나 삭제할 수 있는 기능
+
+### 구현 방법
+
+#### 리뷰 수정 (PUT /api/reviews/[id])
+```typescript
+// src/app/api/reviews/[id]/route.ts
+
+export async function PUT(request: NextRequest, { params }) {
+  const reviewId = (await params).id;
+
+  // JWT 토큰에서 사용자 정보 추출
+  const token = request.cookies.get("auth_token")?.value;
+  const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+
+  // 리뷰 조회
+  const review = await collection.findOne({ _id: new ObjectId(reviewId) });
+
+  // 본인 리뷰인지 확인
+  if (review.user_id !== decoded.userId) {
+    return NextResponse.json(
+      { success: false, error: "수정 권한이 없습니다." },
+      { status: 403 }
+    );
+  }
+
+  // 리뷰 수정
+  const body = await request.json();
+  await collection.updateOne(
+    { _id: new ObjectId(reviewId) },
+    {
+      $set: {
+        rating: body.rating,
+        food_rating: body.food_rating,
+        service_rating: body.service_rating,
+        atmosphere_rating: body.atmosphere_rating,
+        content: body.content,
+        photos: body.photos,
+        meal_type: body.meal_type,
+        updated_at: new Date().toISOString(),
+      },
+    }
+  );
+
+  return NextResponse.json({ success: true, message: "리뷰가 수정되었습니다." });
+}
+```
+
+#### 리뷰 삭제 (DELETE /api/reviews/[id])
+```typescript
+export async function DELETE(request: NextRequest, { params }) {
+  const reviewId = (await params).id;
+
+  // JWT 토큰에서 사용자 정보 추출
+  const token = request.cookies.get("auth_token")?.value;
+  const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+
+  // 리뷰 조회 및 권한 확인
+  const review = await collection.findOne({ _id: new ObjectId(reviewId) });
+  if (review.user_id !== decoded.userId) {
+    return NextResponse.json(
+      { success: false, error: "삭제 권한이 없습니다." },
+      { status: 403 }
+    );
+  }
+
+  // 리뷰 삭제
+  await collection.deleteOne({ _id: new ObjectId(reviewId) });
+
+  return NextResponse.json({ success: true });
+}
+```
+
+#### 프론트엔드 리뷰 수정 모달
+```typescript
+// src/components/review-modal.tsx
+
+// 수정 모드일 때 기존 데이터 로드
+useEffect(() => {
+  if (editReview) {
+    setRating(editReview.rating);
+    setFoodRating(editReview.food_rating || 0);
+    setServiceRating(editReview.service_rating || 0);
+    setAtmosphereRating(editReview.atmosphere_rating || 0);
+    setContent(editReview.content);
+    setPhotos(editReview.photos || []);
+    setMealType(editReview.meal_type || "");
+  }
+}, [editReview]);
+
+// 수정 또는 새 리뷰 저장
+const handleSubmit = async () => {
+  const url = editReview
+    ? `/api/reviews/${editReview._id}`  // PUT
+    : "/api/reviews";                    // POST
+
+  const method = editReview ? "PUT" : "POST";
+
+  const res = await fetch(url, { method, body: JSON.stringify(reviewData) });
+  // ...
+};
+```
+
+### 삭제 확인 모달
+```typescript
+// 삭제 전 확인 모달 표시
+const handleDeleteClick = (review: Review) => {
+  setReviewToDelete(review);
+  setShowDeleteConfirm(true);
+};
+
+// 삭제 확인
+const confirmDelete = async () => {
+  const res = await fetch(`/api/reviews/${reviewToDelete._id}`, {
+    method: "DELETE",
+  });
+
+  if (res.ok) {
+    // 리뷰 목록에서 제거
+    setReviews(reviews.filter(r => r._id !== reviewToDelete._id));
+    setShowDeleteConfirm(false);
+  }
+};
+```
+
+### 권한 체계
+
+| 작업 | 권한 |
+|------|------|
+| 리뷰 작성 | 로그인 사용자 |
+| 리뷰 수정 | 본인만 |
+| 리뷰 삭제 | 본인만 |
+
+### 관련 파일
+- `src/app/api/reviews/[id]/route.ts` - PUT/DELETE API
+- `src/components/review-modal.tsx` - 수정 모드 지원
+- `src/components/review-section.tsx` - 수정/삭제 버튼, 확인 모달
