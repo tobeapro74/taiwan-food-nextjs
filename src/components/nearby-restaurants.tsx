@@ -1,10 +1,24 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { MapPin, Navigation, ChevronDown, ArrowLeft, Loader2, Search, X } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { MapPin, Navigation, ChevronDown, ArrowLeft, Loader2, Search, X, Star } from "lucide-react";
 import { useUserLocation, getMockLocationList } from "@/hooks/useUserLocation";
 import { filterByRadius, RADIUS_OPTIONS } from "@/lib/geo-utils";
 import { taiwanFoodMap, Restaurant } from "@/data/taiwan-food";
+import { Badge } from "@/components/ui/badge";
+
+// 사용자 등록 맛집 타입
+interface CustomRestaurant {
+  place_id: string;
+  name: string;
+  address: string;
+  category: string;
+  feature?: string;
+  coordinates: { lat: number; lng: number };
+  google_rating?: number;
+  google_reviews_count?: number;
+  registered_by?: number;
+}
 
 interface NearbyRestaurantsProps {
   onSelectRestaurant: (restaurant: Restaurant) => void;
@@ -38,10 +52,44 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
   const [manualLat, setManualLat] = useState("");
   const [manualLng, setManualLng] = useState("");
   const [manualName, setManualName] = useState("");
+  const [customRestaurants, setCustomRestaurants] = useState<Restaurant[]>([]);
+  const [isLoadingCustom, setIsLoadingCustom] = useState(false);
 
   const mockLocations = getMockLocationList();
 
-  // 모든 맛집 데이터를 하나의 배열로 합침
+  // 사용자 등록 맛집 가져오기
+  useEffect(() => {
+    const fetchCustomRestaurants = async () => {
+      setIsLoadingCustom(true);
+      try {
+        const res = await fetch("/api/custom-restaurants");
+        const data = await res.json();
+        if (data.success && data.data) {
+          // CustomRestaurant를 Restaurant 형식으로 변환
+          const converted: Restaurant[] = data.data.map((r: CustomRestaurant) => ({
+            이름: r.name,
+            위치: r.address,
+            특징: r.feature || "",
+            평점: r.google_rating,
+            리뷰수: r.google_reviews_count,
+            coordinates: r.coordinates,
+            place_id: r.place_id,
+            category: r.category,
+            registered_by: r.registered_by,
+          }));
+          setCustomRestaurants(converted);
+        }
+      } catch (error) {
+        console.error("사용자 등록 맛집 로드 실패:", error);
+      } finally {
+        setIsLoadingCustom(false);
+      }
+    };
+
+    fetchCustomRestaurants();
+  }, []);
+
+  // 모든 맛집 데이터를 하나의 배열로 합침 (정적 데이터 + 사용자 등록 맛집)
   const allRestaurants = useMemo(() => {
     const categories = ["면류", "만두", "밥류", "탕류", "디저트", "길거리음식", "카페", "까르푸"] as const;
     const restaurants: Restaurant[] = [];
@@ -53,8 +101,11 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
       }
     });
 
+    // 사용자 등록 맛집 추가
+    restaurants.push(...customRestaurants);
+
     return restaurants;
-  }, []);
+  }, [customRestaurants]);
 
   // 주변 맛집 필터링
   const nearbyRestaurants = useMemo(() => {
@@ -338,11 +389,18 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
               위 버튼을 눌러 위치를 설정해주세요
             </p>
           </div>
+        ) : isLoadingCustom ? (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-4" />
+            <p className="text-gray-500 dark:text-gray-400">
+              맛집 데이터를 불러오는 중...
+            </p>
+          </div>
         ) : nearbyRestaurants.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <MapPin className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-4" />
             <p className="text-gray-500 dark:text-gray-400 mb-2">
-              {selectedRadius / 1000}km 이내에 맛집이 없습니다
+              {selectedRadius >= 1000 ? `${selectedRadius / 1000}km` : `${selectedRadius}m`} 이내에 맛집이 없습니다
             </p>
             <p className="text-sm text-gray-400 dark:text-gray-500">
               검색 반경을 늘려보세요
@@ -381,29 +439,43 @@ interface NearbyRestaurantCardProps {
 }
 
 function NearbyRestaurantCard({ restaurant, distance, onSelect }: NearbyRestaurantCardProps) {
+  const isCustom = !!restaurant.place_id;
+
   return (
     <button
       onClick={onSelect}
       className="w-full text-left bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-700"
     >
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-bold text-gray-900 dark:text-white">{restaurant.이름}</h3>
-        <span className="text-sm font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <h3 className="font-bold text-gray-900 dark:text-white truncate">{restaurant.이름}</h3>
+          {isCustom && (
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">
+              {restaurant.category}
+            </Badge>
+          )}
+        </div>
+        <span className="text-sm font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded flex-shrink-0 ml-2">
           {distance}
         </span>
       </div>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
-        {restaurant.특징}
-      </p>
-      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+      {restaurant.특징 && (
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
+          {restaurant.특징}
+        </p>
+      )}
+      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
         <span className="flex items-center gap-1">
           <MapPin className="w-3 h-3" />
-          {restaurant.위치}
+          <span className="truncate max-w-[150px]">{restaurant.위치}</span>
         </span>
         {restaurant.평점 && (
           <span className="flex items-center gap-1">
-            <span className="text-yellow-500">★</span>
-            {restaurant.평점}
+            <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+            {restaurant.평점.toFixed(1)}
+            {restaurant.리뷰수 && (
+              <span className="text-gray-400">({restaurant.리뷰수.toLocaleString()})</span>
+            )}
           </span>
         )}
         {restaurant.가격대 && (
