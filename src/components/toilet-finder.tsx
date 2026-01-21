@@ -91,7 +91,8 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
         }
         if (data.data.length === 0) {
           const storeName = type === "7eleven" ? "7-ELEVEN" : "FamilyMart";
-          setError(`2km 이내에 ${storeName}이(가) 없습니다.`);
+          const distance = type === "7eleven" ? "3km" : "2km";
+          setError(`${distance} 이내에 ${storeName}이(가) 없습니다.`);
         }
       } else {
         setError(data.error || "검색 중 오류가 발생했습니다.");
@@ -197,7 +198,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
         <div className="flex justify-between items-center">
           <p className="text-sm text-gray-600 dark:text-gray-400">
             {userLocation
-              ? "현재 위치 기준 2km 이내"
+              ? `현재 위치 기준 ${storeType === "7eleven" ? "3km" : "2km"} 이내`
               : "위치 정보를 가져오는 중..."}
           </p>
           <Button
