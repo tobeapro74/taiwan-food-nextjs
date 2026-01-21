@@ -275,10 +275,15 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       {/* 매장명 */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {index === 0 && (
                           <span className="px-2 py-0.5 bg-green-500 text-white text-xs rounded-full font-medium">
                             가장 가까움
+                          </span>
+                        )}
+                        {store.services?.some(s => s.includes('ATM')) && (
+                          <span className="px-2 py-0.5 bg-yellow-500 text-white text-xs rounded-full font-medium">
+                            ATM
                           </span>
                         )}
                         <h3 className="font-bold text-gray-900 dark:text-white">
