@@ -162,29 +162,26 @@ async function syncSevenElevenData() {
     for (const store of toiletStores) {
       foundPoiIds.add(store.poiId);
 
-      const storeData: Omit<SevenElevenToilet, '_id'> = {
-        poi_id: store.poiId,
-        name: store.name,
-        address: store.address,
-        city: '台北市',
-        district: district.name,
-        coordinates: {
-          lat: store.lat,
-          lng: store.lng,
-        },
-        phone: store.phone,
-        opening_hours: store.openingHours,
-        opening_days: store.openingDays,
-        services: store.services,
-        has_toilet: true,
-        created_at: now,
-        updated_at: now,
-      };
-
       const result = await collection.updateOne(
         { poi_id: store.poiId },
         {
-          $set: { ...storeData, updated_at: now },
+          $set: {
+            poi_id: store.poiId,
+            name: store.name,
+            address: store.address,
+            city: '台北市',
+            district: district.name,
+            coordinates: {
+              lat: store.lat,
+              lng: store.lng,
+            },
+            phone: store.phone,
+            opening_hours: store.openingHours,
+            opening_days: store.openingDays,
+            services: store.services,
+            has_toilet: true,
+            updated_at: now,
+          },
           $setOnInsert: { created_at: now },
         },
         { upsert: true }
