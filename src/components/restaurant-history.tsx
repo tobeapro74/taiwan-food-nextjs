@@ -122,7 +122,7 @@ export function RestaurantHistoryList({ onBack, onSelectRestaurant }: Restaurant
                         {item.action !== "delete" ? (
                           <button
                             onClick={() => onSelectRestaurant?.(item.place_id)}
-                            className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
+                            className="text-sm font-medium text-primary hover:underline flex items-center gap-1 active:scale-95 transition-transform duration-150"
                             title={`${item.name} 상세보기`}
                           >
                             <span className="truncate">{item.name}</span>
@@ -164,7 +164,7 @@ export function RestaurantHistoryList({ onBack, onSelectRestaurant }: Restaurant
                         {item.action !== "delete" ? (
                           <button
                             onClick={() => onSelectRestaurant?.(item.place_id)}
-                            className="text-sm font-medium text-primary hover:underline flex items-center gap-1 max-w-full overflow-hidden"
+                            className="text-sm font-medium text-primary hover:underline flex items-center gap-1 max-w-full overflow-hidden active:scale-95 transition-transform duration-150"
                             title={`${item.name} 상세보기`}
                           >
                             <span className="truncate">{item.name}</span>
