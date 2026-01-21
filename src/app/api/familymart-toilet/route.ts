@@ -84,7 +84,8 @@ export async function GET(request: NextRequest) {
     // radius를 maxDistance(km)를 미터로 변환
     const radiusMeters = Math.min(maxDistance * 1000, 50000); // 최대 50km
 
-    const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${userLat},${userLng}&radius=${radiusMeters}&type=convenience_store&keyword=FamilyMart|全家&language=ko&key=${apiKey}`;
+    // 全家 (중국어)로 검색하면 더 정확한 결과가 나옴
+    const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${userLat},${userLng}&radius=${radiusMeters}&type=convenience_store&keyword=${encodeURIComponent('全家')}&language=ko&key=${apiKey}`;
 
     const response = await fetch(placesUrl);
     const data = await response.json();
