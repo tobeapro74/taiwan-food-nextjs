@@ -23,7 +23,7 @@ const SEVEN_ELEVEN_API = 'https://emap.pcsc.com.tw/EMapSDK.aspx';
 
 // XML 파싱 헬퍼 함수
 function parseXmlValue(xml: string, tag: string): string {
-  const match = xml.match(new RegExp(`<${tag}>(.*?)</${tag}>`, 's'));
+  const match = xml.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`));
   return match ? match[1].trim() : '';
 }
 
@@ -53,7 +53,7 @@ function parseStores(xml: string): Array<{
     hasToilet: boolean;
   }> = [];
 
-  const storeMatches = xml.match(/<GeoPosition>(.*?)<\/GeoPosition>/gs);
+  const storeMatches = xml.match(/<GeoPosition>[\s\S]*?<\/GeoPosition>/g);
   if (!storeMatches) return stores;
 
   for (const storeXml of storeMatches) {

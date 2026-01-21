@@ -971,3 +971,262 @@ const confirmDelete = async () => {
 - `src/app/api/reviews/[id]/route.ts` - PUT/DELETE API
 - `src/components/review-modal.tsx` - 수정 모드 지원
 - `src/components/review-section.tsx` - 수정/삭제 버튼, 확인 모달
+
+---
+
+## 13. 사용자 등록 맛집의 맛집알리미 통합
+
+### 문제 상황
+앱에서 사용자가 등록한 맛집(custom_restaurants)이 "맛집알리미" 주변 맛집 검색 기능에 나타나지 않는 문제 발생. 정적 데이터(taiwan-food.ts)에 있는 맛집만 검색되고, MongoDB에 저장된 사용자 등록 맛집은 검색 결과에서 제외됨.
+
+### 원인 분석
+
+#### 기존 구조의 한계
+```typescript
+// 기존: 정적 데이터만 사용
+const allRestaurants = useMemo(() => {
+  const categories = ["면류", "만두", "밥류", ...] as const;
+  const restaurants: Restaurant[] = [];
+  categories.forEach((category) => {
+    const items = taiwanFoodMap[category];
+    if (items) restaurants.push(...items);
+  });
+  return restaurants;  // 정적 데이터만 반환
+}, []);
+```
+
+- `taiwanFoodMap`은 코드에 하드코딩된 정적 맛집 데이터
+- MongoDB의 `custom_restaurants` 컬렉션은 별도로 관리됨
+- 두 데이터 소스가 통합되지 않아 주변 검색에서 사용자 등록 맛집 누락
+
+### 해결 방안
+
+#### 1단계: 사용자 등록 맛집 타입 정의
+```typescript
+// src/components/nearby-restaurants.tsx
+
+interface CustomRestaurant {
+  place_id: string;
+  name: string;
+  address: string;
+  category: string;
+  feature?: string;
+  coordinates: { lat: number; lng: number };
+  google_rating?: number;
+  google_reviews_count?: number;
+  registered_by?: number;
+}
+```
+
+#### 2단계: API에서 사용자 등록 맛집 가져오기
+```typescript
+const [customRestaurants, setCustomRestaurants] = useState<Restaurant[]>([]);
+const [isLoadingCustom, setIsLoadingCustom] = useState(false);
+
+useEffect(() => {
+  const fetchCustomRestaurants = async () => {
+    setIsLoadingCustom(true);
+    try {
+      const res = await fetch("/api/custom-restaurants");
+      const data = await res.json();
+      if (data.success && data.data) {
+        // CustomRestaurant를 Restaurant 형식으로 변환
+        const converted: Restaurant[] = data.data.map((r: CustomRestaurant) => ({
+          이름: r.name,
+          위치: r.address,
+          특징: r.feature || "",
+          평점: r.google_rating,
+          리뷰수: r.google_reviews_count,
+          coordinates: r.coordinates,
+          place_id: r.place_id,        // 사용자 등록 맛집 식별자
+          category: r.category,
+          registered_by: r.registered_by,
+        }));
+        setCustomRestaurants(converted);
+      }
+    } catch (error) {
+      console.error("사용자 등록 맛집 로드 실패:", error);
+    } finally {
+      setIsLoadingCustom(false);
+    }
+  };
+
+  fetchCustomRestaurants();
+}, []);
+```
+
+#### 3단계: 정적 데이터 + 사용자 등록 맛집 통합
+```typescript
+const allRestaurants = useMemo(() => {
+  const categories = ["면류", "만두", "밥류", "탕류", "디저트", "길거리음식", "카페", "까르푸"] as const;
+  const restaurants: Restaurant[] = [];
+
+  // 1. 정적 데이터 추가
+  categories.forEach((category) => {
+    const items = taiwanFoodMap[category];
+    if (items) {
+      restaurants.push(...items);
+    }
+  });
+
+  // 2. 사용자 등록 맛집 추가 ✨ 핵심 변경
+  restaurants.push(...customRestaurants);
+
+  return restaurants;
+}, [customRestaurants]);  // customRestaurants 의존성 추가
+```
+
+#### 4단계: 반경 필터링 적용
+```typescript
+const nearbyRestaurants = useMemo(() => {
+  if (!coordinates) return [];
+
+  // allRestaurants에 정적 + 사용자 등록 맛집 모두 포함
+  const filtered = filterByRadius(allRestaurants, coordinates, selectedRadius);
+  return filtered;
+}, [allRestaurants, coordinates, selectedRadius]);
+```
+
+#### 5단계: 사용자 등록 맛집 UI 구분
+```typescript
+function NearbyRestaurantCard({ restaurant, distance, onSelect }: NearbyRestaurantCardProps) {
+  // place_id가 있으면 사용자 등록 맛집
+  const isCustom = !!restaurant.place_id;
+
+  return (
+    <button onClick={onSelect} className="...">
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <h3 className="font-bold truncate">{restaurant.이름}</h3>
+          {/* 사용자 등록 맛집에 카테고리 배지 표시 */}
+          {isCustom && (
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">
+              {restaurant.category}
+            </Badge>
+          )}
+        </div>
+        <span className="text-sm font-medium text-blue-500 bg-blue-50 px-2 py-0.5 rounded">
+          {distance}
+        </span>
+      </div>
+      {/* ... 나머지 UI */}
+    </button>
+  );
+}
+```
+
+### 데이터 흐름도
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        맛집알리미 (NearbyRestaurants)              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────────┐     ┌──────────────────────────────────┐ │
+│  │  정적 데이터        │     │   MongoDB (custom_restaurants)    │ │
+│  │  taiwanFoodMap   │     │   /api/custom-restaurants        │ │
+│  │  (코드에 하드코딩)   │     │   (사용자가 등록한 맛집)            │ │
+│  └────────┬─────────┘     └───────────────┬──────────────────┘ │
+│           │                               │                     │
+│           │    ┌──────────────────────────┘                     │
+│           │    │  useEffect로 fetch                             │
+│           │    │  CustomRestaurant → Restaurant 변환            │
+│           ▼    ▼                                                │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │              allRestaurants (useMemo)                       ││
+│  │         정적 데이터 + 사용자 등록 맛집 통합                     ││
+│  └─────────────────────────┬───────────────────────────────────┘│
+│                            │                                    │
+│                            ▼                                    │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │           filterByRadius(allRestaurants, coordinates)       ││
+│  │              Haversine 공식으로 거리 계산                      ││
+│  └─────────────────────────┬───────────────────────────────────┘│
+│                            │                                    │
+│                            ▼                                    │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                nearbyRestaurants                            ││
+│  │           반경 내 맛집 목록 (거리순 정렬)                       ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 발생한 부수적 버그: 잘못된 좌표 문제
+
+#### 문제 상황
+사용자가 등록한 "Monodon Coffee (一角鯨咖啡)"가 실제 위치(중산구, ~3.2km 거리)와 다른 위치(119m)로 표시됨.
+
+#### 원인 분석
+```
+저장된 좌표:  lat: 25.0554122, lng: 121.483754  ❌
+실제 좌표:   lat: 25.055701,  lng: 121.519953  ✅
+                              ↑
+                           경도 차이 약 0.036
+                           (약 3.2km 오차)
+```
+
+- 사용자가 다른 장소(CoCo Curry)의 Plus Code를 Monodon Coffee 주소란에 입력
+- 역지오코딩으로 좌표 변환 시 잘못된 좌표가 저장됨
+- 맛집알리미에서 잘못된 좌표 기준으로 거리 계산
+
+#### 해결 방법
+1. 앱의 맛집 수정 모달에서 정확한 좌표로 수정
+2. Google Maps에서 "一角鯨咖啡" 검색하여 정확한 좌표 확인
+3. 수정된 좌표: `(25.055701, 121.519953)`
+
+#### 교훈
+> **좌표 검증의 중요성**: 사용자 입력 좌표는 항상 Google Places API 등으로 검증 후 저장하는 것이 안전함. Plus Code 변환 시 의도한 장소와 일치하는지 확인 필요.
+
+### 로딩 상태 처리
+
+```typescript
+{isLoadingCustom ? (
+  <div className="flex flex-col items-center justify-center h-full text-center">
+    <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-4" />
+    <p className="text-gray-500 dark:text-gray-400">
+      맛집 데이터를 불러오는 중...
+    </p>
+  </div>
+) : nearbyRestaurants.length === 0 ? (
+  // 결과 없음 UI
+) : (
+  // 맛집 목록 렌더링
+)}
+```
+
+### 결과
+
+| 항목 | 변경 전 | 변경 후 |
+|------|---------|---------|
+| 검색 대상 | 정적 데이터만 | 정적 + 사용자 등록 |
+| 데이터 소스 | taiwanFoodMap | taiwanFoodMap + MongoDB |
+| 사용자 등록 맛집 | 검색 불가 | 검색 가능 ✅ |
+| UI 구분 | 없음 | 카테고리 배지 표시 |
+
+### 관련 파일
+- `src/components/nearby-restaurants.tsx` - 핵심 변경 (사용자 등록 맛집 통합)
+- `src/app/api/custom-restaurants/route.ts` - GET API (맛집 목록 조회)
+- `src/lib/geo-utils.ts` - filterByRadius 함수 (거리 계산)
+- `src/data/taiwan-food.ts` - 정적 맛집 데이터
+
+### API 응답 예시
+
+```json
+// GET /api/custom-restaurants
+{
+  "success": true,
+  "data": [
+    {
+      "place_id": "ChIJ...",
+      "name": "Monodon Coffee",
+      "address": "3G5M+5X6 中山區 台北市",
+      "category": "카페",
+      "feature": "스페셜티 커피",
+      "coordinates": { "lat": 25.055701, "lng": 121.519953 },
+      "google_rating": 4.5,
+      "google_reviews_count": 128,
+      "registered_by": 1
+    }
+  ]
+}
