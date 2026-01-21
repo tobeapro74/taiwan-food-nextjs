@@ -7,15 +7,15 @@
 | **프로젝트명** | 대만맛집정보 (Taiwan Food Guide) |
 | **저장소** | taiwan-food-nextjs |
 | **배포 URL** | https://taiwan-food-nextjs.vercel.app |
-| **프레임워크** | Next.js 15 (App Router) |
-| **언어** | TypeScript |
+| **프레임워크** | Next.js 16.1.4 (App Router) |
+| **언어** | TypeScript 5 |
 | **스타일링** | Tailwind CSS 4 |
 
 ## 기술 스택 상세
 
 ### 프론트엔드
 ```
-Next.js 15.1.1
+Next.js 16.1.4
 ├── React 19
 ├── TypeScript 5
 ├── Tailwind CSS 4
@@ -34,13 +34,15 @@ Next.js API Routes
 ├── MongoDB Atlas (데이터베이스)
 ├── Cloudinary (이미지 저장)
 ├── JWT + bcryptjs (인증)
-└── Google Places API (이미지 프록시)
+├── Resend (이메일 인증)
+└── Google Places API (장소 정보)
 ```
 
 ### 인프라
 ```
 Vercel
 ├── Serverless Functions
+├── Cron Jobs (일일 동기화)
 ├── Edge Network (CDN)
 └── Auto Deploy (GitHub 연동)
 ```
@@ -51,12 +53,18 @@ Vercel
 src/
 ├── app/
 │   ├── api/           # API 엔드포인트
+│   │   ├── auth/      # 인증 (로그인, 회원가입, 이메일인증)
+│   │   ├── cron/      # Cron Jobs (리뷰 갱신, 편의점 동기화)
+│   │   ├── reviews/   # 리뷰 CRUD
+│   │   └── ...
 │   ├── globals.css    # 전역 스타일
 │   ├── layout.tsx     # 루트 레이아웃
 │   └── page.tsx       # 메인 SPA
 │
 ├── components/
 │   ├── ui/            # shadcn/ui 기반
+│   ├── toilet-finder.tsx    # 화장실 찾기
+│   ├── restaurant-history.tsx # 등록 히스토리
 │   └── *.tsx          # 비즈니스 컴포넌트
 │
 ├── data/
@@ -64,6 +72,7 @@ src/
 │
 └── lib/
     ├── mongodb.ts     # DB 연결
+    ├── types.ts       # 타입 정의
     └── utils.ts       # 유틸리티
 ```
 
@@ -73,13 +82,24 @@ src/
 page.tsx (메인 페이지)
 │
 ├── 헤더
-│   └── AuthModal (로그인/회원가입)
+│   ├── AuthModal (로그인/회원가입)
+│   └── 사용자 메뉴
+│       ├── 등록 히스토리
+│       ├── 비밀번호 변경
+│       └── 회원탈퇴
 │
 ├── 홈 화면
 │   ├── 검색바 (자동완성)
+│   ├── 화장실 찾기 버튼
 │   ├── 카테고리 버튼
 │   ├── 인기 맛집 (RestaurantCard)
 │   └── 야시장별 맛집 (RestaurantCard)
+│
+├── 화장실 찾기 (ToiletFinder)
+│   ├── 7-ELEVEN 탭
+│   └── FamilyMart 탭
+│
+├── 등록 히스토리 (RestaurantHistoryList)
 │
 ├── 목록 화면 (RestaurantList)
 │   └── RestaurantCard
@@ -101,11 +121,22 @@ page.tsx (메인 페이지)
 | POST | /api/auth/login | 로그인 |
 | POST | /api/auth/logout | 로그아웃 |
 | GET | /api/auth/me | 현재 사용자 |
-| GET | /api/reviews | 리뷰 목록 |
-| POST | /api/reviews | 리뷰 작성 |
-| DELETE | /api/reviews/[id] | 리뷰 삭제 |
+| POST | /api/auth/send-verification | 이메일 인증 코드 발송 |
+| POST | /api/auth/verify-email | 이메일 인증 확인 |
+| POST | /api/auth/change-password | 비밀번호 변경 |
+| DELETE | /api/auth/delete-account | 계정 삭제 |
+| GET/POST | /api/reviews | 리뷰 목록/작성 |
+| PUT/DELETE | /api/reviews/[id] | 리뷰 수정/삭제 |
 | POST | /api/upload | 이미지 업로드 |
 | GET | /api/place-photo | Google 이미지 프록시 |
+| GET/POST/PUT/PATCH/DELETE | /api/custom-restaurants | 사용자 맛집 CRUD |
+| GET/POST | /api/restaurant-history | 등록 히스토리 |
+| POST | /api/ratings | 실시간 평점 조회 |
+| GET | /api/seven-eleven-toilet | 7-ELEVEN 화장실 검색 |
+| GET | /api/familymart-toilet | FamilyMart 화장실 검색 |
+| GET | /api/cron/refresh-reviews | 리뷰 정보 갱신 (Cron) |
+| GET | /api/cron/sync-seven-eleven | 7-ELEVEN 동기화 (Cron) |
+| GET | /api/cron/sync-familymart | FamilyMart 동기화 (Cron) |
 
 ## 데이터 카테고리
 
@@ -119,43 +150,71 @@ page.tsx (메인 페이지)
 ### 도심투어 (4개)
 - 시먼딩, 융캉제, 중산, 신이
 
+## MongoDB 컬렉션
+
+| 컬렉션 | 설명 |
+|--------|------|
+| users | 사용자 계정 |
+| reviews | 사용자 리뷰 |
+| custom_restaurants | 사용자 등록 맛집 |
+| restaurant_history | 맛집 등록/수정/삭제 히스토리 |
+| email_verifications | 이메일 인증 코드 |
+| seven_eleven_toilets | 7-ELEVEN 화장실 매장 (타이베이+신베이) |
+| familymart_stores | FamilyMart 매장 (타이베이+신베이) |
+
+## Vercel Cron Jobs
+
+| 스케줄 | 경로 | 설명 |
+|--------|------|------|
+| 매일 06:00 UTC | /api/cron/refresh-reviews | Google 리뷰 정보 갱신 |
+| 매일 22:00 UTC | /api/cron/sync-seven-eleven | 7-ELEVEN 매장 동기화 |
+| 매일 23:00 UTC | /api/cron/sync-familymart | FamilyMart 매장 동기화 |
+
 ## 환경변수
 
 ```env
 # MongoDB
 MONGODB_URI=mongodb+srv://...
+MONGODB_DB_NAME=taiwan_food
 
 # Cloudinary
 CLOUDINARY_URL=cloudinary://...
-# 또는
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
 
 # JWT
 JWT_SECRET=...
 
-# Google Places (선택)
+# Google Places
 GOOGLE_PLACES_API_KEY=...
+
+# Resend (이메일)
+RESEND_API_KEY=re_...
+
+# Cron (Vercel)
+CRON_SECRET=...
+
+# Admin
+ADMIN_SECRET_KEY=...
 ```
 
 ## 최근 변경사항
 
-### 2024-01-10
-- 카테고리 모달 스크롤 오버플로우 수정
-  - `sheet.tsx`: `max-h-[70vh]` 적용
-  - `category-sheet.tsx`: `overflow-y-auto` 추가
+### 2025-01-21
+- 의존성 패키지 최신 버전 업데이트
+  - Next.js 16.1.4
+  - @types/node 25.0.9
+  - cloudinary 2.9.0
+  - resend 6.8.0
 
-## 알려진 이슈
+### 2025-01-20
+- 7-ELEVEN 화장실 찾기 기능 추가
+- FamilyMart 화장실 찾기 기능 추가
+- 타이베이시 + 신베이시 41개 구 지원
+- MongoDB 기반 편의점 데이터 캐싱
+- Vercel Cron Job으로 일일 자동 동기화
 
-### 해결됨
-- ~~리뷰 사진 업로드 실패~~ → 클라이언트 리사이즈
-- ~~Cloudinary 환경변수~~ → URL 파싱
-- ~~리뷰 모달 버튼 가려짐~~ → 레이아웃 수정
-- ~~카테고리 모달 오버플로우~~ → 스크롤 추가
-
-### 진행 중
-- 없음
+### 2025-01-18
+- 맛집 등록 히스토리 기능 추가
+- 히스토리에서 맛집 상세 화면 이동
 
 ## 개발 명령어
 
@@ -197,9 +256,12 @@ git push origin main
 "검색 기능" → src/app/page.tsx (searchRestaurants)
 "리뷰 작성" → src/components/review-modal.tsx
 "인증" → src/app/api/auth/
+"화장실" → src/components/toilet-finder.tsx
+"편의점 동기화" → src/app/api/cron/
 ```
 
 ### 자주 수정하는 파일
 - `src/app/page.tsx` - 메인 페이지 로직
 - `src/data/taiwan-food.ts` - 맛집 데이터
 - `src/components/ui/sheet.tsx` - 모달 스타일
+- `src/components/toilet-finder.tsx` - 화장실 찾기

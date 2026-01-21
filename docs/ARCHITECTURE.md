@@ -30,9 +30,9 @@
 └───────┼─────────────┼─────────────┼─────────────┼───────────────┘
         │             │             │             │
         ▼             ▼             ▼             ▼
-┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐
+┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐
 │  MongoDB  │  │  MongoDB  │  │  MongoDB  │  │Cloudinary │  │  Google   │  │  Resend   │
-│  (Users)  │  │ (Reviews) │  │ (History) │  │  (Image)  │  │  Places   │  │  (Email)  │
+│  (Users)  │  │ (Reviews) │  │ (Stores)  │  │  (Image)  │  │  Places   │  │  (Email)  │
 └───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘
 ```
 
@@ -64,7 +64,13 @@ src/
 │   │   ├── ratings/route.ts          # POST: 실시간 평점 조회
 │   │   ├── upload/route.ts           # POST: 이미지 업로드
 │   │   ├── place-photo/route.ts      # GET: Google Places 이미지 프록시
-│   │   └── restaurant-prices/[name]/route.ts # GET: 가격/전화번호 조회
+│   │   ├── restaurant-prices/[name]/route.ts # GET: 가격/전화번호 조회
+│   │   ├── seven-eleven-toilet/route.ts # GET: 7-ELEVEN 화장실 검색
+│   │   ├── familymart-toilet/route.ts # GET: FamilyMart 매장 검색
+│   │   └── cron/
+│   │       ├── refresh-reviews/route.ts # GET: 리뷰 정보 갱신 (Cron)
+│   │       ├── sync-seven-eleven/route.ts # GET: 7-ELEVEN 동기화 (Cron)
+│   │       └── sync-familymart/route.ts # GET: FamilyMart 동기화 (Cron)
 │   ├── globals.css                # 전역 스타일
 │   ├── layout.tsx                 # 루트 레이아웃
 │   └── page.tsx                   # 메인 페이지 (SPA 라우팅)
@@ -88,6 +94,7 @@ src/
 │   ├── restaurant-list.tsx        # 맛집 목록 (실시간 평점)
 │   ├── nearby-restaurants.tsx     # 주변 맛집 찾기
 │   ├── restaurant-history.tsx     # 등록 히스토리 목록
+│   ├── toilet-finder.tsx          # 화장실 찾기 (7-ELEVEN/FamilyMart)
 │   ├── google-reviews.tsx         # Google 리뷰 섹션
 │   ├── review-modal.tsx           # 리뷰 작성 모달
 │   └── review-section.tsx         # 리뷰 목록 섹션
@@ -167,8 +174,8 @@ taiwan-food.ts ──► getRestaurantsByCategory() ──► 컴포넌트
 
 ```typescript
 // 뷰 상태
-currentView: "home" | "list" | "detail" | "nearby" | "history"
-previousView: "home" | "list" | "nearby"  // 뒤로가기 추적용
+currentView: "home" | "list" | "detail" | "nearby" | "history" | "toilet"
+previousView: "home" | "list" | "nearby" | "history"  // 뒤로가기 추적용
 
 // 탭 상태
 activeTab: "home" | "category" | "market" | "tour" | "places" | "nearby"
@@ -277,7 +284,9 @@ page.tsx (상태 관리)
 도심투어 ─► 목록 ─► 상세
 맛집알리미 ─► 상세
 
-사용자메뉴 ─► 등록 히스토리
+사용자메뉴 ─► 등록 히스토리 ─► 상세 ─► (뒤로가기) ─► 등록 히스토리
+
+화장실 찾기 ─► 7-ELEVEN / FamilyMart ─► Google Maps 길찾기
 ```
 
 ### 뒤로가기 로직

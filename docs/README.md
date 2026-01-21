@@ -6,7 +6,7 @@
 
 | 분류 | 기술 |
 |------|------|
-| **프레임워크** | Next.js 16.1.1 (App Router) |
+| **프레임워크** | Next.js 16.1.4 (App Router) |
 | **언어** | TypeScript 5 |
 | **스타일링** | Tailwind CSS 4 |
 | **UI 컴포넌트** | Radix UI (Dialog, Tabs, ScrollArea 등) |
@@ -16,7 +16,7 @@
 | **인증** | JWT + bcryptjs |
 | **이메일** | Resend API |
 | **지도 API** | Google Places API |
-| **배포** | Vercel |
+| **배포** | Vercel (Cron Jobs 포함) |
 
 ## 프로젝트 구조
 
@@ -30,13 +30,21 @@ src/
 │   │   │   ├── me/            # 현재 사용자 정보
 │   │   │   ├── register/      # 회원가입
 │   │   │   ├── delete-account/ # 계정 삭제
+│   │   │   ├── change-password/ # 비밀번호 변경
 │   │   │   ├── send-verification/ # 이메일 인증 코드 발송
-│   │   │   └── verify-code/   # 인증 코드 확인
+│   │   │   └── verify-email/  # 인증 코드 확인
 │   │   ├── reviews/           # 리뷰 CRUD API
 │   │   │   ├── route.ts       # GET/POST
 │   │   │   └── [id]/          # PUT/DELETE
 │   │   ├── custom-restaurants/ # 사용자 등록 맛집 API
-│   │   │   └── route.ts       # GET/POST/PATCH/DELETE
+│   │   │   └── route.ts       # GET/POST/PATCH/PUT/DELETE
+│   │   ├── restaurant-history/ # 등록 히스토리 API
+│   │   ├── seven-eleven-toilet/ # 7-ELEVEN 화장실 검색
+│   │   ├── familymart-toilet/ # FamilyMart 매장 검색
+│   │   ├── cron/              # Cron Jobs
+│   │   │   ├── refresh-reviews/ # 리뷰 정보 갱신
+│   │   │   ├── sync-seven-eleven/ # 7-ELEVEN 동기화
+│   │   │   └── sync-familymart/ # FamilyMart 동기화
 │   │   ├── ratings/           # 실시간 평점 조회 API
 │   │   ├── upload/            # 이미지 업로드 (Cloudinary)
 │   │   └── place-photo/       # Google Places 이미지 프록시
@@ -52,8 +60,10 @@ src/
 │   ├── restaurant-card.tsx    # 맛집 카드
 │   ├── restaurant-detail.tsx  # 맛집 상세 페이지
 │   ├── restaurant-list.tsx    # 맛집 목록
+│   ├── restaurant-history.tsx # 등록 히스토리 목록
 │   ├── add-restaurant-modal.tsx # 맛집 등록 모달
 │   ├── nearby-restaurants.tsx # 주변 맛집 찾기
+│   ├── toilet-finder.tsx      # 화장실 찾기 (7-ELEVEN/FamilyMart)
 │   ├── google-reviews.tsx     # Google 리뷰 섹션
 │   ├── review-modal.tsx       # 리뷰 작성 모달
 │   └── review-section.tsx     # 리뷰 목록 섹션
@@ -93,6 +103,9 @@ GOOGLE_PLACES_API_KEY=your_google_api_key
 # Resend (이메일 발송)
 RESEND_API_KEY=re_xxxx
 
+# Cron Secret (Vercel)
+CRON_SECRET=your_cron_secret
+
 # Admin Secret Key (관리자 등록용)
 ADMIN_SECRET_KEY=your_admin_secret
 ```
@@ -123,6 +136,14 @@ git commit -m "feat: 기능 설명"
 git push
 ```
 
+### Vercel Cron Jobs
+
+| 스케줄 | 경로 | 설명 |
+|--------|------|------|
+| 매일 06:00 UTC | /api/cron/refresh-reviews | Google 리뷰 정보 갱신 |
+| 매일 22:00 UTC | /api/cron/sync-seven-eleven | 7-ELEVEN 매장 동기화 |
+| 매일 23:00 UTC | /api/cron/sync-familymart | FamilyMart 매장 동기화 |
+
 ## 관련 문서
 
 - [기능 명세서](./FEATURES.md) - 전체 기능 목록
@@ -132,14 +153,26 @@ git push
 
 ## 주요 기능
 
+### 맛집 기능
 - 카테고리/야시장/도심투어별 맛집 검색
 - 주변 맛집 찾기 (GPS/주소 기반)
 - Google 리뷰 연동 및 실시간 평점 조회
 - 사용자 리뷰 작성 (사진 첨부)
 - **사용자 맛집 등록** (Google Places 연동)
   - 카테고리 선택 및 수정
-  - 중복 등록 방지 (좌표 기반)
+  - 중복 등록 방지 (place_id 기반)
+- **맛집 등록 히스토리** (등록/수정/삭제 내역)
+
+### 화장실 찾기
+- **7-ELEVEN 화장실** (화장실 개방 매장만 표시)
+- **FamilyMart 화장실**
+- 현재 위치 기준 2km 이내 검색
+- 거리순 정렬, Google Maps 길찾기 연동
+- 타이베이시 + 신베이시 41개 구 지원
+
+### 회원 기능
 - **이메일 인증 회원가입** (Resend API)
+- 비밀번호 변경
 - **계정 삭제 기능**
 - iOS 스타일 스와이프 뒤로가기
 - PWA 지원 (홈 화면 추가)

@@ -703,3 +703,181 @@ Google Places 이미지 프록시
   ]
 }
 ```
+
+---
+
+## 화장실 찾기 API
+
+### GET /api/seven-eleven-toilet
+7-ELEVEN 화장실 매장 검색 (MongoDB 기반)
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| lat | O | 위도 |
+| lng | O | 경도 |
+| limit | X | 최대 결과 수 (기본: 5) |
+| maxDistance | X | 최대 거리 km (기본: 2) |
+
+**Response**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "poi_id": "123456",
+      "name": "古亭門市",
+      "address": "台北市中正區羅斯福路二段33號",
+      "city": "台北市",
+      "district": "中正區",
+      "coordinates": { "lat": 25.0267, "lng": 121.5224 },
+      "phone": "02-23921234",
+      "opening_hours": "00:00-24:00",
+      "services": ["02廁所", "03ATM"],
+      "has_toilet": true,
+      "distance": 0.35,
+      "distance_text": "350m",
+      "google_maps_directions_url": "https://www.google.com/maps/dir/..."
+    }
+  ],
+  "total": 5,
+  "user_location": { "lat": 25.0267, "lng": 121.5224 }
+}
+```
+
+---
+
+### GET /api/familymart-toilet
+FamilyMart 매장 검색 (MongoDB 기반)
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| lat | O | 위도 |
+| lng | O | 경도 |
+| limit | X | 최대 결과 수 (기본: 5) |
+| maxDistance | X | 최대 거리 km (기본: 2) |
+
+**Response**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "place_id": "ChIJ...",
+      "name": "全家便利商店 古亭店",
+      "address": "106台北市大安區羅斯福路二段33號",
+      "city": "台北市",
+      "district": "大安區",
+      "coordinates": { "lat": 25.0267, "lng": 121.5224 },
+      "opening_hours": { "open_now": true },
+      "distance": 0.25,
+      "distance_text": "250m",
+      "google_maps_directions_url": "https://www.google.com/maps/dir/..."
+    }
+  ],
+  "total": 5,
+  "user_location": { "lat": 25.0267, "lng": 121.5224 }
+}
+```
+
+---
+
+## Cron Jobs API
+
+### GET /api/cron/refresh-reviews
+사용자 등록 맛집의 Google 리뷰 정보 갱신
+
+**인증**: `Authorization: Bearer {CRON_SECRET}` 또는 `?key=init-reviews-2026`
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "리뷰 갱신 완료",
+  "timestamp": "2025-01-21T06:00:00.000Z",
+  "duration": "12.5s",
+  "results": {
+    "total": 50,
+    "updated": 48,
+    "failed": 2
+  }
+}
+```
+
+---
+
+### GET /api/cron/sync-seven-eleven
+7-ELEVEN 매장 동기화 (공식 API)
+
+**인증**: `Authorization: Bearer {CRON_SECRET}` 또는 `?key=init-seven-eleven-2026`
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| district | X | 특정 구 ID (예: tp01, nt15) |
+| batch | X | 배치 번호 (0-8, 5개 구씩 처리) |
+| city | X | 도시 필터 (taipei, newtaipei) |
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "7-ELEVEN 배치 동기화 완료",
+  "timestamp": "2025-01-21T22:00:00.000Z",
+  "duration": "45.2s",
+  "results": {
+    "batch": 0,
+    "nextBatch": 1,
+    "totalDistricts": 41,
+    "districts": [
+      {
+        "district": "松山區",
+        "city": "台北市",
+        "total": 120,
+        "withToilet": 45,
+        "added": 3,
+        "updated": 42
+      }
+    ]
+  }
+}
+```
+
+---
+
+### GET /api/cron/sync-familymart
+FamilyMart 매장 동기화 (Google Places API)
+
+**인증**: `Authorization: Bearer {CRON_SECRET}` 또는 `?key=init-familymart-2026`
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| district | X | 특정 구 ID (예: tp01, nt15) |
+| batch | X | 배치 번호 (0-20, 2개 구씩 처리) |
+| city | X | 도시 필터 (taipei, newtaipei) |
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "FamilyMart 배치 동기화 완료",
+  "timestamp": "2025-01-21T23:00:00.000Z",
+  "duration": "30.5s",
+  "results": {
+    "batch": 0,
+    "nextBatch": 1,
+    "totalDistricts": 41,
+    "districts": [
+      {
+        "district": "松山區",
+        "city": "台北市",
+        "total": 25,
+        "added": 5,
+        "updated": 20
+      }
+    ]
+  }
+}
+```
