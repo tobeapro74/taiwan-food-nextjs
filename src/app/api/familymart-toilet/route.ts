@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     const lat = searchParams.get('lat');
     const lng = searchParams.get('lng');
     const limit = parseInt(searchParams.get('limit') || '5');
-    const maxDistance = parseFloat(searchParams.get('maxDistance') || '3'); // 기본 3km
+    const maxDistance = parseFloat(searchParams.get('maxDistance') || '2'); // 기본 2km
 
     if (!lat || !lng) {
       return NextResponse.json(
@@ -81,10 +81,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Google Places API - Nearby Search (패밀리마트 검색)
-    // radius를 maxDistance(km)를 미터로 변환
-    const radiusMeters = Math.min(maxDistance * 1000, 50000); // 최대 50km
-
-    const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${userLat},${userLng}&radius=${radiusMeters}&type=convenience_store&keyword=FamilyMart&language=ko&key=${apiKey}`;
+    // rankby=distance 사용 시 radius 대신 거리순 정렬
+    const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${userLat},${userLng}&rankby=distance&type=convenience_store&keyword=FamilyMart&language=ko&key=${apiKey}`;
 
     const response = await fetch(placesUrl);
     const data = await response.json();
