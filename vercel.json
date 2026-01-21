@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/refresh-reviews",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/sync-seven-eleven",
+      "schedule": "0 22 * * *"
     }
   ]
 }

@@ -113,3 +113,37 @@ export interface RestaurantHistory {
   action: 'register' | 'delete' | 'update'; // 액션 유형
   memo?: string; // 메모 (삭제 사유 등)
 }
+
+// 7-ELEVEN 화장실 매장 타입
+export interface SevenElevenToilet {
+  _id?: string;
+  poi_id: string; // 매장 고유 ID
+  name: string; // 매장명 (예: 台場)
+  address: string; // 주소
+  city: string; // 도시 (예: 台北市)
+  district: string; // 구 (예: 松山區)
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  phone: string; // 전화번호
+  opening_hours: string; // 영업시간 (예: 24H, 07:00 ~ 21:00)
+  opening_days: string; // 영업일 (예: 週六/日不營業)
+  services: string[]; // 제공 서비스 목록
+  has_toilet: boolean; // 화장실 유무
+  created_at: string;
+  updated_at: string;
+}
+
+// 7-ELEVEN API 응답 파싱용 타입
+export interface SevenElevenApiStore {
+  POIID: string;
+  POIName: string;
+  Address: string;
+  X: string; // 경도
+  Y: string; // 위도
+  Telno: string;
+  StoreImageTitle: string; // 서비스 목록 (콤마 구분)
+  OP_DAY: string;
+  OP_TIME: string;
+}

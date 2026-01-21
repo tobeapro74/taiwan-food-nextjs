@@ -16,6 +16,7 @@ import { NearbyRestaurants } from "@/components/nearby-restaurants";
 import { AddRestaurantModal } from "@/components/add-restaurant-modal";
 import { DeleteAccountModal } from "@/components/delete-account-modal";
 import { RestaurantHistoryList } from "@/components/restaurant-history";
+import { ToiletFinder } from "@/components/toilet-finder";
 import {
   Restaurant,
   categories,
@@ -29,7 +30,7 @@ import {
   searchRestaurants,
 } from "@/data/taiwan-food";
 
-type View = "home" | "list" | "detail" | "nearby" | "history";
+type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet";
 type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add";
 
 interface UserInfo {
@@ -421,6 +422,20 @@ export default function Home() {
     );
   }
 
+  if (currentView === "toilet") {
+    return (
+      <>
+        <ToiletFinder
+          onClose={() => {
+            setCurrentView("home");
+            setActiveTab("home");
+          }}
+        />
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
+      </>
+    );
+  }
+
   if (currentView === "nearby") {
     return (
       <>
@@ -683,6 +698,25 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {/* 화장실 찾기 버튼 */}
+          <button
+            onClick={() => setCurrentView("toilet")}
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 shadow-sm flex items-center justify-between hover:from-green-600 hover:to-emerald-700 transition-all active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <span className="text-2xl">🚽</span>
+              </div>
+              <div className="text-left">
+                <h3 className="text-white font-bold text-base">가까운 화장실 찾기</h3>
+                <p className="text-white/80 text-xs">7-ELEVEN 화장실 위치 안내</p>
+              </div>
+            </div>
+            <div className="text-white/80">
+              <MapPin className="w-6 h-6" />
+            </div>
+          </button>
 
           {/* 퀵 카테고리 */}
           <section className="bg-card rounded-xl p-4 shadow-sm">
