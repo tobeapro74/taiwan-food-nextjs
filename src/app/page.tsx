@@ -338,6 +338,34 @@ export default function Home() {
     setCurrentView("detail");
   };
 
+  // place_id로 맛집 상세 화면 이동 (히스토리에서 사용)
+  const handleRestaurantSelectByPlaceId = async (placeId: string) => {
+    try {
+      // custom_restaurants에서 조회
+      const res = await fetch(`/api/custom-restaurants?place_id=${placeId}`);
+      const data = await res.json();
+
+      if (data.success && data.data && data.data.length > 0) {
+        const customRestaurant = data.data[0];
+        // CustomRestaurant를 Restaurant 형식으로 변환
+        const restaurant: Restaurant = {
+          이름: customRestaurant.name,
+          위치: customRestaurant.address,
+          특징: customRestaurant.feature || "",
+          가격대: customRestaurant.price_level ? `${"$".repeat(customRestaurant.price_level)}` : "",
+          place_id: customRestaurant.place_id,
+          category: customRestaurant.category,
+          coordinates: customRestaurant.coordinates,
+        };
+        setPreviousView(currentView);
+        setSelectedRestaurant(restaurant);
+        setCurrentView("detail");
+      }
+    } catch (error) {
+      console.error("맛집 조회 실패:", error);
+    }
+  };
+
   // 뒤로가기
   const handleBack = useCallback(() => {
     if (currentView === "detail") {
@@ -416,6 +444,7 @@ export default function Home() {
             setCurrentView("home");
             setActiveTab("home");
           }}
+          onSelectRestaurant={handleRestaurantSelectByPlaceId}
         />
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
       </>
