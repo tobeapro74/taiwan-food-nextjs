@@ -4,18 +4,18 @@ import { FamilyMartStore } from '@/lib/types';
 
 // 타이베이시 구별 중심 좌표 (검색 기준점)
 const TAIPEI_DISTRICTS = [
-  { name: '松山區', lat: 25.0608, lng: 121.5576 },
-  { name: '信義區', lat: 25.0330, lng: 121.5654 },
-  { name: '大安區', lat: 25.0267, lng: 121.5435 },
-  { name: '中山區', lat: 25.0685, lng: 121.5264 },
-  { name: '中正區', lat: 25.0320, lng: 121.5180 },
-  { name: '大同區', lat: 25.0631, lng: 121.5130 },
-  { name: '萬華區', lat: 25.0340, lng: 121.4997 },
-  { name: '文山區', lat: 24.9897, lng: 121.5703 },
-  { name: '南港區', lat: 25.0550, lng: 121.6069 },
-  { name: '內湖區', lat: 25.0830, lng: 121.5880 },
-  { name: '士林區', lat: 25.0930, lng: 121.5250 },
-  { name: '北投區', lat: 25.1320, lng: 121.5020 },
+  { id: '01', name: '松山區', lat: 25.0608, lng: 121.5576 },
+  { id: '02', name: '信義區', lat: 25.0330, lng: 121.5654 },
+  { id: '03', name: '大安區', lat: 25.0267, lng: 121.5435 },
+  { id: '04', name: '中山區', lat: 25.0685, lng: 121.5264 },
+  { id: '05', name: '中正區', lat: 25.0320, lng: 121.5180 },
+  { id: '06', name: '大同區', lat: 25.0631, lng: 121.5130 },
+  { id: '07', name: '萬華區', lat: 25.0340, lng: 121.4997 },
+  { id: '08', name: '文山區', lat: 24.9897, lng: 121.5703 },
+  { id: '09', name: '南港區', lat: 25.0550, lng: 121.6069 },
+  { id: '10', name: '內湖區', lat: 25.0830, lng: 121.5880 },
+  { id: '11', name: '士林區', lat: 25.0930, lng: 121.5250 },
+  { id: '12', name: '北投區', lat: 25.1320, lng: 121.5020 },
 ];
 
 // Google Places API로 FamilyMart 검색
@@ -60,8 +60,8 @@ function extractDistrict(address: string): string {
   return districtMatch ? districtMatch[1] : '';
 }
 
-// 메인 동기화 함수
-async function syncFamilyMartData() {
+// 단일 구 동기화 함수
+async function syncDistrictData(district: { id: string; name: string; lat: number; lng: number }) {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
 
   if (!apiKey) {
@@ -73,128 +73,144 @@ async function syncFamilyMartData() {
 
   const now = new Date().toISOString();
   const results = {
+    district: district.name,
     total: 0,
     added: 0,
     updated: 0,
-    deleted: 0,
-    districts: [] as { name: string; count: number }[],
   };
 
-  // 현재 DB의 모든 Place ID 가져오기 (삭제 체크용)
-  const existingStores = await collection.find({}, { projection: { place_id: 1 } }).toArray();
-  const existingPlaceIds = new Set(existingStores.map(s => s.place_id));
-  const foundPlaceIds = new Set<string>();
+  let pageToken: string | undefined;
+  let searchResult = await searchFamilyMartInArea(district.lat, district.lng, apiKey);
 
-  // 각 구별로 검색
-  for (const district of TAIPEI_DISTRICTS) {
-    let districtCount = 0;
-    let pageToken: string | undefined;
+  do {
+    for (const place of searchResult.results) {
+      // FamilyMart 또는 全家 이름이 포함된 매장만 처리
+      if (!place.name.includes('FamilyMart') && !place.name.includes('全家')) {
+        continue;
+      }
 
-    // 첫 페이지 검색
-    let searchResult = await searchFamilyMartInArea(district.lat, district.lng, apiKey);
+      results.total++;
+      const storeDistrict = extractDistrict(place.vicinity) || district.name;
 
-    do {
-      for (const place of searchResult.results) {
-        // FamilyMart 또는 全家 이름이 포함된 매장만 처리
-        if (!place.name.includes('FamilyMart') && !place.name.includes('全家')) {
-          continue;
-        }
-
-        foundPlaceIds.add(place.place_id);
-        districtCount++;
-        results.total++;
-
-        const storeDistrict = extractDistrict(place.vicinity) || district.name;
-
-        const result = await collection.updateOne(
-          { place_id: place.place_id },
-          {
-            $set: {
-              place_id: place.place_id,
-              name: place.name,
-              address: place.vicinity,
-              city: '台北市',
-              district: storeDistrict,
-              coordinates: {
-                lat: place.geometry.location.lat,
-                lng: place.geometry.location.lng,
-              },
-              opening_hours: place.opening_hours ? {
-                open_now: place.opening_hours.open_now,
-              } : undefined,
-              updated_at: now,
+      const result = await collection.updateOne(
+        { place_id: place.place_id },
+        {
+          $set: {
+            place_id: place.place_id,
+            name: place.name,
+            address: place.vicinity,
+            city: '台北市',
+            district: storeDistrict,
+            coordinates: {
+              lat: place.geometry.location.lat,
+              lng: place.geometry.location.lng,
             },
-            $setOnInsert: { created_at: now },
+            opening_hours: place.opening_hours ? {
+              open_now: place.opening_hours.open_now,
+            } : undefined,
+            updated_at: now,
           },
-          { upsert: true }
-        );
+          $setOnInsert: { created_at: now },
+        },
+        { upsert: true }
+      );
 
-        if (result.upsertedCount > 0) {
-          results.added++;
-        } else if (result.modifiedCount > 0) {
-          results.updated++;
-        }
+      if (result.upsertedCount > 0) {
+        results.added++;
+      } else if (result.modifiedCount > 0) {
+        results.updated++;
       }
+    }
 
-      // 다음 페이지가 있으면 계속 검색
-      pageToken = searchResult.nextPageToken;
-      if (pageToken) {
-        // Google API는 next_page_token을 사용하려면 잠시 대기 필요
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        searchResult = await searchFamilyMartInArea(district.lat, district.lng, apiKey, pageToken);
-      }
-    } while (pageToken);
+    // 다음 페이지가 있으면 계속 검색
+    pageToken = searchResult.nextPageToken;
+    if (pageToken) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      searchResult = await searchFamilyMartInArea(district.lat, district.lng, apiKey, pageToken);
+    }
+  } while (pageToken);
 
-    results.districts.push({
-      name: district.name,
-      count: districtCount,
-    });
+  return results;
+}
 
-    // API 호출 간 딜레이 (과부하 방지)
+// 전체 동기화 함수 (Cron용 - 2개 구씩 처리)
+async function syncBatchDistricts(batchIndex: number) {
+  const batchSize = 2;
+  const startIdx = batchIndex * batchSize;
+  const endIdx = Math.min(startIdx + batchSize, TAIPEI_DISTRICTS.length);
+
+  if (startIdx >= TAIPEI_DISTRICTS.length) {
+    return { message: '모든 구 처리 완료', batch: batchIndex, districts: [] };
+  }
+
+  const districtsToProcess = TAIPEI_DISTRICTS.slice(startIdx, endIdx);
+  const results = [];
+
+  for (const district of districtsToProcess) {
+    const result = await syncDistrictData(district);
+    results.push(result);
     await new Promise(resolve => setTimeout(resolve, 500));
   }
 
-  // 더 이상 존재하지 않는 매장 삭제
-  for (const existingPlaceId of existingPlaceIds) {
-    if (!foundPlaceIds.has(existingPlaceId)) {
-      await collection.deleteOne({ place_id: existingPlaceId });
-      results.deleted++;
-    }
-  }
-
-  return results;
+  return {
+    batch: batchIndex,
+    nextBatch: endIdx < TAIPEI_DISTRICTS.length ? batchIndex + 1 : null,
+    districts: results,
+  };
 }
 
 // GET: Cron Job 또는 수동 실행
 export async function GET(request: NextRequest) {
   try {
-    // Vercel Cron 인증 확인
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
     const { searchParams } = new URL(request.url);
     const manualKey = searchParams.get('key');
+    const districtId = searchParams.get('district'); // 특정 구만 처리
+    const batch = searchParams.get('batch'); // 배치 번호 (0-5)
 
-    // 수동 실행 키 확인 (초기 데이터 적재용)
     const isManualRun = manualKey === 'init-familymart-2026';
 
-    // Cron 시크릿이 설정된 경우 인증 확인
     if (!isManualRun && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      // 개발 환경에서는 허용
       if (process.env.NODE_ENV === 'production') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
 
-    console.log('Starting FamilyMart data sync...');
     const startTime = Date.now();
 
-    const results = await syncFamilyMartData();
+    // 특정 구만 처리
+    if (districtId) {
+      const district = TAIPEI_DISTRICTS.find(d => d.id === districtId);
+      if (!district) {
+        return NextResponse.json({
+          error: '유효하지 않은 구 ID입니다.',
+          validIds: TAIPEI_DISTRICTS.map(d => ({ id: d.id, name: d.name }))
+        }, { status: 400 });
+      }
 
+      console.log(`Syncing FamilyMart data for ${district.name}...`);
+      const results = await syncDistrictData(district);
+      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+      return NextResponse.json({
+        success: true,
+        message: `${district.name} FamilyMart 동기화 완료`,
+        timestamp: new Date().toISOString(),
+        duration: `${duration}s`,
+        results,
+      });
+    }
+
+    // 배치 처리 (Cron용)
+    const batchIndex = batch ? parseInt(batch) : 0;
+    console.log(`Syncing FamilyMart data batch ${batchIndex}...`);
+    const results = await syncBatchDistricts(batchIndex);
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
     return NextResponse.json({
       success: true,
-      message: 'FamilyMart 매장 데이터 동기화 완료',
+      message: 'FamilyMart 배치 동기화 완료',
       timestamp: new Date().toISOString(),
       duration: `${duration}s`,
       results,
