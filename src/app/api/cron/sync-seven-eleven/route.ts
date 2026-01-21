@@ -218,9 +218,14 @@ export async function GET(request: NextRequest) {
     // Vercel Cron 인증 확인
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
+    const { searchParams } = new URL(request.url);
+    const manualKey = searchParams.get('key');
+
+    // 수동 실행 키 확인 (초기 데이터 적재용)
+    const isManualRun = manualKey === 'init-seven-eleven-2026';
 
     // Cron 시크릿이 설정된 경우 인증 확인
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!isManualRun && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
       // 개발 환경에서는 허용
       if (process.env.NODE_ENV === 'production') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
