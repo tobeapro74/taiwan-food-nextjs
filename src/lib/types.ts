@@ -147,3 +147,23 @@ export interface SevenElevenApiStore {
   OP_DAY: string;
   OP_TIME: string;
 }
+
+// FamilyMart 매장 타입
+export interface FamilyMartStore {
+  _id?: string;
+  place_id: string; // Google Place ID
+  name: string; // 매장명
+  address: string; // 주소
+  city: string; // 도시 (예: 台北市)
+  district: string; // 구 (예: 松山區)
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  opening_hours?: {
+    open_now?: boolean;
+    weekday_text?: string[];
+  };
+  created_at: string;
+  updated_at: string;
+}

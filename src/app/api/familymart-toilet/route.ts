@@ -1,21 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-interface FamilyMartStore {
-  place_id: string;
-  name: string;
-  address: string;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
-  opening_hours?: {
-    open_now?: boolean;
-  };
-  distance?: number;
-  distance_text?: string;
-  distance_km?: number;
-  google_maps_directions_url?: string;
-}
+import { connectToDatabase } from '@/lib/mongodb';
+import { FamilyMartStore } from '@/lib/types';
 
 // 두 좌표 간 거리 계산 (Haversine 공식, 단위: km)
 function calculateDistance(
@@ -45,7 +30,7 @@ function formatDistance(km: number): string {
   return `${km.toFixed(1)}km`;
 }
 
-// GET: 가까운 패밀리마트 검색 (Google Places API 사용)
+// GET: 가까운 패밀리마트 검색 (MongoDB 기반)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -54,11 +39,18 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '5');
     const maxDistance = parseFloat(searchParams.get('maxDistance') || '2'); // 기본 2km
 
+    // 좌표 없이 전체 목록 요청
     if (!lat || !lng) {
-      return NextResponse.json(
-        { success: false, error: '위치 정보가 필요합니다.' },
-        { status: 400 }
-      );
+      const db = await connectToDatabase();
+      const collection = db.collection<FamilyMartStore>('familymart_stores');
+
+      const stores = await collection.find({}).toArray();
+
+      return NextResponse.json({
+        success: true,
+        data: stores,
+        total: stores.length,
+      });
     }
 
     const userLat = parseFloat(lat);
@@ -71,78 +63,39 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+    const db = await connectToDatabase();
+    const collection = db.collection<FamilyMartStore>('familymart_stores');
 
-    if (!apiKey) {
-      return NextResponse.json(
-        { success: false, error: 'Google Places API 키가 설정되지 않았습니다.' },
-        { status: 500 }
-      );
-    }
+    // 모든 패밀리마트 매장 가져오기
+    const stores = await collection.find({}).toArray();
 
-    // Google Places API - Nearby Search (패밀리마트 검색)
-    // rankby=distance 사용 시 radius 대신 거리순 정렬
-    const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${userLat},${userLng}&rankby=distance&type=convenience_store&keyword=FamilyMart&language=ko&key=${apiKey}`;
-
-    const response = await fetch(placesUrl);
-    const data = await response.json();
-
-    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      console.error('Google Places API error:', data.status, data.error_message);
-      return NextResponse.json(
-        { success: false, error: `Google API 오류: ${data.status}` },
-        { status: 500 }
-      );
-    }
-
-    if (!data.results || data.results.length === 0) {
-      return NextResponse.json({
-        success: true,
-        data: [],
-        total: 0,
-        user_location: { lat: userLat, lng: userLng },
-      });
-    }
-
-    // 결과 처리 및 거리 계산
-    const stores: FamilyMartStore[] = data.results
-      .map((place: {
-        place_id: string;
-        name: string;
-        vicinity: string;
-        geometry: { location: { lat: number; lng: number } };
-        opening_hours?: { open_now?: boolean };
-      }) => {
-        const distance = calculateDistance(
+    // 거리 계산 및 정렬
+    const storesWithDistance = stores
+      .map(store => ({
+        ...store,
+        distance: calculateDistance(
           userLat,
           userLng,
-          place.geometry.location.lat,
-          place.geometry.location.lng
-        );
-
-        return {
-          place_id: place.place_id,
-          name: place.name,
-          address: place.vicinity,
-          coordinates: {
-            lat: place.geometry.location.lat,
-            lng: place.geometry.location.lng,
-          },
-          opening_hours: place.opening_hours,
-          distance,
-          distance_text: formatDistance(distance),
-          distance_km: Math.round(distance * 1000) / 1000,
-          google_maps_directions_url: `https://www.google.com/maps/dir/?api=1&destination=${place.geometry.location.lat},${place.geometry.location.lng}&travelmode=walking`,
-        };
-      })
-      .filter((store: FamilyMartStore) => store.distance! <= maxDistance)
-      .sort((a: FamilyMartStore, b: FamilyMartStore) => a.distance! - b.distance!)
+          store.coordinates.lat,
+          store.coordinates.lng
+        ),
+      }))
+      .filter(store => store.distance <= maxDistance) // 최대 거리 필터
+      .sort((a, b) => a.distance - b.distance)
       .slice(0, limit);
+
+    // 거리 포맷팅 및 구글맵 길찾기 URL 추가
+    const result = storesWithDistance.map(store => ({
+      ...store,
+      distance_text: formatDistance(store.distance),
+      distance_km: Math.round(store.distance * 1000) / 1000,
+      google_maps_directions_url: `https://www.google.com/maps/dir/?api=1&destination=${store.coordinates.lat},${store.coordinates.lng}&travelmode=walking`,
+    }));
 
     return NextResponse.json({
       success: true,
-      data: stores,
-      total: stores.length,
+      data: result,
+      total: result.length,
       user_location: { lat: userLat, lng: userLng },
     });
   } catch (error) {
