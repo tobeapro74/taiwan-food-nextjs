@@ -408,7 +408,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
         )}
 
         {/* 안내 문구 */}
-        <div className="mt-6 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+        <div className="mt-6 mb-24 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
           {storeType === "7eleven" ? (
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
               💡 7-ELEVEN 매장 중 화장실을 개방하는 매장만 표시됩니다.
