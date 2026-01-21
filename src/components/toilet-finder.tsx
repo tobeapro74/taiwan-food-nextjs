@@ -145,8 +145,8 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between p-4">
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 pt-safe">
+        <div className="flex items-center justify-between p-4 pt-12">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
               <span className="text-white text-xl">🚽</span>
