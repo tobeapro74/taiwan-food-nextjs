@@ -124,12 +124,11 @@ export function AddRestaurantModal({
         setSelectedPlace(data.data);
         setSelectedCategory(data.data.suggested_category || "밥류");
 
-        // 이미 등록된 맛집인지 확인 (좌표 기반)
+        // 이미 등록된 맛집인지 확인 (place_id 기반)
         try {
-          const { lat, lng } = data.data.coordinates;
-          const checkRes = await fetch(`/api/custom-restaurants?lat=${lat}&lng=${lng}`);
+          const checkRes = await fetch(`/api/custom-restaurants?place_id=${data.data.place_id}`);
           const checkData = await checkRes.json();
-          console.log("중복 확인 결과:", checkData, "coordinates:", lat, lng);
+          console.log("중복 확인 결과:", checkData, "place_id:", data.data.place_id);
           if (checkData.success && checkData.data && checkData.data.length > 0) {
             console.log("이미 등록된 맛집!");
             setIsAlreadyRegistered(true);
