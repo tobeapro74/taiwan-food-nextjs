@@ -369,13 +369,15 @@ export default function Home() {
   // 뒤로가기
   const handleBack = useCallback(() => {
     if (currentView === "detail") {
-      // 이전 화면이 홈이면 홈으로, nearby면 nearby로, 리스트면 리스트로
+      // 이전 화면이 홈이면 홈으로, nearby면 nearby로, history면 history로, 리스트면 리스트로
       if (previousView === "home") {
         setCurrentView("home");
         setActiveTab("home");
       } else if (previousView === "nearby") {
         setCurrentView("nearby");
         setActiveTab("nearby");
+      } else if (previousView === "history") {
+        setCurrentView("history");
       } else {
         setCurrentView("list");
       }
