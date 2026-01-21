@@ -4,19 +4,57 @@ import { FamilyMartStore } from '@/lib/types';
 
 // 타이베이시 구별 중심 좌표 (검색 기준점)
 const TAIPEI_DISTRICTS = [
-  { id: '01', name: '松山區', lat: 25.0608, lng: 121.5576 },
-  { id: '02', name: '信義區', lat: 25.0330, lng: 121.5654 },
-  { id: '03', name: '大安區', lat: 25.0267, lng: 121.5435 },
-  { id: '04', name: '中山區', lat: 25.0685, lng: 121.5264 },
-  { id: '05', name: '中正區', lat: 25.0320, lng: 121.5180 },
-  { id: '06', name: '大同區', lat: 25.0631, lng: 121.5130 },
-  { id: '07', name: '萬華區', lat: 25.0340, lng: 121.4997 },
-  { id: '08', name: '文山區', lat: 24.9897, lng: 121.5703 },
-  { id: '09', name: '南港區', lat: 25.0550, lng: 121.6069 },
-  { id: '10', name: '內湖區', lat: 25.0830, lng: 121.5880 },
-  { id: '11', name: '士林區', lat: 25.0930, lng: 121.5250 },
-  { id: '12', name: '北投區', lat: 25.1320, lng: 121.5020 },
+  { id: 'tp01', name: '松山區', city: '台北市', lat: 25.0608, lng: 121.5576 },
+  { id: 'tp02', name: '信義區', city: '台北市', lat: 25.0330, lng: 121.5654 },
+  { id: 'tp03', name: '大安區', city: '台北市', lat: 25.0267, lng: 121.5435 },
+  { id: 'tp04', name: '中山區', city: '台北市', lat: 25.0685, lng: 121.5264 },
+  { id: 'tp05', name: '中正區', city: '台北市', lat: 25.0320, lng: 121.5180 },
+  { id: 'tp06', name: '大同區', city: '台北市', lat: 25.0631, lng: 121.5130 },
+  { id: 'tp07', name: '萬華區', city: '台北市', lat: 25.0340, lng: 121.4997 },
+  { id: 'tp08', name: '文山區', city: '台北市', lat: 24.9897, lng: 121.5703 },
+  { id: 'tp09', name: '南港區', city: '台北市', lat: 25.0550, lng: 121.6069 },
+  { id: 'tp10', name: '內湖區', city: '台北市', lat: 25.0830, lng: 121.5880 },
+  { id: 'tp11', name: '士林區', city: '台北市', lat: 25.0930, lng: 121.5250 },
+  { id: 'tp12', name: '北投區', city: '台北市', lat: 25.1320, lng: 121.5020 },
 ];
+
+// 신베이시 구별 중심 좌표
+const NEW_TAIPEI_DISTRICTS = [
+  { id: 'nt01', name: '板橋區', city: '新北市', lat: 25.0146, lng: 121.4593 },
+  { id: 'nt02', name: '三重區', city: '新北市', lat: 25.0615, lng: 121.4879 },
+  { id: 'nt03', name: '中和區', city: '新北市', lat: 24.9998, lng: 121.4986 },
+  { id: 'nt04', name: '永和區', city: '新北市', lat: 25.0076, lng: 121.5168 },
+  { id: 'nt05', name: '新莊區', city: '新北市', lat: 25.0360, lng: 121.4504 },
+  { id: 'nt06', name: '新店區', city: '新北市', lat: 24.9677, lng: 121.5419 },
+  { id: 'nt07', name: '土城區', city: '新北市', lat: 24.9723, lng: 121.4433 },
+  { id: 'nt08', name: '蘆洲區', city: '新北市', lat: 25.0849, lng: 121.4738 },
+  { id: 'nt09', name: '樹林區', city: '新北市', lat: 24.9906, lng: 121.4205 },
+  { id: 'nt10', name: '汐止區', city: '新北市', lat: 25.0658, lng: 121.6475 },
+  { id: 'nt11', name: '鶯歌區', city: '新北市', lat: 24.9553, lng: 121.3545 },
+  { id: 'nt12', name: '三峽區', city: '新北市', lat: 24.9340, lng: 121.3686 },
+  { id: 'nt13', name: '淡水區', city: '新北市', lat: 25.1694, lng: 121.4408 },
+  { id: 'nt14', name: '瑞芳區', city: '新北市', lat: 25.1089, lng: 121.8104 },
+  { id: 'nt15', name: '五股區', city: '新北市', lat: 25.0829, lng: 121.4381 },
+  { id: 'nt16', name: '泰山區', city: '新北市', lat: 25.0590, lng: 121.4318 },
+  { id: 'nt17', name: '林口區', city: '新北市', lat: 25.0775, lng: 121.3916 },
+  { id: 'nt18', name: '深坑區', city: '新北市', lat: 25.0022, lng: 121.6153 },
+  { id: 'nt19', name: '石碇區', city: '新北市', lat: 24.9917, lng: 121.6586 },
+  { id: 'nt20', name: '坪林區', city: '新北市', lat: 24.9375, lng: 121.7111 },
+  { id: 'nt21', name: '三芝區', city: '新北市', lat: 25.2583, lng: 121.5000 },
+  { id: 'nt22', name: '石門區', city: '新北市', lat: 25.2903, lng: 121.5681 },
+  { id: 'nt23', name: '八里區', city: '新北市', lat: 25.1472, lng: 121.4008 },
+  { id: 'nt24', name: '平溪區', city: '新北市', lat: 25.0258, lng: 121.7381 },
+  { id: 'nt25', name: '雙溪區', city: '新北市', lat: 25.0333, lng: 121.8653 },
+  { id: 'nt26', name: '貢寮區', city: '新北市', lat: 25.0222, lng: 121.9083 },
+  { id: 'nt27', name: '金山區', city: '新北市', lat: 25.2222, lng: 121.6361 },
+  { id: 'nt28', name: '萬里區', city: '新北市', lat: 25.1778, lng: 121.6889 },
+  { id: 'nt29', name: '烏來區', city: '新北市', lat: 24.8653, lng: 121.5514 },
+];
+
+const ALL_DISTRICTS = [...TAIPEI_DISTRICTS, ...NEW_TAIPEI_DISTRICTS];
+
+// 타이베이시 + 신베이시 구 이름 목록 (주소에서 추출용)
+const ALL_DISTRICT_NAMES = ALL_DISTRICTS.map(d => d.name).join('|');
 
 // Google Places API로 FamilyMart 검색
 async function searchFamilyMartInArea(
@@ -56,12 +94,12 @@ async function searchFamilyMartInArea(
 
 // 주소에서 구 이름 추출
 function extractDistrict(address: string): string {
-  const districtMatch = address.match(/(松山區|信義區|大安區|中山區|中正區|大同區|萬華區|文山區|南港區|內湖區|士林區|北投區)/);
+  const districtMatch = address.match(new RegExp(`(${ALL_DISTRICT_NAMES})`));
   return districtMatch ? districtMatch[1] : '';
 }
 
 // 단일 구 동기화 함수
-async function syncDistrictData(district: { id: string; name: string; lat: number; lng: number }) {
+async function syncDistrictData(district: { id: string; name: string; city: string; lat: number; lng: number }) {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
 
   if (!apiKey) {
@@ -74,6 +112,7 @@ async function syncDistrictData(district: { id: string; name: string; lat: numbe
   const now = new Date().toISOString();
   const results = {
     district: district.name,
+    city: district.city,
     total: 0,
     added: 0,
     updated: 0,
@@ -99,7 +138,7 @@ async function syncDistrictData(district: { id: string; name: string; lat: numbe
             place_id: place.place_id,
             name: place.name,
             address: place.vicinity,
-            city: '台北市',
+            city: district.city,
             district: storeDistrict,
             coordinates: {
               lat: place.geometry.location.lat,
@@ -133,17 +172,17 @@ async function syncDistrictData(district: { id: string; name: string; lat: numbe
   return results;
 }
 
-// 전체 동기화 함수 (Cron용 - 2개 구씩 처리)
+// 배치 동기화 함수 (Cron용 - 2개 구씩 처리)
 async function syncBatchDistricts(batchIndex: number) {
   const batchSize = 2;
   const startIdx = batchIndex * batchSize;
-  const endIdx = Math.min(startIdx + batchSize, TAIPEI_DISTRICTS.length);
+  const endIdx = Math.min(startIdx + batchSize, ALL_DISTRICTS.length);
 
-  if (startIdx >= TAIPEI_DISTRICTS.length) {
+  if (startIdx >= ALL_DISTRICTS.length) {
     return { message: '모든 구 처리 완료', batch: batchIndex, districts: [] };
   }
 
-  const districtsToProcess = TAIPEI_DISTRICTS.slice(startIdx, endIdx);
+  const districtsToProcess = ALL_DISTRICTS.slice(startIdx, endIdx);
   const results = [];
 
   for (const district of districtsToProcess) {
@@ -154,7 +193,8 @@ async function syncBatchDistricts(batchIndex: number) {
 
   return {
     batch: batchIndex,
-    nextBatch: endIdx < TAIPEI_DISTRICTS.length ? batchIndex + 1 : null,
+    nextBatch: endIdx < ALL_DISTRICTS.length ? batchIndex + 1 : null,
+    totalDistricts: ALL_DISTRICTS.length,
     districts: results,
   };
 }
@@ -167,7 +207,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const manualKey = searchParams.get('key');
     const districtId = searchParams.get('district'); // 특정 구만 처리
-    const batch = searchParams.get('batch'); // 배치 번호 (0-5)
+    const batch = searchParams.get('batch'); // 배치 번호 (0-20)
+    const city = searchParams.get('city'); // 도시 필터 (taipei, newtaipei)
 
     const isManualRun = manualKey === 'init-familymart-2026';
 
@@ -181,24 +222,41 @@ export async function GET(request: NextRequest) {
 
     // 특정 구만 처리
     if (districtId) {
-      const district = TAIPEI_DISTRICTS.find(d => d.id === districtId);
+      const district = ALL_DISTRICTS.find(d => d.id === districtId);
       if (!district) {
         return NextResponse.json({
           error: '유효하지 않은 구 ID입니다.',
-          validIds: TAIPEI_DISTRICTS.map(d => ({ id: d.id, name: d.name }))
+          validIds: ALL_DISTRICTS.map(d => ({ id: d.id, name: d.name, city: d.city }))
         }, { status: 400 });
       }
 
-      console.log(`Syncing FamilyMart data for ${district.name}...`);
+      console.log(`Syncing FamilyMart data for ${district.city} ${district.name}...`);
       const results = await syncDistrictData(district);
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
       return NextResponse.json({
         success: true,
-        message: `${district.name} FamilyMart 동기화 완료`,
+        message: `${district.city} ${district.name} FamilyMart 동기화 완료`,
         timestamp: new Date().toISOString(),
         duration: `${duration}s`,
         results,
+      });
+    }
+
+    // 도시별 처리
+    if (city) {
+      const districts = city === 'taipei' ? TAIPEI_DISTRICTS :
+                       city === 'newtaipei' ? NEW_TAIPEI_DISTRICTS : [];
+
+      if (districts.length === 0) {
+        return NextResponse.json({ error: '유효하지 않은 도시입니다. (taipei, newtaipei)' }, { status: 400 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `${city === 'taipei' ? '台北市' : '新北市'} 구 목록`,
+        districts: districts.map(d => ({ id: d.id, name: d.name })),
+        hint: '개별 구를 ?district=ID로 호출하세요.',
       });
     }
 

@@ -4,19 +4,54 @@ import { SevenElevenToilet } from '@/lib/types';
 
 // 타이베이시 구 목록
 const TAIPEI_DISTRICTS = [
-  { id: '01', name: '松山區' },
-  { id: '02', name: '信義區' },
-  { id: '03', name: '大安區' },
-  { id: '04', name: '中山區' },
-  { id: '05', name: '中正區' },
-  { id: '06', name: '大同區' },
-  { id: '07', name: '萬華區' },
-  { id: '08', name: '文山區' },
-  { id: '09', name: '南港區' },
-  { id: '10', name: '內湖區' },
-  { id: '11', name: '士林區' },
-  { id: '12', name: '北投區' },
+  { id: 'tp01', name: '松山區', city: '台北市' },
+  { id: 'tp02', name: '信義區', city: '台北市' },
+  { id: 'tp03', name: '大安區', city: '台北市' },
+  { id: 'tp04', name: '中山區', city: '台北市' },
+  { id: 'tp05', name: '中正區', city: '台北市' },
+  { id: 'tp06', name: '大同區', city: '台北市' },
+  { id: 'tp07', name: '萬華區', city: '台北市' },
+  { id: 'tp08', name: '文山區', city: '台北市' },
+  { id: 'tp09', name: '南港區', city: '台北市' },
+  { id: 'tp10', name: '內湖區', city: '台北市' },
+  { id: 'tp11', name: '士林區', city: '台北市' },
+  { id: 'tp12', name: '北投區', city: '台北市' },
 ];
+
+// 신베이시 구 목록
+const NEW_TAIPEI_DISTRICTS = [
+  { id: 'nt01', name: '板橋區', city: '新北市' },
+  { id: 'nt02', name: '三重區', city: '新北市' },
+  { id: 'nt03', name: '中和區', city: '新北市' },
+  { id: 'nt04', name: '永和區', city: '新北市' },
+  { id: 'nt05', name: '新莊區', city: '新北市' },
+  { id: 'nt06', name: '新店區', city: '新北市' },
+  { id: 'nt07', name: '土城區', city: '新北市' },
+  { id: 'nt08', name: '蘆洲區', city: '新北市' },
+  { id: 'nt09', name: '樹林區', city: '新北市' },
+  { id: 'nt10', name: '汐止區', city: '新北市' },
+  { id: 'nt11', name: '鶯歌區', city: '新北市' },
+  { id: 'nt12', name: '三峽區', city: '新北市' },
+  { id: 'nt13', name: '淡水區', city: '新北市' },
+  { id: 'nt14', name: '瑞芳區', city: '新北市' },
+  { id: 'nt15', name: '五股區', city: '新北市' },
+  { id: 'nt16', name: '泰山區', city: '新北市' },
+  { id: 'nt17', name: '林口區', city: '新北市' },
+  { id: 'nt18', name: '深坑區', city: '新北市' },
+  { id: 'nt19', name: '石碇區', city: '新北市' },
+  { id: 'nt20', name: '坪林區', city: '新北市' },
+  { id: 'nt21', name: '三芝區', city: '新北市' },
+  { id: 'nt22', name: '石門區', city: '新北市' },
+  { id: 'nt23', name: '八里區', city: '新北市' },
+  { id: 'nt24', name: '平溪區', city: '新北市' },
+  { id: 'nt25', name: '雙溪區', city: '新北市' },
+  { id: 'nt26', name: '貢寮區', city: '新北市' },
+  { id: 'nt27', name: '金山區', city: '新北市' },
+  { id: 'nt28', name: '萬里區', city: '新北市' },
+  { id: 'nt29', name: '烏來區', city: '新北市' },
+];
+
+const ALL_DISTRICTS = [...TAIPEI_DISTRICTS, ...NEW_TAIPEI_DISTRICTS];
 
 // 7-ELEVEN API 엔드포인트
 const SEVEN_ELEVEN_API = 'https://emap.pcsc.com.tw/EMapSDK.aspx';
@@ -95,7 +130,7 @@ function parseStores(xml: string): Array<{
 }
 
 // 구별 매장 데이터 가져오기
-async function fetchDistrictStores(districtName: string): Promise<Array<{
+async function fetchDistrictStores(cityName: string, districtName: string): Promise<Array<{
   poiId: string;
   name: string;
   address: string;
@@ -113,132 +148,180 @@ async function fetchDistrictStores(districtName: string): Promise<Array<{
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
       },
-      body: `commandid=SearchStore&city=台北市&town=${encodeURIComponent(districtName)}`,
+      body: `commandid=SearchStore&city=${encodeURIComponent(cityName)}&town=${encodeURIComponent(districtName)}`,
     });
 
     const xml = await response.text();
     return parseStores(xml);
   } catch (error) {
-    console.error(`Error fetching ${districtName}:`, error);
+    console.error(`Error fetching ${cityName} ${districtName}:`, error);
     return [];
   }
 }
 
-// 메인 동기화 함수
-async function syncSevenElevenData() {
+// 단일 구 동기화 함수
+async function syncDistrictData(district: { id: string; name: string; city: string }) {
   const db = await connectToDatabase();
   const collection = db.collection<SevenElevenToilet>('seven_eleven_toilets');
 
   const now = new Date().toISOString();
   const results = {
+    district: district.name,
+    city: district.city,
     total: 0,
     withToilet: 0,
     added: 0,
     updated: 0,
-    deleted: 0,
-    districts: [] as { name: string; total: number; withToilet: number }[],
   };
 
-  // 현재 DB의 모든 POI ID 가져오기 (삭제 체크용)
-  const existingStores = await collection.find({}, { projection: { poi_id: 1 } }).toArray();
-  const existingPoiIds = new Set(existingStores.map(s => s.poi_id));
-  const foundPoiIds = new Set<string>();
+  const stores = await fetchDistrictStores(district.city, district.name);
+  const toiletStores = stores.filter(s => s.hasToilet);
 
-  // 각 구별로 데이터 수집
-  for (const district of TAIPEI_DISTRICTS) {
-    const stores = await fetchDistrictStores(district.name);
-    const toiletStores = stores.filter(s => s.hasToilet);
+  results.total = stores.length;
+  results.withToilet = toiletStores.length;
 
-    results.districts.push({
-      name: district.name,
-      total: stores.length,
-      withToilet: toiletStores.length,
-    });
-
-    results.total += stores.length;
-    results.withToilet += toiletStores.length;
-
-    // 화장실 있는 매장만 DB에 저장
-    for (const store of toiletStores) {
-      foundPoiIds.add(store.poiId);
-
-      const result = await collection.updateOne(
-        { poi_id: store.poiId },
-        {
-          $set: {
-            poi_id: store.poiId,
-            name: store.name,
-            address: store.address,
-            city: '台北市',
-            district: district.name,
-            coordinates: {
-              lat: store.lat,
-              lng: store.lng,
-            },
-            phone: store.phone,
-            opening_hours: store.openingHours,
-            opening_days: store.openingDays,
-            services: store.services,
-            has_toilet: true,
-            updated_at: now,
+  for (const store of toiletStores) {
+    const result = await collection.updateOne(
+      { poi_id: store.poiId },
+      {
+        $set: {
+          poi_id: store.poiId,
+          name: store.name,
+          address: store.address,
+          city: district.city,
+          district: district.name,
+          coordinates: {
+            lat: store.lat,
+            lng: store.lng,
           },
-          $setOnInsert: { created_at: now },
+          phone: store.phone,
+          opening_hours: store.openingHours,
+          opening_days: store.openingDays,
+          services: store.services,
+          has_toilet: true,
+          updated_at: now,
         },
-        { upsert: true }
-      );
+        $setOnInsert: { created_at: now },
+      },
+      { upsert: true }
+    );
 
-      if (result.upsertedCount > 0) {
-        results.added++;
-      } else if (result.modifiedCount > 0) {
-        results.updated++;
-      }
-    }
-
-    // API 호출 간 딜레이 (과부하 방지)
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-
-  // 더 이상 존재하지 않는 매장 삭제
-  for (const existingPoiId of existingPoiIds) {
-    if (!foundPoiIds.has(existingPoiId)) {
-      await collection.deleteOne({ poi_id: existingPoiId });
-      results.deleted++;
+    if (result.upsertedCount > 0) {
+      results.added++;
+    } else if (result.modifiedCount > 0) {
+      results.updated++;
     }
   }
 
   return results;
 }
 
+// 배치 동기화 함수 (Cron용 - 5개 구씩 처리)
+async function syncBatchDistricts(batchIndex: number) {
+  const batchSize = 5;
+  const startIdx = batchIndex * batchSize;
+  const endIdx = Math.min(startIdx + batchSize, ALL_DISTRICTS.length);
+
+  if (startIdx >= ALL_DISTRICTS.length) {
+    return { message: '모든 구 처리 완료', batch: batchIndex, districts: [] };
+  }
+
+  const districtsToProcess = ALL_DISTRICTS.slice(startIdx, endIdx);
+  const results = [];
+
+  for (const district of districtsToProcess) {
+    const result = await syncDistrictData(district);
+    results.push(result);
+    await new Promise(resolve => setTimeout(resolve, 300));
+  }
+
+  return {
+    batch: batchIndex,
+    nextBatch: endIdx < ALL_DISTRICTS.length ? batchIndex + 1 : null,
+    totalDistricts: ALL_DISTRICTS.length,
+    districts: results,
+  };
+}
+
 // GET: Cron Job 또는 수동 실행
 export async function GET(request: NextRequest) {
   try {
-    // Vercel Cron 인증 확인
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
     const { searchParams } = new URL(request.url);
     const manualKey = searchParams.get('key');
+    const districtId = searchParams.get('district'); // 특정 구만 처리
+    const batch = searchParams.get('batch'); // 배치 번호 (0-8)
+    const city = searchParams.get('city'); // 도시 필터 (taipei, newtaipei)
 
-    // 수동 실행 키 확인 (초기 데이터 적재용)
     const isManualRun = manualKey === 'init-seven-eleven-2026';
 
-    // Cron 시크릿이 설정된 경우 인증 확인
     if (!isManualRun && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      // 개발 환경에서는 허용
       if (process.env.NODE_ENV === 'production') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
 
-    console.log('Starting 7-ELEVEN toilet data sync...');
     const startTime = Date.now();
 
-    const results = await syncSevenElevenData();
+    // 특정 구만 처리
+    if (districtId) {
+      const district = ALL_DISTRICTS.find(d => d.id === districtId);
+      if (!district) {
+        return NextResponse.json({
+          error: '유효하지 않은 구 ID입니다.',
+          validIds: ALL_DISTRICTS.map(d => ({ id: d.id, name: d.name, city: d.city }))
+        }, { status: 400 });
+      }
 
+      console.log(`Syncing 7-ELEVEN data for ${district.city} ${district.name}...`);
+      const results = await syncDistrictData(district);
+      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+      return NextResponse.json({
+        success: true,
+        message: `${district.city} ${district.name} 7-ELEVEN 동기화 완료`,
+        timestamp: new Date().toISOString(),
+        duration: `${duration}s`,
+        results,
+      });
+    }
+
+    // 도시별 배치 처리
+    if (city) {
+      const districts = city === 'taipei' ? TAIPEI_DISTRICTS :
+                       city === 'newtaipei' ? NEW_TAIPEI_DISTRICTS : [];
+
+      if (districts.length === 0) {
+        return NextResponse.json({ error: '유효하지 않은 도시입니다. (taipei, newtaipei)' }, { status: 400 });
+      }
+
+      const results = [];
+      for (const district of districts) {
+        const result = await syncDistrictData(district);
+        results.push(result);
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
+      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+      return NextResponse.json({
+        success: true,
+        message: `${city === 'taipei' ? '台北市' : '新北市'} 7-ELEVEN 동기화 완료`,
+        timestamp: new Date().toISOString(),
+        duration: `${duration}s`,
+        results,
+      });
+    }
+
+    // 배치 처리 (Cron용)
+    const batchIndex = batch ? parseInt(batch) : 0;
+    console.log(`Syncing 7-ELEVEN data batch ${batchIndex}...`);
+    const results = await syncBatchDistricts(batchIndex);
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
     return NextResponse.json({
       success: true,
-      message: '7-ELEVEN 화장실 데이터 동기화 완료',
+      message: '7-ELEVEN 배치 동기화 완료',
       timestamp: new Date().toISOString(),
       duration: `${duration}s`,
       results,
