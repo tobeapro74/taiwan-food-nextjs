@@ -1230,3 +1230,67 @@ function NearbyRestaurantCard({ restaurant, distance, onSelect }: NearbyRestaura
     }
   ]
 }
+```
+
+---
+
+## 12. 화장실 찾기 세븐일레븐 카드 레이아웃 오버플로우 문제
+
+### 문제 상황
+화장실 찾기 > 세븐일레븐 탭에서 첫 번째 카드의 거리 및 길찾기 버튼이 카드 우측을 넘어가는 레이아웃 문제가 발생했습니다.
+
+### 원인 분석
+- FamilyMart 카드에는 `overflow-hidden`, `min-w-0`, `shrink-0` 등의 flex 레이아웃 제어 클래스가 적용되어 있었음
+- 7-ELEVEN 카드에는 해당 클래스들이 누락되어 있어 콘텐츠가 카드 영역을 넘어감
+
+### 해결 방안
+
+#### FamilyMart와 동일하게 7-ELEVEN 카드 레이아웃 수정
+
+**변경 전:**
+```tsx
+<div className="flex items-start justify-between">
+  <div className="flex-1">
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="... font-medium">가장 가까움</span>
+      <span className="... font-medium">ATM</span>
+      <h3 className="font-bold ...">7-ELEVEN {store.name}</h3>
+    </div>
+    ...
+  </div>
+  <div className="flex flex-col items-end gap-2 ml-4">
+    ...
+  </div>
+</div>
+```
+
+**변경 후:**
+```tsx
+<div className="flex items-start justify-between overflow-hidden">
+  <div className="flex-1 min-w-0 mr-3">
+    <div className="flex items-center gap-2">
+      <span className="... font-medium shrink-0">가장 가까움</span>
+      <span className="... font-medium shrink-0">ATM</span>
+      <h3 className="font-bold ... truncate">7-ELEVEN {store.name}</h3>
+    </div>
+    ...
+  </div>
+  <div className="flex flex-col items-end gap-2 shrink-0">
+    ...
+  </div>
+</div>
+```
+
+### 변경 사항 요약
+
+| 요소 | 변경 내용 |
+|------|-----------|
+| 외부 div | `overflow-hidden` 추가 |
+| 좌측 콘텐츠 div | `min-w-0 mr-3` 추가 (flex 아이템 축소 허용) |
+| 배지 컨테이너 | `flex-wrap` 제거 |
+| 배지(태그) | `shrink-0` 추가 (축소 방지) |
+| 매장명 h3 | `truncate` 추가 (말줄임 처리) |
+| 우측 거리/길찾기 div | `ml-4` → `shrink-0` (축소 방지) |
+
+### 관련 파일
+- `src/components/toilet-finder.tsx` - 7-ELEVEN 카드 레이아웃 수정 (275-319줄)
