@@ -77,7 +77,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
 
       // API 호출 (타입에 따라 다른 엔드포인트)
       const endpoint = type === "7eleven"
-        ? `/api/seven-eleven-toilet?lat=${latitude}&lng=${longitude}&limit=5&maxDistance=2`
+        ? `/api/seven-eleven-toilet?lat=${latitude}&lng=${longitude}&limit=5&maxDistance=3`
         : `/api/familymart-toilet?lat=${latitude}&lng=${longitude}&limit=5&maxDistance=2`;
 
       const res = await fetch(endpoint);
