@@ -272,21 +272,21 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                 onClick={() => openDirections(store)}
               >
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                  <div className="flex items-start justify-between overflow-hidden">
+                    <div className="flex-1 min-w-0 mr-3">
                       {/* 매장명 */}
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
                         {index === 0 && (
-                          <span className="px-2 py-0.5 bg-green-500 text-white text-xs rounded-full font-medium">
+                          <span className="px-2 py-0.5 bg-green-500 text-white text-xs rounded-full font-medium shrink-0">
                             가장 가까움
                           </span>
                         )}
                         {store.services?.some(s => s.includes('ATM')) && (
-                          <span className="px-2 py-0.5 bg-yellow-500 text-white text-xs rounded-full font-medium">
+                          <span className="px-2 py-0.5 bg-yellow-500 text-white text-xs rounded-full font-medium shrink-0">
                             ATM
                           </span>
                         )}
-                        <h3 className="font-bold text-gray-900 dark:text-white">
+                        <h3 className="font-bold text-gray-900 dark:text-white truncate">
                           7-ELEVEN {store.name}
                         </h3>
                       </div>
@@ -316,7 +316,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                     </div>
 
                     {/* 거리 및 길찾기 */}
-                    <div className="flex flex-col items-end gap-2 ml-4">
+                    <div className="flex flex-col items-end gap-2 shrink-0">
                       <div className="text-right">
                         <span className="text-2xl font-bold text-green-600 dark:text-green-400">
                           {store.distance_text}
