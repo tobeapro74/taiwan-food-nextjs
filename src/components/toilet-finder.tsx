@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MapPin, Navigation, Clock, Phone, ExternalLink, Loader2, RefreshCw } from "lucide-react";
+import { MapPin, Navigation, Clock, Phone, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-interface ToiletStore {
+type StoreType = "7eleven" | "familymart";
+
+interface SevenElevenStore {
   _id: string;
   poi_id: string;
   name: string;
@@ -25,19 +27,37 @@ interface ToiletStore {
   google_maps_directions_url?: string;
 }
 
+interface FamilyMartStore {
+  place_id: string;
+  name: string;
+  address: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  opening_hours?: {
+    open_now?: boolean;
+  };
+  distance_text?: string;
+  distance_km?: number;
+  google_maps_directions_url?: string;
+}
+
 interface ToiletFinderProps {
   onClose?: () => void;
 }
 
 export function ToiletFinder({ onClose }: ToiletFinderProps) {
-  const [stores, setStores] = useState<ToiletStore[]>([]);
+  const [storeType, setStoreType] = useState<StoreType>("7eleven");
+  const [sevenElevenStores, setSevenElevenStores] = useState<SevenElevenStore[]>([]);
+  const [familyMartStores, setFamilyMartStores] = useState<FamilyMartStore[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
 
   // 위치 권한 요청 및 가까운 매장 검색
-  const findNearbyToilets = async () => {
+  const findNearbyToilets = async (type: StoreType) => {
     setLoading(true);
     setError(null);
     setLocationError(null);
@@ -55,16 +75,23 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
       const { latitude, longitude } = position.coords;
       setUserLocation({ lat: latitude, lng: longitude });
 
-      // API 호출
-      const res = await fetch(
-        `/api/seven-eleven-toilet?lat=${latitude}&lng=${longitude}&limit=5&maxDistance=3`
-      );
+      // API 호출 (타입에 따라 다른 엔드포인트)
+      const endpoint = type === "7eleven"
+        ? `/api/seven-eleven-toilet?lat=${latitude}&lng=${longitude}&limit=5&maxDistance=3`
+        : `/api/familymart-toilet?lat=${latitude}&lng=${longitude}&limit=5&maxDistance=3`;
+
+      const res = await fetch(endpoint);
       const data = await res.json();
 
       if (data.success) {
-        setStores(data.data);
+        if (type === "7eleven") {
+          setSevenElevenStores(data.data);
+        } else {
+          setFamilyMartStores(data.data);
+        }
         if (data.data.length === 0) {
-          setError("3km 이내에 화장실이 있는 7-ELEVEN이 없습니다.");
+          const storeName = type === "7eleven" ? "7-ELEVEN" : "FamilyMart";
+          setError(`3km 이내에 ${storeName}이(가) 없습니다.`);
         }
       } else {
         setError(data.error || "검색 중 오류가 발생했습니다.");
@@ -92,11 +119,24 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
 
   // 컴포넌트 마운트 시 자동으로 검색 시작
   useEffect(() => {
-    findNearbyToilets();
+    findNearbyToilets(storeType);
   }, []);
 
+  // 탭 변경 시 해당 매장 검색
+  const handleTabChange = (type: StoreType) => {
+    setStoreType(type);
+    setError(null);
+
+    // 해당 타입의 데이터가 없으면 검색
+    if (type === "7eleven" && sevenElevenStores.length === 0) {
+      findNearbyToilets(type);
+    } else if (type === "familymart" && familyMartStores.length === 0) {
+      findNearbyToilets(type);
+    }
+  };
+
   // 구글맵 길찾기 열기
-  const openDirections = (store: ToiletStore) => {
+  const openDirections = (store: SevenElevenStore | FamilyMartStore) => {
     const url = store.google_maps_directions_url ||
       `https://www.google.com/maps/dir/?api=1&destination=${store.coordinates.lat},${store.coordinates.lng}&travelmode=walking`;
     window.open(url, "_blank");
@@ -116,7 +156,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                 가까운 화장실 찾기
               </h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                7-ELEVEN 화장실
+                편의점 화장실
               </p>
             </div>
           </div>
@@ -125,6 +165,30 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
               닫기
             </Button>
           )}
+        </div>
+
+        {/* 탭 UI */}
+        <div className="flex px-4 pb-3 gap-2">
+          <button
+            onClick={() => handleTabChange("7eleven")}
+            className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all ${
+              storeType === "7eleven"
+                ? "bg-green-500 text-white shadow-md"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+            }`}
+          >
+            🏪 7-ELEVEN
+          </button>
+          <button
+            onClick={() => handleTabChange("familymart")}
+            className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all ${
+              storeType === "familymart"
+                ? "bg-blue-500 text-white shadow-md"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+            }`}
+          >
+            🏬 FamilyMart
+          </button>
         </div>
       </div>
 
@@ -139,7 +203,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={findNearbyToilets}
+            onClick={() => findNearbyToilets(storeType)}
             disabled={loading}
             className="flex items-center gap-1"
           >
@@ -175,7 +239,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                     variant="outline"
                     size="sm"
                     className="mt-3"
-                    onClick={findNearbyToilets}
+                    onClick={() => findNearbyToilets(storeType)}
                   >
                     다시 시도
                   </Button>
@@ -194,10 +258,10 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
           </Card>
         )}
 
-        {/* 매장 목록 */}
-        {!loading && !locationError && stores.length > 0 && (
+        {/* 7-ELEVEN 매장 목록 */}
+        {!loading && !locationError && storeType === "7eleven" && sevenElevenStores.length > 0 && (
           <div className="space-y-3">
-            {stores.map((store, index) => (
+            {sevenElevenStores.map((store, index) => (
               <Card
                 key={store._id}
                 className={`overflow-hidden transition-all hover:shadow-lg cursor-pointer ${
@@ -272,13 +336,92 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
           </div>
         )}
 
+        {/* FamilyMart 매장 목록 */}
+        {!loading && !locationError && storeType === "familymart" && familyMartStores.length > 0 && (
+          <div className="space-y-3">
+            {familyMartStores.map((store, index) => (
+              <Card
+                key={store.place_id}
+                className={`overflow-hidden transition-all hover:shadow-lg cursor-pointer ${
+                  index === 0
+                    ? "border-blue-500 dark:border-blue-400 border-2"
+                    : "border-gray-200 dark:border-gray-700"
+                }`}
+                onClick={() => openDirections(store)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      {/* 매장명 */}
+                      <div className="flex items-center gap-2">
+                        {index === 0 && (
+                          <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full font-medium">
+                            가장 가까움
+                          </span>
+                        )}
+                        <h3 className="font-bold text-gray-900 dark:text-white">
+                          {store.name}
+                        </h3>
+                      </div>
+
+                      {/* 주소 */}
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-1">
+                        <MapPin className="w-4 h-4 flex-shrink-0" />
+                        <span className="truncate">{store.address}</span>
+                      </p>
+
+                      {/* 영업 상태 */}
+                      {store.opening_hours && (
+                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1 flex items-center gap-1">
+                          <Clock className="w-4 h-4 flex-shrink-0" />
+                          <span className={store.opening_hours.open_now ? "text-green-600" : "text-red-500"}>
+                            {store.opening_hours.open_now ? "영업 중" : "영업 종료"}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+
+                    {/* 거리 및 길찾기 */}
+                    <div className="flex flex-col items-end gap-2 ml-4">
+                      <div className="text-right">
+                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          {store.distance_text}
+                        </span>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDirections(store);
+                        }}
+                      >
+                        <Navigation className="w-4 h-4" />
+                        길찾기
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
         {/* 안내 문구 */}
         <div className="mt-6 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-            💡 7-ELEVEN 매장 중 화장실을 개방하는 매장만 표시됩니다.
-            <br />
-            데이터는 매일 오전 6시에 자동 업데이트됩니다.
-          </p>
+          {storeType === "7eleven" ? (
+            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+              💡 7-ELEVEN 매장 중 화장실을 개방하는 매장만 표시됩니다.
+              <br />
+              데이터는 매일 오전 6시에 자동 업데이트됩니다.
+            </p>
+          ) : (
+            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+              💡 대만 FamilyMart(全家)는 대부분 화장실을 이용할 수 있습니다.
+              <br />
+              일부 매장은 화장실이 없거나 직원 전용일 수 있습니다.
+            </p>
+          )}
         </div>
       </div>
     </div>
