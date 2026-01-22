@@ -1294,3 +1294,83 @@ function NearbyRestaurantCard({ restaurant, distance, onSelect }: NearbyRestaura
 
 ### 관련 파일
 - `src/components/toilet-finder.tsx` - 7-ELEVEN 카드 레이아웃 수정 (275-319줄)
+
+---
+
+## 14. iOS PWA에서 구글맵 길찾기 후 빈 화면 문제
+
+### 문제 상황
+화장실 찾기 > 길찾기 클릭 > 구글맵 열림 > 다시 "대만맛집" 앱으로 돌아오면 빈 화면이 표시되고, 상단에 Safari의 "검색 또는 웹사이트 이름 입력" 주소창이 나타남.
+
+### 원인 분석
+- `window.open(url, "_blank")`를 사용하여 외부 링크(구글맵)를 열었음
+- iOS PWA(홈 화면에 추가된 웹앱) 환경에서 `window.open()`은 예상치 못한 동작을 유발
+- Safari 브라우저가 열리면서 원래 PWA의 컨텍스트가 손상됨
+- 사용자가 앱으로 돌아오면 Safari의 빈 탭 화면이 표시됨
+
+### 해결 방안
+
+#### 문제가 있었던 코드
+```typescript
+// window.open 사용 (iOS PWA에서 문제 발생)
+const openDirections = (store: SevenElevenStore | FamilyMartStore) => {
+  const url = store.google_maps_directions_url ||
+    `https://www.google.com/maps/dir/?api=1&destination=${store.coordinates.lat},${store.coordinates.lng}&travelmode=walking`;
+  window.open(url, "_blank");  // ❌ iOS PWA에서 문제 발생
+};
+```
+
+#### 수정된 코드
+```typescript
+// 동적 anchor 태그 생성 방식 (iOS PWA 호환)
+const openDirections = (store: SevenElevenStore | FamilyMartStore) => {
+  const url = store.google_maps_directions_url ||
+    `https://www.google.com/maps/dir/?api=1&destination=${store.coordinates.lat},${store.coordinates.lng}&travelmode=walking`;
+
+  // Create and click a link element for better iOS PWA support
+  // window.open can cause blank page issues on iOS PWA
+  const link = document.createElement('a');
+  link.href = url;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+```
+
+### 왜 이 방식이 작동하는가?
+
+| 방식 | iOS PWA 동작 |
+|------|-------------|
+| `window.open()` | JavaScript에서 새 창을 강제로 열려고 함 → PWA 컨텍스트 손상 가능 |
+| `<a>` 태그 클릭 | 브라우저가 네이티브하게 링크 처리 → PWA 상태 유지 |
+
+### 다른 외부 링크 처리 방식 비교
+
+```tsx
+// 방법 1: <a> 태그 직접 사용 (권장 - 이미 restaurant-detail.tsx에서 사용 중)
+<a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
+  구글 지도에서 보기
+</a>
+
+// 방법 2: 동적 anchor 태그 생성 (버튼 onClick에서 링크를 열어야 할 때)
+const link = document.createElement('a');
+link.href = url;
+link.target = '_blank';
+link.rel = 'noopener noreferrer';
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
+
+// 방법 3: window.open (❌ iOS PWA에서 문제 발생 가능)
+window.open(url, "_blank");
+```
+
+### 권장 사항
+- 가능하면 `<a>` 태그를 직접 사용
+- 버튼의 onClick 이벤트에서 외부 링크를 열어야 하는 경우, 동적 anchor 태그 생성 방식 사용
+- `window.open()`은 iOS PWA 환경에서 피할 것
+
+### 관련 파일
+- `src/components/toilet-finder.tsx` - `openDirections` 함수 수정 (138-152줄)
