@@ -82,6 +82,9 @@ export default function Home() {
   // 실시간 평점 상태
   const [liveRatings, setLiveRatings] = useState<Record<string, { rating: number | null; userRatingsTotal: number | null }>>({});
 
+  // 삭제된 정적 데이터 ID 목록 (홈화면 필터링용)
+  const [deletedStaticIds, setDeletedStaticIds] = useState<string[]>([]);
+
   // 로그인 상태 확인
   useEffect(() => {
     const checkAuth = async () => {
@@ -121,6 +124,22 @@ export default function Home() {
       console.error("Logout error:", error);
     }
   };
+
+  // 삭제된 정적 데이터 ID 로드
+  useEffect(() => {
+    const loadDeletedStaticIds = async () => {
+      try {
+        const res = await fetch("/api/custom-restaurants");
+        const data = await res.json();
+        if (data.deletedStaticIds) {
+          setDeletedStaticIds(data.deletedStaticIds);
+        }
+      } catch (error) {
+        console.error("Failed to load deleted static IDs:", error);
+      }
+    };
+    loadDeletedStaticIds();
+  }, []);
 
   // 인기 맛집 (카테고리별 최고 평점 맛집) - 기본 데이터
   const basePopularRestaurants = useMemo(() => {
@@ -162,20 +181,32 @@ export default function Home() {
     fetchLiveRatings();
   }, [basePopularRestaurants, baseMarketRestaurants]);
 
-  // 실시간 평점 적용된 인기 맛집 (평점 높은 순 정렬)
+  // 실시간 평점 적용된 인기 맛집 (평점 높은 순 정렬, 삭제된 정적 데이터 제외)
   const popularRestaurants = useMemo(() => {
     return basePopularRestaurants
+      .filter(r => {
+        // 삭제된 정적 데이터 필터링
+        if (deletedStaticIds.length === 0) return true;
+        const staticPlaceId = generateStaticPlaceId(r.이름, r.category || "");
+        return !deletedStaticIds.includes(staticPlaceId);
+      })
       .map(r => ({
         ...r,
         평점: liveRatings[r.이름]?.rating ?? r.평점,
         리뷰수: liveRatings[r.이름]?.userRatingsTotal ?? r.리뷰수
       }))
       .sort((a, b) => (b.평점 || 0) - (a.평점 || 0));
-  }, [basePopularRestaurants, liveRatings]);
+  }, [basePopularRestaurants, liveRatings, deletedStaticIds]);
 
-  // 실시간 평점 적용된 야시장별 맛집 (평점 높은 순 정렬, 상위 6개)
+  // 실시간 평점 적용된 야시장별 맛집 (평점 높은 순 정렬, 상위 6개, 삭제된 정적 데이터 제외)
   const marketRestaurants = useMemo(() => {
     return baseMarketRestaurants
+      .filter(r => {
+        // 삭제된 정적 데이터 필터링
+        if (deletedStaticIds.length === 0) return true;
+        const staticPlaceId = generateStaticPlaceId(r.이름, r.category || "");
+        return !deletedStaticIds.includes(staticPlaceId);
+      })
       .map(r => ({
         ...r,
         평점: liveRatings[r.이름]?.rating ?? r.평점,
@@ -183,7 +214,7 @@ export default function Home() {
       }))
       .sort((a, b) => (b.평점 || 0) - (a.평점 || 0))
       .slice(0, 6);
-  }, [baseMarketRestaurants, liveRatings]);
+  }, [baseMarketRestaurants, liveRatings, deletedStaticIds]);
 
   // 검색 처리
   const handleSearch = useCallback((query: string) => {
