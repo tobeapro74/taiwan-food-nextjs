@@ -54,7 +54,9 @@ src/
 │   │   │   ├── route.ts              # GET/POST: 리뷰 목록/작성
 │   │   │   └── [id]/route.ts         # PUT/DELETE: 리뷰 수정/삭제
 │   │   ├── custom-restaurants/
-│   │   │   └── route.ts              # GET/POST/PATCH/PUT/DELETE: 사용자 맛집
+│   │   │   └── route.ts              # GET/POST/PATCH/PUT/DELETE: 사용자 맛집 (정적 데이터 자동 마이그레이션)
+│   │   ├── migrate-static-data/
+│   │   │   └── route.ts              # POST: 정적 데이터 일괄 마이그레이션
 │   │   ├── reverse-geocode/
 │   │   │   └── route.ts              # POST: 좌표→주소 변환 (역지오코딩)
 │   │   ├── google-place-details/
@@ -104,7 +106,7 @@ src/
 │   └── useUserLocation.ts         # 사용자 위치 관리
 │
 ├── data/
-│   └── taiwan-food.ts             # 맛집 정적 데이터 + 헬퍼 함수
+│   └── taiwan-food.ts             # 맛집 정적 데이터 + 헬퍼 함수 + place_id 생성
 │
 └── lib/
     ├── mongodb.ts                 # MongoDB 연결
@@ -124,6 +126,7 @@ taiwan-food.ts ──► getRestaurantsByCategory() ──► 컴포넌트
                  ──► getRestaurantsByTour()
                  ──► searchRestaurants()
                  ──► getPopularRestaurants()
+                 ──► generateStaticPlaceId()    # place_id 생성
 ```
 
 - 맛집 데이터는 `taiwan-food.ts`에 정적으로 저장
@@ -131,7 +134,84 @@ taiwan-food.ts ──► getRestaurantsByCategory() ──► 컴포넌트
 - 야시장: 스린, 닝샤, 라오허제, 통화, 펑자, 단수이
 - 도심투어: 시먼딩, 융캉제, 중산, 신이
 
-#### 1.2 사용자 등록 맛집 (동적)
+#### 1.2 정적 데이터 자동 마이그레이션
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                    정적 데이터 수정/삭제 요청                       │
+└─────────────────────────────┬────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────────┐
+│           place_id가 'static_'으로 시작하는지 확인                  │
+└─────────────────────────────┬────────────────────────────────────┘
+                              │
+                    ┌─────────▼─────────┐
+                    │ DB에 해당 맛집이   │
+                    │ 있는지 확인        │
+                    └────────┬──────────┘
+                             │
+              ┌──────────────┴──────────────┐
+              │ 없음 (정적 데이터)            │ 있음 (이미 마이그레이션됨)
+              ▼                             ▼
+┌─────────────────────────────┐  ┌─────────────────────────────┐
+│  자동 마이그레이션 실행       │  │  기존 DB 데이터 사용         │
+│  (정적 → MongoDB)           │  │                             │
+└─────────────────────────────┘  └─────────────────────────────┘
+```
+
+**place_id 생성 규칙 (정적 데이터)**
+```typescript
+// 형식: static_${이름}_${카테고리}
+generateStaticPlaceId("딩타이펑", "만두")
+// → "static_딩타이펑_만두"
+
+generateStaticPlaceId("융캉우육면", "면류")
+// → "static_융캉우육면_면류"
+```
+
+**자동 마이그레이션 대상 필드**
+- `name`, `address`, `category`, `feature`
+- `coordinates`, `google_rating`, `google_reviews_count`
+- `phone_number`, `building`, `night_market`
+
+#### 1.4 정적 데이터 삭제 (Soft Delete)
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                    정적 데이터 삭제 요청                           │
+└─────────────────────────────┬────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────────┐
+│           place_id가 'static_'으로 시작하는지 확인                  │
+└─────────────────────────────┬────────────────────────────────────┘
+                              │
+              ┌───────────────┴───────────────┐
+              │ 정적 데이터                     │ 일반 데이터
+              ▼                               ▼
+┌─────────────────────────────┐  ┌─────────────────────────────┐
+│  Soft Delete                │  │  Hard Delete               │
+│  - deleted: true            │  │  - deleteOne() 실행         │
+│  - deleted_at: timestamp    │  │                             │
+│  (DB에 기록 유지)            │  │                             │
+└─────────────────────────────┘  └─────────────────────────────┘
+```
+
+**목록 조회 시 필터링**
+```typescript
+// API 응답에 삭제된 정적 데이터 ID 목록 포함
+const deletedStaticIds = await collection
+  .find({ deleted: true, place_id: { $regex: /^static_/ } })
+  .project({ place_id: 1 })
+  .toArray();
+
+// 클라이언트에서 정적 데이터 필터링
+staticRestaurants = staticRestaurants.filter(r => {
+  const staticPlaceId = r.place_id || generateStaticPlaceId(r.이름, r.category);
+  return !deletedStaticIds.includes(staticPlaceId);
+});
+```
+
+#### 1.3 사용자 등록 맛집 (동적)
 ```
 ┌──────────┐   GET /api/custom-restaurants  ┌──────────────────┐
 │ 클라이언트│ ──────────────────────────────► │ MongoDB          │
@@ -142,6 +222,7 @@ taiwan-food.ts ──► getRestaurantsByCategory() ──► 컴포넌트
 - MongoDB `custom_restaurants` 컬렉션에 저장
 - Google Places API로 장소 정보 자동 조회
 - 정적 데이터와 병합하여 표시
+- **정적 데이터 수정/삭제 시 자동으로 DB로 마이그레이션**
 
 ### 2. 리뷰 데이터 (동적)
 
@@ -267,11 +348,33 @@ page.tsx (상태 관리)
 
 ## UI/UX 패턴
 
-### 바텀 시트 (Sheet)
+### 바텀 시트 (Sheet) - 카테고리 선택
 - Radix UI Dialog 기반
 - `side="bottom"` 설정으로 하단에서 슬라이드 업
 - `max-h-[70vh]`로 높이 제한
 - 내부 콘텐츠 스크롤 가능
+
+### 바텀시트 모달 (맛집수정, 리뷰)
+- 커스텀 구현 (CSS 애니메이션)
+- 아래에서 위로 슬라이드 애니메이션 (`slide-up`)
+- 드래그 핸들 (상단 회색 바)
+- 배경 터치 시 닫힘
+- 상단 모서리만 둥글게 (`rounded-t-3xl`)
+- 최대 높이 85~90vh, safe-area 고려
+
+### 모달 배경 스크롤 방지
+```typescript
+useEffect(() => {
+  if (isOpen) {
+    document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "";
+  }
+  return () => {
+    document.body.style.overflow = "";
+  };
+}, [isOpen]);
+```
 
 ### 네비게이션 구조
 ```
@@ -294,6 +397,12 @@ page.tsx (상태 관리)
 - 홈 → 상세: 뒤로가기 시 홈으로
 - 목록 → 상세: 뒤로가기 시 목록으로
 - 맛집알리미 → 상세: 뒤로가기 시 맛집알리미로
+- 등록 히스토리 → 상세: 뒤로가기 시 등록 히스토리로
+
+### 사용자 등록 맛집 데이터 동기화
+- 상세 화면 진입 시 DB에서 최신 데이터 자동 fetch
+- 수정 후 `onUpdate` 콜백으로 부모 상태 실시간 반영
+- `place_id` 기반으로 custom_restaurants 컬렉션 조회
 
 ### 스와이프 뒤로가기 (useSwipeBack)
 ```
