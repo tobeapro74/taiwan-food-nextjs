@@ -135,11 +135,20 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
     }
   };
 
-  // 구글맵 길찾기 열기
+  // 구글맵 길찾기 열기 (iOS PWA 호환)
   const openDirections = (store: SevenElevenStore | FamilyMartStore) => {
     const url = store.google_maps_directions_url ||
       `https://www.google.com/maps/dir/?api=1&destination=${store.coordinates.lat},${store.coordinates.lng}&travelmode=walking`;
-    window.open(url, "_blank");
+
+    // Create and click a link element for better iOS PWA support
+    // window.open can cause blank page issues on iOS PWA
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
