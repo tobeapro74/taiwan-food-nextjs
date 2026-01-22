@@ -181,14 +181,24 @@ export async function GET(request: NextRequest) {
       query.registered_by = parseInt(registeredBy);
     }
 
+    // 삭제되지 않은 항목만 조회
+    query.deleted = { $ne: true };
+
     const restaurants = await collection
       .find(query)
       .sort({ created_at: -1 })
       .toArray();
 
+    // 삭제된 정적 데이터의 place_id 목록 조회 (정적 데이터 필터링용)
+    const deletedStaticIds = await collection
+      .find({ deleted: true, place_id: { $regex: /^static_/ } })
+      .project({ place_id: 1 })
+      .toArray();
+
     return NextResponse.json({
       success: true,
       data: restaurants,
+      deletedStaticIds: deletedStaticIds.map(d => d.place_id),
     });
   } catch (error) {
     console.error('맛집 목록 조회 오류:', error);
@@ -659,7 +669,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await collection.deleteOne({ place_id: placeId });
+    // 정적 데이터인 경우 실제 삭제 대신 deleted 플래그 설정 (나중에 필터링용)
+    if (placeId.startsWith('static_')) {
+      await collection.updateOne(
+        { place_id: placeId },
+        { $set: { deleted: true, deleted_at: new Date().toISOString() } }
+      );
+    } else {
+      await collection.deleteOne({ place_id: placeId });
+    }
 
     // 히스토리 기록
     await recordHistory({

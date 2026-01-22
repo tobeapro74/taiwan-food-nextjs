@@ -28,6 +28,7 @@ import {
   getPlaces,
   getPopularRestaurants,
   searchRestaurants,
+  generateStaticPlaceId,
 } from "@/data/taiwan-food";
 
 type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet";
@@ -247,13 +248,23 @@ export default function Home() {
     setListTitle(categoryId === "전체" ? "전체 맛집" : `${category?.name || categoryId} 맛집`);
 
     // 정적 데이터 가져오기
-    const staticRestaurants = getRestaurantsByCategory(categoryId);
+    let staticRestaurants = getRestaurantsByCategory(categoryId);
 
     // 사용자 등록 맛집 가져오기
     try {
       const categoryParam = categoryId === "전체" ? "" : `?category=${encodeURIComponent(categoryId)}`;
       const res = await fetch(`/api/custom-restaurants${categoryParam}`);
       const data = await res.json();
+
+      // 삭제된 정적 데이터 필터링
+      const deletedStaticIds: string[] = data.deletedStaticIds || [];
+      if (deletedStaticIds.length > 0) {
+        staticRestaurants = staticRestaurants.filter(r => {
+          // place_id가 이미 있으면 사용, 없으면 생성
+          const staticPlaceId = r.place_id || generateStaticPlaceId(r.이름, r.category || categoryId);
+          return !deletedStaticIds.includes(staticPlaceId);
+        });
+      }
 
       if (data.success && data.data?.length > 0) {
         // 가격대 변환 함수
