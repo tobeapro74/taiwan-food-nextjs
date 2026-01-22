@@ -211,9 +211,21 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
     onClose();
   };
 
+  // 배경 스크롤 방지
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
-      <div className="bg-background w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in max-h-[calc(100vh-120px-env(safe-area-inset-bottom))] overflow-y-auto flex flex-col">
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-[calc(env(safe-area-inset-bottom)+80px)]">
+      <div className="bg-background w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in max-h-[calc(100vh-160px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] overflow-y-auto flex flex-col">
         {/* 헤더 */}
         <div className="bg-primary px-4 py-4 flex items-center justify-between sticky top-0">
           <h2 className="text-lg font-semibold text-primary-foreground">

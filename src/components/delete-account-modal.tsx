@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, AlertTriangle, Loader2 } from "lucide-react";
@@ -20,6 +20,18 @@ export function DeleteAccountModal({
   const [confirmText, setConfirmText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // 배경 스크롤 방지
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -70,12 +82,12 @@ export function DeleteAccountModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-[calc(env(safe-area-inset-bottom)+80px)]">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={handleClose}
       />
-      <div className="relative bg-card rounded-xl shadow-2xl w-full max-w-md overflow-hidden max-h-[calc(100vh-120px-env(safe-area-inset-bottom))]">
+      <div className="relative bg-card rounded-xl shadow-2xl w-full max-w-md overflow-hidden max-h-[calc(100vh-160px-env(safe-area-inset-top)-env(safe-area-inset-bottom))]">
         {/* 헤더 */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-destructive/10">
           <div className="flex items-center gap-2">

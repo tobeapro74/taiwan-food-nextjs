@@ -59,7 +59,7 @@ export function ReviewModal({
 
   const isEditMode = !!editReview;
 
-  // 수정 모드일 때 기존 데이터로 폼 초기화
+  // 수정 모드일 때 기존 데이터로 폼 초기화 및 배경 스크롤 방지
   useEffect(() => {
     if (isOpen && editReview) {
       setRating(editReview.rating);
@@ -79,6 +79,15 @@ export function ReviewModal({
       setPhotos([]);
       setMealType(null);
     }
+    // 배경 스크롤 방지
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen, editReview]);
 
   if (!isOpen) return null;
@@ -299,8 +308,8 @@ export function ReviewModal({
   );
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
-      <div className="bg-background w-full max-w-lg rounded-2xl max-h-[calc(100vh-120px-env(safe-area-inset-bottom))] flex flex-col">
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-[calc(env(safe-area-inset-bottom)+80px)]">
+      <div className="bg-background w-full max-w-lg rounded-2xl max-h-[calc(100vh-160px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex flex-col">
         {/* 헤더 */}
         <div className="flex-shrink-0 border-b px-4 py-3 flex items-center justify-between rounded-t-2xl">
           <h2 className="text-lg font-semibold">{isEditMode ? "리뷰 수정" : restaurantName}</h2>

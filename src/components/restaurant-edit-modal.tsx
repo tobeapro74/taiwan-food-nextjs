@@ -46,7 +46,7 @@ export function RestaurantEditModal({
   const [error, setError] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // 모달이 열릴 때 초기값 설정
+  // 모달이 열릴 때 초기값 설정 및 배경 스크롤 방지
   useEffect(() => {
     if (isOpen) {
       setCategory(restaurant.category);
@@ -56,7 +56,14 @@ export function RestaurantEditModal({
       setAddress(restaurant.address);
       setCoordinates(restaurant.coordinates || null);
       setError("");
+      // 배경 스크롤 방지
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
     }
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen, restaurant]);
 
   // 좌표를 주소로 변환하는 함수
@@ -206,8 +213,8 @@ export function RestaurantEditModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
-      <div className="bg-background w-full max-w-md rounded-2xl overflow-hidden animate-scale-in max-h-[calc(100vh-120px-env(safe-area-inset-bottom))] flex flex-col">
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-[calc(env(safe-area-inset-bottom)+80px)]">
+      <div className="bg-background w-full max-w-md rounded-2xl overflow-hidden animate-scale-in max-h-[calc(100vh-160px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex flex-col">
         {/* 헤더 */}
         <div className="bg-primary px-4 py-4 flex items-center justify-between flex-shrink-0">
           <h2 className="text-lg font-semibold text-primary-foreground">

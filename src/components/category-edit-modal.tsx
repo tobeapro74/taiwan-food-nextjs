@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { categories } from "@/data/taiwan-food";
@@ -25,6 +25,18 @@ export function CategoryEditModal({
   const [selectedCategory, setSelectedCategory] = useState(currentCategory);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // 배경 스크롤 방지
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -66,8 +78,8 @@ export function CategoryEditModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
-      <div className="bg-background w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in max-h-[calc(100vh-120px-env(safe-area-inset-bottom))] flex flex-col">
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-[calc(env(safe-area-inset-bottom)+80px)]">
+      <div className="bg-background w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in max-h-[calc(100vh-160px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex flex-col">
         {/* 헤더 */}
         <div className="bg-primary px-4 py-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-primary-foreground">

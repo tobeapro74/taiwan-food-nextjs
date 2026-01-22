@@ -66,9 +66,11 @@ export function AddRestaurantModal({
   const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 모달 닫힐 때 초기화
+  // 모달 닫힐 때 초기화 및 배경 스크롤 방지
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
       setStep("search");
       setSearchQuery("");
       setSearchResults([]);
@@ -76,7 +78,11 @@ export function AddRestaurantModal({
       setSelectedCategory("");
       setFeature("");
       setIsAlreadyRegistered(false);
+      document.body.style.overflow = "";
     }
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
   // 검색어 변경 시 자동 검색 (디바운스)
@@ -203,8 +209,8 @@ export function AddRestaurantModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
-      <div className="bg-background w-full max-w-lg rounded-2xl max-h-[calc(100vh-120px-env(safe-area-inset-bottom))] flex flex-col">
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-[calc(env(safe-area-inset-bottom)+80px)]">
+      <div className="bg-background w-full max-w-lg rounded-2xl max-h-[calc(100vh-160px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex flex-col">
         {/* 헤더 */}
         <div className="flex-shrink-0 border-b px-4 py-3 flex items-center justify-between rounded-t-2xl">
           <h2 className="text-lg font-semibold">
