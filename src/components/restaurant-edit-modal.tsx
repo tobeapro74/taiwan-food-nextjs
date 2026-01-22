@@ -206,8 +206,8 @@ export function RestaurantEditModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pb-24">
-      <div className="bg-background w-full max-w-md rounded-2xl overflow-hidden animate-scale-in max-h-[calc(100vh-120px)] flex flex-col">
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-start justify-center p-4 pt-16 pb-24">
+      <div className="bg-background w-full max-w-md rounded-2xl overflow-hidden animate-scale-in max-h-[calc(100vh-160px)] flex flex-col">
         {/* 헤더 */}
         <div className="bg-primary px-4 py-4 flex items-center justify-between flex-shrink-0">
           <h2 className="text-lg font-semibold text-primary-foreground">
