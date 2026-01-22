@@ -19,6 +19,13 @@ export interface Restaurant {
   place_id?: string;
   category?: string;
   registered_by?: number;
+  feature?: string;
+  phone_number?: string;
+  opening_hours?: string[];
+  google_map_url?: string;
+  address?: string;
+  google_rating?: number;
+  google_reviews_count?: number;
 }
 
 export interface TaiwanFoodData {
@@ -241,12 +248,22 @@ export const tourAreas = [
   { id: "중정기념당", name: "중정기념당", icon: "🏛️" },
 ];
 
+// place_id 생성 함수 (정적 데이터용)
+export function generateStaticPlaceId(name: string, category: string): string {
+  return `static_${name.replace(/\s+/g, '_').toLowerCase()}_${category}`;
+}
+
 // 유틸리티 함수
 export function getAllRestaurants(): Restaurant[] {
   const all: Restaurant[] = [];
   const cats = ["면류", "만두", "밥류", "탕류", "디저트", "길거리음식", "카페", "까르푸"] as const;
   for (const cat of cats) {
-    all.push(...taiwanFoodMap[cat]);
+    const restaurants = taiwanFoodMap[cat].map(r => ({
+      ...r,
+      place_id: generateStaticPlaceId(r.이름, cat),
+      category: cat,
+    }));
+    all.push(...restaurants);
   }
   return all;
 }
@@ -255,16 +272,21 @@ export function getRestaurantsByCategory(category: string): Restaurant[] {
   if (category === "전체") {
     return getAllRestaurants();
   }
-  return taiwanFoodMap[category as keyof typeof taiwanFoodMap] as Restaurant[] || [];
+  const restaurants = taiwanFoodMap[category as keyof typeof taiwanFoodMap] as Restaurant[] || [];
+  return restaurants.map(r => ({
+    ...r,
+    place_id: generateStaticPlaceId(r.이름, category),
+    category: category,
+  }));
 }
 
 export function getRestaurantsByMarket(market: string): Restaurant[] {
-  const allRestaurants: Record<string, Restaurant> = {};
+  const allRestaurants: Record<string, { restaurant: Restaurant; category: string }> = {};
   const cats = ["면류", "만두", "밥류", "탕류", "디저트", "길거리음식", "카페", "까르푸"] as const;
 
   for (const cat of cats) {
     for (const rest of taiwanFoodMap[cat]) {
-      allRestaurants[rest.이름] = rest;
+      allRestaurants[rest.이름] = { restaurant: rest, category: cat };
     }
   }
 
@@ -277,7 +299,16 @@ export function getRestaurantsByMarket(market: string): Restaurant[] {
       for (const name of names) {
         if (!seen.has(name)) {
           seen.add(name);
-          items.push(allRestaurants[name] || { 이름: name, 위치: "", 특징: "", 야시장: marketName });
+          const data = allRestaurants[name];
+          if (data) {
+            items.push({
+              ...data.restaurant,
+              place_id: generateStaticPlaceId(name, data.category),
+              category: data.category,
+            });
+          } else {
+            items.push({ 이름: name, 위치: "", 특징: "", 야시장: marketName });
+          }
         }
       }
     }
@@ -285,7 +316,17 @@ export function getRestaurantsByMarket(market: string): Restaurant[] {
   }
 
   const names = taiwanFoodMap.야시장별[market] || [];
-  return names.map(name => allRestaurants[name] || { 이름: name, 위치: "", 특징: "", 야시장: market });
+  return names.map(name => {
+    const data = allRestaurants[name];
+    if (data) {
+      return {
+        ...data.restaurant,
+        place_id: generateStaticPlaceId(name, data.category),
+        category: data.category,
+      };
+    }
+    return { 이름: name, 위치: "", 특징: "", 야시장: market };
+  });
 }
 
 export function getRestaurantsByTour(area: string): Restaurant[] {
@@ -298,18 +339,31 @@ export function getRestaurantsByTour(area: string): Restaurant[] {
       for (const rest of restaurants) {
         if (!seen.has(rest.이름)) {
           seen.add(rest.이름);
-          items.push(rest);
+          items.push({
+            ...rest,
+            place_id: generateStaticPlaceId(rest.이름, '도심투어'),
+            category: '도심투어',
+          });
         }
       }
     }
     return items;
   }
 
-  return taiwanFoodMap.도심투어[area] || [];
+  const restaurants = taiwanFoodMap.도심투어[area] || [];
+  return restaurants.map(rest => ({
+    ...rest,
+    place_id: generateStaticPlaceId(rest.이름, '도심투어'),
+    category: '도심투어',
+  }));
 }
 
 export function getPlaces(): Restaurant[] {
-  return taiwanFoodMap["갈만한 곳"];
+  return taiwanFoodMap["갈만한 곳"].map(rest => ({
+    ...rest,
+    place_id: generateStaticPlaceId(rest.이름, '갈만한곳'),
+    category: '갈만한곳',
+  }));
 }
 
 // 인기 맛집 (카테고리별 최고 평점 맛집 1개씩)
@@ -329,7 +383,12 @@ export function getPopularRestaurants(): PopularRestaurant[] {
         .filter((r) => r.평점)
         .sort((a, b) => (b.평점 || 0) - (a.평점 || 0));
       if (sorted.length > 0) {
-        topByCategory.push({ ...sorted[0], 카테고리: cat });
+        topByCategory.push({
+          ...sorted[0],
+          카테고리: cat,
+          place_id: generateStaticPlaceId(sorted[0].이름, cat),
+          category: cat,
+        });
       }
     }
   }
@@ -387,6 +446,8 @@ export function searchRestaurants(query: string): SearchResult[] {
         results.push({
           ...item,
           카테고리: cat,
+          place_id: generateStaticPlaceId(item.이름, cat),
+          category: cat,
           matchType: name.includes(q) ? 'name' :
                      location.includes(q) ? 'location' :
                      market.includes(q) ? 'market' : 'feature'
@@ -410,6 +471,8 @@ export function searchRestaurants(query: string): SearchResult[] {
         results.push({
           ...item,
           도심투어: area,
+          place_id: generateStaticPlaceId(item.이름, '도심투어'),
+          category: '도심투어',
           matchType: name.includes(q) ? 'name' :
                      location.includes(q) ? 'location' : 'feature'
         });
@@ -431,6 +494,8 @@ export function searchRestaurants(query: string): SearchResult[] {
       results.push({
         ...item,
         타입: '명소',
+        place_id: generateStaticPlaceId(item.이름, '갈만한곳'),
+        category: '갈만한곳',
         matchType: name.includes(q) ? 'name' :
                    location.includes(q) ? 'location' : 'feature'
       });
