@@ -308,21 +308,33 @@ export function ReviewModal({
   );
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-[calc(env(safe-area-inset-bottom)+80px)]">
-      <div className="bg-background w-full max-w-lg rounded-2xl max-h-[calc(100vh-160px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex flex-col">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center">
+      {/* 배경 오버레이 */}
+      <div
+        className="absolute inset-0 bg-black/50 animate-fade-in"
+        onClick={onClose}
+      />
+
+      {/* 바텀시트 */}
+      <div className="relative bg-background w-full max-w-lg rounded-t-3xl overflow-hidden animate-slide-up max-h-[90vh] flex flex-col pb-[env(safe-area-inset-bottom)]">
+        {/* 드래그 핸들 */}
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+        </div>
+
         {/* 헤더 */}
-        <div className="flex-shrink-0 border-b px-4 py-3 flex items-center justify-between rounded-t-2xl">
+        <div className="px-5 pb-3 flex items-center justify-between border-b">
           <h2 className="text-lg font-semibold">{isEditMode ? "리뷰 수정" : restaurantName}</h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-muted"
+            className="p-2 rounded-full hover:bg-muted transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* 스크롤 가능한 컨텐츠 영역 */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* 사용자 정보 */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
@@ -435,16 +447,39 @@ export function ReviewModal({
         </div>
 
         {/* 게시 버튼 - 고정 */}
-        <div className="flex-shrink-0 border-t p-4 bg-background rounded-b-2xl">
+        <div className="flex-shrink-0 border-t p-4 bg-background">
           <Button
             onClick={handleSubmit}
             disabled={rating === 0 || isSubmitting || isUploading}
-            className="w-full py-5 text-lg"
+            className="w-full h-12 text-base"
           >
             {isSubmitting ? (isEditMode ? "수정 중..." : "게시 중...") : (isEditMode ? "수정" : "게시")}
           </Button>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slide-up {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

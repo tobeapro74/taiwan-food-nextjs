@@ -213,16 +213,26 @@ export function RestaurantEditModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-[calc(env(safe-area-inset-bottom)+80px)]">
-      <div className="bg-background w-full max-w-md rounded-2xl overflow-hidden animate-scale-in max-h-[calc(100vh-160px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex flex-col">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center">
+      {/* 배경 오버레이 */}
+      <div
+        className="absolute inset-0 bg-black/50 animate-fade-in"
+        onClick={onClose}
+      />
+
+      {/* 바텀시트 */}
+      <div className="relative bg-background w-full max-w-lg rounded-t-3xl overflow-hidden animate-slide-up max-h-[85vh] flex flex-col pb-[env(safe-area-inset-bottom)]">
+        {/* 드래그 핸들 */}
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+        </div>
+
         {/* 헤더 */}
-        <div className="bg-primary px-4 py-4 flex items-center justify-between flex-shrink-0">
-          <h2 className="text-lg font-semibold text-primary-foreground">
-            맛집 정보 수정
-          </h2>
+        <div className="px-5 pb-3 flex items-center justify-between border-b">
+          <h2 className="text-lg font-semibold">맛집 정보 수정</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-full hover:bg-white/20 text-primary-foreground"
+            className="p-2 rounded-full hover:bg-muted transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -262,7 +272,7 @@ export function RestaurantEditModal({
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              💡 구글맵에서 복사한 좌표 (25.xxx, 121.xxx) 붙여넣기 시 자동 변환
+              구글맵에서 복사한 좌표 (25.xxx, 121.xxx) 붙여넣기 시 자동 변환
             </p>
           </div>
 
@@ -342,14 +352,14 @@ export function RestaurantEditModal({
           <Button
             variant="outline"
             onClick={onClose}
-            className="flex-1"
+            className="flex-1 h-12"
             disabled={isLoading}
           >
             취소
           </Button>
           <Button
             onClick={handleSaveClick}
-            className="flex-1"
+            className="flex-1 h-12"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -363,8 +373,12 @@ export function RestaurantEditModal({
 
       {/* 확인 모달 */}
       {showConfirm && (
-        <div className="fixed inset-0 z-[110] bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-background w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowConfirm(false)}
+          />
+          <div className="relative bg-background w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in">
             <div className="p-6 text-center">
               <h3 className="text-lg font-semibold mb-2">수정 확인</h3>
               <p className="text-sm text-muted-foreground mb-6">
@@ -391,6 +405,20 @@ export function RestaurantEditModal({
       )}
 
       <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slide-up {
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
         @keyframes scale-in {
           from {
             transform: scale(0.95);
@@ -400,6 +428,12 @@ export function RestaurantEditModal({
             transform: scale(1);
             opacity: 1;
           }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
         }
         .animate-scale-in {
           animation: scale-in 0.2s ease-out;
