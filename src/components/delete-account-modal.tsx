@@ -70,12 +70,12 @@ export function DeleteAccountModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={handleClose}
       />
-      <div className="relative bg-card rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div className="relative bg-card rounded-xl shadow-2xl w-full max-w-md overflow-hidden max-h-[calc(100vh-120px-env(safe-area-inset-bottom))]">
         {/* 헤더 */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-destructive/10">
           <div className="flex items-center gap-2">
