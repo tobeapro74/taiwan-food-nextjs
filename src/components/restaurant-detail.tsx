@@ -80,9 +80,12 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
   // 사용자 등록 맛집인지 확인 (place_id가 있으면 사용자 등록 맛집)
   const isCustomRestaurant = !!restaurant.place_id;
 
-  // 수정 권한 확인 (등록자 본인 또는 관리자)
+  // 수정 권한 확인 (등록자 본인 또는 관리자 또는 박병철)
+  // registered_by가 없는 기존 맛집도 관리자/박병철이면 수정 가능
   const canEdit = user && isCustomRestaurant && (
-    user.is_admin || restaurant.registered_by === user.id
+    user.is_admin ||
+    user.name === "박병철" ||
+    restaurant.registered_by === user.id
   );
 
   // 카테고리 아이콘 및 이름 가져오기
@@ -120,6 +123,40 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // 사용자 등록 맛집일 경우 DB에서 최신 데이터 가져오기
+  useEffect(() => {
+    if (!restaurant.place_id) return;
+
+    const fetchLatestData = async () => {
+      try {
+        const res = await fetch(`/api/custom-restaurants?place_id=${encodeURIComponent(restaurant.place_id!)}`);
+        const data = await res.json();
+        if (data.success && data.data && data.data.length > 0) {
+          const latestData = data.data[0];
+          // 최신 데이터로 상태 업데이트
+          if (latestData.category) setCurrentCategory(latestData.category);
+          if (latestData.feature !== undefined) setCurrentFeature(latestData.feature || "");
+          if (latestData.phone_number !== undefined) {
+            setCurrentPhoneNumber(latestData.phone_number || "");
+            setPhoneNumber(latestData.phone_number || null);
+          }
+          // 부모 컴포넌트에도 알림
+          onUpdate?.({
+            category: latestData.category,
+            feature: latestData.feature,
+            phone_number: latestData.phone_number,
+            opening_hours: latestData.opening_hours,
+            address: latestData.address,
+          });
+        }
+      } catch (error) {
+        console.error("최신 데이터 가져오기 실패:", error);
+      }
+    };
+
+    fetchLatestData();
+  }, [restaurant.place_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     // 캐시에 있으면 바로 사용

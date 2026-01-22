@@ -356,6 +356,7 @@ export default function Home() {
           place_id: customRestaurant.place_id,
           category: customRestaurant.category,
           coordinates: customRestaurant.coordinates,
+          registered_by: customRestaurant.registered_by,
         };
         setPreviousView(currentView);
         setSelectedRestaurant(restaurant);
@@ -400,7 +401,15 @@ export default function Home() {
   if (currentView === "detail" && selectedRestaurant) {
     return (
       <>
-        <RestaurantDetail restaurant={selectedRestaurant} onBack={handleBack} user={user} />
+        <RestaurantDetail
+          restaurant={selectedRestaurant}
+          onBack={handleBack}
+          user={user}
+          onUpdate={(updatedData) => {
+            // 수정된 데이터를 selectedRestaurant에 반영
+            setSelectedRestaurant((prev) => prev ? { ...prev, ...updatedData } : prev);
+          }}
+        />
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
         <CategorySheet
           open={categorySheetOpen}
