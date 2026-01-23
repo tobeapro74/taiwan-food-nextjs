@@ -29,7 +29,9 @@ import {
   getPopularRestaurants,
   searchRestaurants,
   generateStaticPlaceId,
+  getAllRestaurants,
 } from "@/data/taiwan-food";
+import { getRestaurantDistrict, isValidDistrict, DISTRICT_INFO } from "@/lib/district-utils";
 
 type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet";
 type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add";
@@ -215,6 +217,61 @@ export default function Home() {
       .sort((a, b) => (b.평점 || 0) - (a.평점 || 0))
       .slice(0, 6);
   }, [baseMarketRestaurants, liveRatings, deletedStaticIds]);
+
+  // 지역별 맛집 랭킹 계산
+  const districtRanking = useMemo(() => {
+    const allRestaurants = getAllRestaurants();
+    const districtData: Record<string, { restaurants: Restaurant[]; totalRating: number; count: number }> = {};
+
+    // 지역별로 그룹화
+    for (const restaurant of allRestaurants) {
+      const district = getRestaurantDistrict(restaurant.위치);
+      if (!isValidDistrict(district)) continue;
+
+      // 삭제된 정적 데이터 필터링
+      if (deletedStaticIds.length > 0) {
+        const staticPlaceId = generateStaticPlaceId(restaurant.이름, restaurant.category || "");
+        if (deletedStaticIds.includes(staticPlaceId)) continue;
+      }
+
+      const rating = liveRatings[restaurant.이름]?.rating ?? restaurant.평점 ?? 0;
+      if (rating === 0) continue;
+
+      if (!districtData[district]) {
+        districtData[district] = { restaurants: [], totalRating: 0, count: 0 };
+      }
+
+      districtData[district].restaurants.push({
+        ...restaurant,
+        평점: rating,
+        리뷰수: liveRatings[restaurant.이름]?.userRatingsTotal ?? restaurant.리뷰수
+      });
+      districtData[district].totalRating += rating;
+      districtData[district].count += 1;
+    }
+
+    // 평균 평점 계산 및 정렬
+    const ranking = Object.entries(districtData)
+      .map(([district, data]) => ({
+        district,
+        avgRating: data.count > 0 ? data.totalRating / data.count : 0,
+        count: data.count,
+        restaurants: data.restaurants.sort((a, b) => (b.평점 || 0) - (a.평점 || 0)),
+      }))
+      .filter(item => item.count >= 2) // 최소 2개 이상의 맛집이 있는 지역만
+      .sort((a, b) => b.avgRating - a.avgRating);
+
+    return ranking;
+  }, [liveRatings, deletedStaticIds]);
+
+  // 지역 클릭 핸들러
+  const handleDistrictSelect = useCallback((district: string, restaurants: Restaurant[]) => {
+    const districtInfo = DISTRICT_INFO[district];
+    setListTitle(`${districtInfo?.name || district} 맛집`);
+    setListItems(restaurants);
+    setCurrentView("list");
+    setActiveTab("home");
+  }, []);
 
   // 검색 처리
   const handleSearch = useCallback((query: string) => {
@@ -839,6 +896,60 @@ export default function Home() {
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </section>
+
+          {/* 지역별 맛집 랭킹 */}
+          {districtRanking.length > 0 && (
+            <section className="bg-card rounded-xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-semibold text-foreground">📍 지역별 맛집 랭킹</h2>
+                <button
+                  onClick={() => {
+                    setListTitle("전체 지역별 맛집 랭킹");
+                    // 전체 지역 랭킹을 보여주는 목록 (지역별 최고 맛집 1개씩)
+                    const topRestaurants = districtRanking.map(item => ({
+                      ...item.restaurants[0],
+                      특징: `${DISTRICT_INFO[item.district]?.name || item.district} 평균 ⭐${item.avgRating.toFixed(2)} (${item.count}개 맛집)`,
+                    }));
+                    setListItems(topRestaurants);
+                    setCurrentView("list");
+                    setActiveTab("home");
+                  }}
+                  className="text-xs text-primary hover:underline"
+                >
+                  더보기
+                </button>
+              </div>
+              <div className="space-y-2">
+                {districtRanking.slice(0, 5).map((item, index) => {
+                  const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}`;
+                  const districtInfo = DISTRICT_INFO[item.district];
+                  return (
+                    <button
+                      key={item.district}
+                      onClick={() => handleDistrictSelect(item.district, item.restaurants)}
+                      className="w-full flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-left"
+                    >
+                      <span className={`text-lg w-8 text-center ${index < 3 ? '' : 'text-muted-foreground text-sm'}`}>
+                        {medal}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-foreground truncate">
+                          {districtInfo?.name || item.district}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {item.count}개 맛집
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 text-amber-500">
+                        <span className="text-sm">⭐</span>
+                        <span className="font-semibold text-foreground">{item.avgRating.toFixed(2)}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           {/* 야시장별 맛집 */}
           <section className="bg-card rounded-xl p-4 shadow-sm">
