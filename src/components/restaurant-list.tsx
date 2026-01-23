@@ -234,9 +234,14 @@ function normalizeRegion(region: string): string {
     "taichung": "타이중",
   };
 
-  // Plus Code 패턴 감지 (예: 3F4M+5G6) → 기타로 처리
+  // Plus Code 패턴 매핑 (Google Plus Code → 해당 지역)
+  const plusCodeMap: Record<string, string> = {
+    "3f4m+5g6": "싼충구",  // 싼충역 근처
+  };
+
+  // Plus Code 패턴 감지 (예: 3F4M+5G6)
   if (/^[A-Z0-9]{4,}\+[A-Z0-9]+$/i.test(region)) {
-    return "기타";
+    return plusCodeMap[lowerRegion] || "기타";
   }
 
   return districtMap[lowerRegion] || districtMap[region] || region;
