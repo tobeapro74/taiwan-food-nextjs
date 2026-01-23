@@ -568,12 +568,7 @@ export default function Home() {
   if (currentView === "toilet") {
     return (
       <>
-        <ToiletFinder
-          onClose={() => {
-            setCurrentView("home");
-            setActiveTab("home");
-          }}
-        />
+        <ToiletFinder onClose={handleBack} />
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
       </>
     );
@@ -1115,7 +1110,11 @@ export default function Home() {
 
           {/* 화장실 찾기 버튼 */}
           <button
-            onClick={() => setCurrentView("toilet")}
+            onClick={() => {
+              setViewHistory(prev => [...prev, currentView]);
+              setCurrentView("toilet");
+              window.scrollTo(0, 0);
+            }}
             className="w-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 shadow-sm flex items-center justify-between hover:from-green-600 hover:to-emerald-700 transition-all active:scale-[0.98]"
           >
             <div className="flex items-center gap-3">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MapPin, Navigation, Clock, Phone, Loader2, RefreshCw } from "lucide-react";
+import { MapPin, Navigation, Clock, Phone, Loader2, RefreshCw, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -154,26 +154,24 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 pt-safe">
-        <div className="flex items-center justify-between p-4 pt-12">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xl">🚽</span>
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-                가까운 화장실 찾기
-              </h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                편의점 화장실
-              </p>
-            </div>
-          </div>
+      <div className="sticky top-0 z-10 bg-background border-b border-border shadow-sm safe-area-top">
+        <div className="flex items-center gap-2 p-3">
           {onClose && (
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              닫기
+            <Button
+              variant="ghost"
+              onClick={onClose}
+              className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20"
+            >
+              <ArrowLeft className="h-5 w-5" />
             </Button>
           )}
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🚽</span>
+            <div>
+              <h1 className="font-semibold text-foreground">가까운 화장실 찾기</h1>
+              <p className="text-xs text-muted-foreground">편의점 화장실</p>
+            </div>
+          </div>
         </div>
 
         {/* 탭 UI */}
