@@ -22,10 +22,16 @@ interface RestaurantListProps {
 function extractRegion(location: string): string {
   if (!location) return "기타";
 
+  let region = location.trim();
+
+  // "OO역"으로 끝나는 경우 먼저 처리 (도시명 제거 전에)
+  // 예: "타이베이역" → "타이베이역" (그대로 유지)
+  if (region.endsWith("역") && region.length > 1) {
+    return region;
+  }
+
   // 도시명 목록 (제거 대상)
   const cities = ["타이베이", "신베이시", "타이중", "가오슝", "타이난"];
-
-  let region = location.trim();
 
   // 도시명 제거
   for (const city of cities) {
@@ -45,11 +51,6 @@ function extractRegion(location: string): string {
       "Xinyi": "신이",
     };
     return districtMap[districtMatch[1]] || districtMatch[1];
-  }
-
-  // "역"으로 끝나면 그대로 사용
-  if (region.endsWith("역")) {
-    return region;
   }
 
   // 첫 번째 지역 단어 추출 (공백, 쉼표로 분리)
