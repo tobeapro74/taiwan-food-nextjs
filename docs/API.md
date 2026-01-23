@@ -381,7 +381,9 @@ Google Places 이미지 프록시
 ---
 
 ### PATCH /api/custom-restaurants
-카테고리 수정 (등록자 또는 관리자만)
+카테고리 수정 (등록자, 관리자, 또는 박병철)
+
+**정적 데이터 자동 마이그레이션**: `place_id`가 `static_`으로 시작하는 경우, 수정 전 자동으로 DB로 마이그레이션됩니다.
 
 **Request Body**
 ```json
@@ -403,7 +405,9 @@ Google Places 이미지 프록시
 ---
 
 ### PUT /api/custom-restaurants
-맛집 정보 수정 (등록자 또는 관리자만)
+맛집 정보 수정 (등록자, 관리자, 또는 박병철)
+
+**정적 데이터 자동 마이그레이션**: `place_id`가 `static_`으로 시작하는 경우, 수정 전 자동으로 DB로 마이그레이션됩니다.
 
 **Request Body**
 ```json
@@ -433,7 +437,9 @@ Google Places 이미지 프록시
 ---
 
 ### DELETE /api/custom-restaurants
-맛집 삭제 (등록자 본인만)
+맛집 삭제 (등록자, 관리자, 또는 박병철)
+
+**정적 데이터 자동 마이그레이션**: `place_id`가 `static_`으로 시작하는 경우, 삭제 전 자동으로 DB로 마이그레이션됩니다.
 
 **Query Parameters**
 | 파라미터 | 필수 | 설명 |
@@ -446,6 +452,74 @@ Google Places 이미지 프록시
   "success": true
 }
 ```
+
+---
+
+## 정적 데이터 마이그레이션 API
+
+### POST /api/migrate-static-data
+정적 데이터 일괄 마이그레이션 (인증 필요, 관리자 또는 박병철만)
+
+**Request Body**
+```json
+{
+  "category": "면류"
+}
+```
+또는 전체 마이그레이션:
+```json
+{}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "마이그레이션 완료",
+  "data": {
+    "total": 15,
+    "migrated": 12,
+    "skipped": 3,
+    "results": [
+      {
+        "name": "딩타이펑",
+        "place_id": "static_딩타이펑_만두",
+        "status": "migrated"
+      },
+      {
+        "name": "융캉우육면",
+        "place_id": "static_융캉우육면_면류",
+        "status": "skipped",
+        "reason": "already_exists"
+      }
+    ]
+  }
+}
+```
+
+**place_id 생성 규칙**
+```
+static_${이름}_${카테고리}
+
+예시:
+- static_딩타이펑_만두
+- static_융캉우육면_면류
+- static_아이스몬스터_디저트
+```
+
+**마이그레이션 대상 필드**
+| 필드 | 설명 |
+|------|------|
+| name | 맛집명 (이름) |
+| address | 주소 (위치) |
+| category | 카테고리 |
+| feature | 특징 |
+| coordinates | 좌표 |
+| google_rating | 평점 |
+| google_reviews_count | 리뷰 수 |
+| phone_number | 전화번호 |
+| building | 빌딩명 |
+| night_market | 야시장 |
 
 ---
 
@@ -623,13 +697,16 @@ Google Places 이미지 프록시
 
 ## Google Place Details API
 
+> **비용 최적화**: sessionToken을 사용하면 Autocomplete + Place Details 조합 호출 시 한 세션으로 묶여 **70~80% 비용 절감**됩니다.
+
 ### POST /api/google-place-details
 장소 상세 정보 조회
 
 **Request Body**
 ```json
 {
-  "placeId": "ChIJ..."
+  "placeId": "ChIJ...",
+  "sessionToken": "uuid-v4-token"
 }
 ```
 또는
@@ -638,6 +715,12 @@ Google Places 이미지 프록시
   "query": "장소 검색어"
 }
 ```
+
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| placeId | △ | Google Place ID (query와 둘 중 하나 필수) |
+| query | △ | 검색어 (placeId와 둘 중 하나 필수) |
+| sessionToken | X | Autocomplete에서 받은 세션 토큰 (비용 절감) |
 
 **Response**
 ```json
@@ -655,8 +738,6 @@ Google Places 이미지 프록시
     "phone_number": "+886...",
     "opening_hours": ["월: 10:00-22:00", ...],
     "photos": ["https://..."],
-    "website": "https://...",
-    "google_map_url": "https://maps.google.com/...",
     "suggested_category": "밥류",
     "types": ["restaurant", "food"]
   }
@@ -673,6 +754,7 @@ Google Places 이미지 프록시
 |---------|------|------|
 | q | O | 검색어 |
 | mode | X | "textsearch" - 리뷰 수 포함 검색 |
+| sessionToken | X | 세션 토큰 (비용 절감용) |
 
 **Response (기본 - Autocomplete)**
 ```json
@@ -684,9 +766,12 @@ Google Places 이미지 프록시
       "name": "장소명",
       "secondary_text": "주소"
     }
-  ]
+  ],
+  "sessionToken": "uuid-v4-token"
 }
 ```
+
+> **비용 절감 팁**: 응답의 `sessionToken`을 Place Details 호출 시 함께 전달하면 한 세션으로 묶입니다.
 
 **Response (mode=textsearch)**
 ```json
@@ -881,3 +966,82 @@ FamilyMart 매장 동기화 (Google Places API)
   }
 }
 ```
+
+---
+
+## Google Places API 비용 최적화 전략
+
+### 문제점
+| 항목 | 비용 | 문제 |
+|------|------|------|
+| Place Details | $17/1,000회 | 음식점 리스트 표시 시 각각 호출 |
+| Autocomplete | $2.83/1,000회 | 입력마다 호출 폭증 (5~10회/검색) |
+| Place Photo | $7/1,000회 | 매번 새로 요청 |
+
+### 적용된 최적화
+
+#### 1. sessionToken 사용 (70~80% 비용 절감)
+```typescript
+// 클라이언트
+import { getSessionTokenManager } from "@/lib/google-session-token";
+
+const tokenManager = getSessionTokenManager();
+const sessionToken = tokenManager.getToken();
+
+// Autocomplete 호출
+const res = await fetch(`/api/google-place-details?q=${query}&sessionToken=${sessionToken}`);
+const { results, sessionToken: returnedToken } = await res.json();
+
+// Place Details 호출 (동일 토큰 사용)
+await fetch("/api/google-place-details", {
+  method: "POST",
+  body: JSON.stringify({ placeId, sessionToken: returnedToken })
+});
+
+// 선택 완료 후 토큰 무효화
+tokenManager.invalidateToken();
+```
+
+#### 2. fields 파라미터 최적화
+```
+// Before (12개 필드)
+fields=place_id,name,formatted_address,geometry,rating,user_ratings_total,
+       price_level,formatted_phone_number,opening_hours,photos,website,url,types
+
+// After (10개 필드) - website, url 제거
+fields=place_id,name,formatted_address,geometry,rating,user_ratings_total,
+       price_level,formatted_phone_number,opening_hours,photos,types
+```
+
+#### 3. 이미지 캐싱 전략
+- **MongoDB 캐시**: `image_cache` 컬렉션에 URL 저장
+- **Cloudinary 저장**: Google Photo → Cloudinary 업로드 → 최적화 URL 반환
+- **휴업/폐업 상태 캐싱**: `business_status` 저장하여 불필요한 재조회 방지
+
+#### 4. 리뷰 캐싱 (24시간)
+- **MongoDB 캐시**: `google_reviews_cache` 컬렉션
+- **캐시 기간**: 24시간
+- **배치 갱신**: Cron Job으로 자동 갱신
+
+### 캐싱 관련 컬렉션
+
+| 컬렉션명 | 용도 | TTL |
+|---------|------|-----|
+| `image_cache` | 식당 이미지 URL 캐시 | 무제한 |
+| `google_reviews_cache` | 구글 리뷰 캐시 | 24시간 |
+| `restaurant_buildings` | 건물 정보 | 무제한 |
+
+### 비용 절감 예상
+
+| 최적화 항목 | 예상 절감률 |
+|------------|-----------|
+| sessionToken 도입 | 70~80% |
+| fields 최적화 | 5~10% |
+| 이미지 Cloudinary 캐싱 | 90%+ |
+| 리뷰 24시간 캐싱 | 95%+ |
+
+### 관련 파일
+- `/src/lib/google-session-token.ts` - sessionToken 유틸리티
+- `/src/app/api/places-search/route.ts` - 주소 검색 (sessionToken 적용)
+- `/src/app/api/google-place-details/route.ts` - 장소 상세 (sessionToken + fields 최적화)
+- `/src/app/api/place-photo/route.ts` - 이미지 캐싱 (Cloudinary + MongoDB)

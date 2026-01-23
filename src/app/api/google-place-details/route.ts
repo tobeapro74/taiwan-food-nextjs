@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidSessionToken, createSessionToken } from "@/lib/google-session-token";
 
 interface PlaceDetails {
   place_id: string;
@@ -20,20 +21,25 @@ interface PlaceDetails {
   photos?: Array<{
     photo_reference: string;
   }>;
-  website?: string;
-  url?: string; // Google Maps URL
   types?: string[];
+  // 비용 최적화: website, url 필드 제거 (미사용)
 }
 
 /**
  * Google Places API를 사용하여 장소 상세 정보 조회
  * POST /api/google-place-details
- * Body: { placeId: string } 또는 { query: string }
+ * Body: { placeId: string, sessionToken?: string } 또는 { query: string }
+ *
+ * sessionToken을 사용하면 Autocomplete에서 받은 placeId로 Details 조회 시
+ * 한 세션으로 묶여 비용이 크게 절감됩니다
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { placeId, query } = body;
+    const { placeId, query, sessionToken: clientToken } = body;
+
+    // sessionToken 처리: Autocomplete에서 받은 토큰 사용 또는 새로 생성
+    const sessionToken = isValidSessionToken(clientToken) ? clientToken : createSessionToken();
 
     const apiKey = process.env.GOOGLE_PLACES_API_KEY;
 
@@ -72,8 +78,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Place Details API 호출
-    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${targetPlaceId}&fields=place_id,name,formatted_address,geometry,rating,user_ratings_total,price_level,formatted_phone_number,opening_hours,photos,website,url,types&language=ko&key=${apiKey}`;
+    // Place Details API 호출 (sessionToken 포함, fields 최적화)
+    // 비용 절감: 실제 사용하는 필드만 요청 (website, url 제거 - 미사용)
+    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${targetPlaceId}&fields=place_id,name,formatted_address,geometry,rating,user_ratings_total,price_level,formatted_phone_number,opening_hours,photos,types&sessiontoken=${sessionToken}&language=ko&key=${apiKey}`;
 
     const detailsResponse = await fetch(detailsUrl);
     const detailsData = await detailsResponse.json();
@@ -143,8 +150,6 @@ export async function POST(request: NextRequest) {
         phone_number: place.formatted_phone_number,
         opening_hours: place.opening_hours?.weekday_text,
         photos: photoUrls,
-        website: place.website,
-        google_map_url: place.url,
         suggested_category: suggestedCategory,
         types: place.types,
       },
@@ -160,14 +165,17 @@ export async function POST(request: NextRequest) {
 
 /**
  * Google Places API를 사용하여 식당 검색 (자동완성)
- * GET /api/google-place-details?q=검색어
+ * GET /api/google-place-details?q=검색어&sessionToken=xxx
  * GET /api/google-place-details?q=검색어&mode=textsearch (Text Search - 리뷰 수 포함)
+ *
+ * sessionToken을 포함하면 이후 Place Details 호출과 묶여 비용 절감
  */
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get("q");
     const mode = searchParams.get("mode");
+    const clientToken = searchParams.get("sessionToken");
 
     if (!query) {
       return NextResponse.json(
@@ -220,10 +228,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ results });
     }
 
-    // 기본 모드 - Autocomplete (자동완성)
+    // sessionToken 처리: 클라이언트에서 받거나 새로 생성
+    const sessionToken = isValidSessionToken(clientToken) ? clientToken : createSessionToken();
+
+    // 기본 모드 - Autocomplete (자동완성) - sessionToken 포함
     const autocompleteUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
       query
-    )}&components=country:tw&types=establishment&language=ko&key=${apiKey}`;
+    )}&components=country:tw&types=establishment&language=ko&sessiontoken=${sessionToken}&key=${apiKey}`;
 
     const autocompleteResponse = await fetch(autocompleteUrl);
     const autocompleteData = await autocompleteResponse.json();
@@ -241,7 +252,8 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    return NextResponse.json({ results });
+    // sessionToken 포함하여 클라이언트가 Place Details 호출 시 재사용 가능
+    return NextResponse.json({ results, sessionToken });
   } catch (error) {
     console.error("Google Place Search error:", error);
     return NextResponse.json(
