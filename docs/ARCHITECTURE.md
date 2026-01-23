@@ -111,6 +111,12 @@ src/
 └── lib/
     ├── mongodb.ts                 # MongoDB 연결
     ├── geo-utils.ts               # 위치/거리 계산 유틸리티
+    ├── district-utils.ts          # 지역(구) 유틸리티
+    │   ├── DISTRICT_INFO          # 타이베이 12개 구 + 신베이시 정보
+    │   ├── extractRegion()        # 위치에서 지역명 추출
+    │   ├── normalizeRegion()      # 지역명을 구 단위로 정규화
+    │   ├── getRestaurantDistrict() # 맛집의 구(지역) 가져오기
+    │   └── isValidDistrict()      # 유효한 구(지역)인지 확인
     ├── types.ts                   # TypeScript 타입 정의
     └── utils.ts                   # 유틸리티 (cn 함수)
 ```
@@ -255,8 +261,8 @@ staticRestaurants = staticRestaurants.filter(r => {
 
 ```typescript
 // 뷰 상태
-currentView: "home" | "list" | "detail" | "nearby" | "history" | "toilet"
-previousView: "home" | "list" | "nearby" | "history"  // 뒤로가기 추적용
+currentView: "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking" | "guide"
+viewHistory: View[]  // 네비게이션 스택 (뒤로가기 추적용)
 
 // 탭 상태
 activeTab: "home" | "category" | "market" | "tour" | "places" | "nearby"
@@ -380,7 +386,10 @@ useEffect(() => {
 ```
 홈 ─┬─► 인기 맛집 ───► 상세
     ├─► 야시장별 맛집 ─► 상세
-    └─► 검색 결과 ────► 상세
+    ├─► 지역별 랭킹 ──► 지역 맛집 목록 ─► 상세
+    ├─► 검색 결과 ────► 상세
+    ├─► 타이베이 가이드 (독립 화면)
+    └─► 화장실 찾기 ──► Google Maps 길찾기
 
 카테고리 ─► 목록 ─► 상세
 야시장 ───► 목록 ─► 상세
@@ -389,15 +398,26 @@ useEffect(() => {
 
 사용자메뉴 ─► 등록 히스토리 ─► 상세 ─► (뒤로가기) ─► 등록 히스토리
 
-화장실 찾기 ─► 7-ELEVEN / FamilyMart ─► Google Maps 길찾기
+지역별 랭킹 (더보기) ─► 전체 지역 랭킹 ─► 지역 맛집 목록 ─► 상세
+                                       └─► (뒤로가기) ─► 전체 지역 랭킹
 ```
 
 ### 뒤로가기 로직
-- `previousView` 상태로 이전 화면 추적
-- 홈 → 상세: 뒤로가기 시 홈으로
-- 목록 → 상세: 뒤로가기 시 목록으로
-- 맛집알리미 → 상세: 뒤로가기 시 맛집알리미로
-- 등록 히스토리 → 상세: 뒤로가기 시 등록 히스토리로
+- `viewHistory` 스택으로 이전 화면 추적 (배열)
+- 화면 이동 시 현재 화면을 스택에 push
+- 뒤로가기 시 스택에서 pop하여 이전 화면으로 정확히 복귀
+- 여러 단계 이동 후에도 정확한 뒤로가기 지원
+
+```typescript
+// 화면 이동 시
+setViewHistory(prev => [...prev, currentView]);
+setCurrentView("list");
+
+// 뒤로가기 시
+const previousView = viewHistory[viewHistory.length - 1] || "home";
+setViewHistory(prev => prev.slice(0, -1));
+setCurrentView(previousView);
+```
 
 ### 사용자 등록 맛집 데이터 동기화
 - 상세 화면 진입 시 DB에서 최신 데이터 자동 fetch

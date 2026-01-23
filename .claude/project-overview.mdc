@@ -72,6 +72,7 @@ src/
 │
 └── lib/
     ├── mongodb.ts     # DB 연결
+    ├── district-utils.ts # 지역(구) 유틸리티 (extractRegion, normalizeRegion, DISTRICT_INFO)
     ├── types.ts       # 타입 정의
     └── utils.ts       # 유틸리티
 ```
@@ -90,10 +91,21 @@ page.tsx (메인 페이지)
 │
 ├── 홈 화면
 │   ├── 검색바 (자동완성)
+│   ├── 타이베이 여행 가이드 버튼 (guide view)
 │   ├── 화장실 찾기 버튼
 │   ├── 카테고리 버튼
 │   ├── 인기 맛집 (RestaurantCard)
+│   ├── 지역별 맛집 랭킹 (districtRanking)
 │   └── 야시장별 맛집 (RestaurantCard)
+│
+├── 타이베이 여행 가이드 (guide view)
+│   ├── 타이베이시 vs 신베이시 소개
+│   ├── 타이베이시 12개 구 설명
+│   ├── 타이베이시 주요 명소
+│   └── 신베이시 주요 명소
+│
+├── 지역별 맛집 랭킹 (district-ranking view)
+│   └── 전체 지역 랭킹 카드 목록
 │
 ├── 화장실 찾기 (ToiletFinder)
 │   ├── 7-ELEVEN 탭
@@ -198,12 +210,41 @@ ADMIN_SECRET_KEY=...
 
 ## 최근 변경사항
 
+### 2025-01-24
+- **지역별 맛집 랭킹 기능 추가**
+  - 홈화면에 "📍 지역별 맛집 랭킹" 섹션 추가
+  - 타이베이 12개 구 + 신베이시 지역별 평균 평점 계산
+  - 상위 5개 지역 메달 표시 (🥇🥈🥉)
+  - "더보기" 클릭 시 전체 지역 랭킹 표시 (district-ranking view)
+  - 지역 클릭 시 해당 지역 맛집 목록 표시
+- **타이베이 여행 가이드 페이지 추가** (guide view)
+  - 타이베이시 vs 신베이시 소개
+  - 타이베이시 12개 구 설명 (이모지 포함)
+  - 타이베이시 주요 명소 7곳
+  - 신베이시 주요 명소 8곳
+  - MZ세대 친화적 UI (그라데이션, 둥근 카드)
+- **네비게이션 히스토리 스택 관리**
+  - previousView 단일 변수 → viewHistory 배열(스택)으로 변경
+  - 여러 단계 이동 후에도 정확한 뒤로가기 지원
+- **화장실 찾기 화면 UX 개선**
+  - "닫기" 버튼 → 뒤로가기 버튼으로 통일
+  - 앱 전체 네비게이션 일관성 확보
+- **district-utils.ts 유틸리티 파일 분리**
+  - extractRegion, normalizeRegion, DISTRICT_INFO 함수 분리
+  - getRestaurantDistrict, isValidDistrict 함수 추가
+
 ### 2025-01-21
 - 의존성 패키지 최신 버전 업데이트
   - Next.js 16.1.4
   - @types/node 25.0.9
   - cloudinary 2.9.0
   - resend 6.8.0
+- 맛집 상세 화면 데이터 동기화 개선
+  - 상세 화면 진입 시 DB에서 최신 데이터 자동 fetch
+  - 수정 후 onUpdate 콜백으로 부모 상태 실시간 반영
+- 등록 히스토리 뒤로가기 버그 수정
+- Restaurant 타입에 사용자 등록 맛집 필드 추가
+- 맛집 등록 카테고리에 까르푸 추가
 
 ### 2025-01-20
 - 7-ELEVEN 화장실 찾기 기능 추가
@@ -261,7 +302,9 @@ git push origin main
 ```
 
 ### 자주 수정하는 파일
-- `src/app/page.tsx` - 메인 페이지 로직
+- `src/app/page.tsx` - 메인 페이지 로직 (뷰 관리, 네비게이션)
 - `src/data/taiwan-food.ts` - 맛집 데이터
+- `src/lib/district-utils.ts` - 지역(구) 유틸리티
 - `src/components/ui/sheet.tsx` - 모달 스타일
 - `src/components/toilet-finder.tsx` - 화장실 찾기
+- `src/components/restaurant-list.tsx` - 맛집 목록 (지역별 그룹화)
