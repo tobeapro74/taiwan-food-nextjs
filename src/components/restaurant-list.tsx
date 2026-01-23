@@ -41,16 +41,26 @@ function extractRegion(location: string): string {
     }
   }
 
-  // 영어 주소 처리 (예: "Jihe Rd, Shilin District")
-  const districtMatch = region.match(/(\w+)\s*District/i);
+  // 영어 주소 처리 (예: "Jihe Rd, Shilin District", "Da'an District")
+  const districtMatch = region.match(/([\w']+)\s*District/i);
   if (districtMatch) {
+    const districtName = districtMatch[1].replace(/'/g, ""); // Da'an → Daan
     const districtMap: Record<string, string> = {
       "Shilin": "스린",
       "Datong": "다퉁",
       "Zhongshan": "중산",
       "Xinyi": "신이",
+      "Daan": "다안",
+      "Da": "다안",  // Da'an에서 Da만 매칭되는 경우
+      "Wanhua": "완화",
+      "Zhongzheng": "중정",
+      "Beitou": "베이터우",
+      "Songshan": "송산",
+      "Neihu": "네이후",
+      "Nangang": "난강",
+      "Wenshan": "원산",
     };
-    return districtMap[districtMatch[1]] || districtMatch[1];
+    return districtMap[districtName] || districtMatch[1];
   }
 
   // 첫 번째 지역 단어 추출 (공백, 쉼표로 분리)
@@ -161,6 +171,7 @@ function normalizeRegion(region: string): string {
     "동문": "다안구",
     "da'an": "다안구",
     "daan": "다안구",
+    "an": "다안구",  // Da'an에서 an만 추출되는 경우
 
     // 중산구 (中山區)
     "중산": "중산구",
