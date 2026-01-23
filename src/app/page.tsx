@@ -33,7 +33,7 @@ import {
 } from "@/data/taiwan-food";
 import { getRestaurantDistrict, isValidDistrict, DISTRICT_INFO } from "@/lib/district-utils";
 
-type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking";
+type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking" | "guide";
 type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add";
 
 interface UserInfo {
@@ -704,6 +704,176 @@ export default function Home() {
     );
   }
 
+  if (currentView === "guide") {
+    return (
+      <>
+        <div className="min-h-screen pb-20 bg-gradient-to-b from-amber-50 to-orange-50 dark:from-background dark:to-background">
+          {/* 헤더 */}
+          <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-500 to-orange-500 shadow-lg safe-area-top">
+            <div className="flex items-center gap-3 p-4">
+              <Button
+                variant="ghost"
+                onClick={handleBack}
+                className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-white/20 hover:bg-white/30 text-white"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <h1 className="font-bold text-white text-lg">📖 타이베이 여행 가이드</h1>
+                <p className="text-white/80 text-xs">대만 타이베이 완벽 정리</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 space-y-6">
+            {/* 섹션 1: 타이베이에 대하여 */}
+            <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">🏙️</span>
+                <h2 className="text-lg font-bold text-foreground">타이베이에 대하여</h2>
+              </div>
+              <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                <p>
+                  타이베이는 크게 <span className="font-semibold text-foreground">타이베이시(Taipei City)</span>와{" "}
+                  <span className="font-semibold text-foreground">신베이시(New Taipei City)</span>로 나뉩니다.
+                </p>
+                <div className="grid gap-3">
+                  <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30 rounded-xl p-4 border border-red-100 dark:border-red-900/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🏛️</span>
+                      <span className="font-semibold text-foreground">타이베이시</span>
+                    </div>
+                    <p className="text-xs">대만의 정치·경제·문화 중심지로, 12개의 행정구가 있으며 관광 명소와 맛집이 집중되어 있습니다.</p>
+                  </div>
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 border border-green-100 dark:border-green-900/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🌿</span>
+                      <span className="font-semibold text-foreground">신베이시</span>
+                    </div>
+                    <p className="text-xs">타이베이를 둘러싸고 있는 광역 도시로, 자연·전통·근교 여행지들이 많아 당일치기 코스로 인기가 높습니다.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* 섹션 2: 타이베이시 12개 구 */}
+            <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">📍</span>
+                <h2 className="text-lg font-bold text-foreground">타이베이시 12개 구</h2>
+              </div>
+              <div className="grid gap-2">
+                {[
+                  { name: "중정구", emoji: "🏛️", desc: "중정기념당과 타이베이 메인스테이션이 위치. 교통과 관광의 중심지." },
+                  { name: "다안구", emoji: "☕", desc: "융캉제가 있어 카페와 맛집이 밀집된 감성 거리. 젊은 여행자들에게 인기." },
+                  { name: "신이구", emoji: "🏙️", desc: "타이베이 101타워와 대형 쇼핑몰. 야경과 쇼핑 명소." },
+                  { name: "완화구", emoji: "🛍️", desc: "시먼딩이 위치한 패션·문화 거리. 용산사 같은 전통 명소도 함께." },
+                  { name: "중산구", emoji: "🍸", desc: "중산 카페거리와 세련된 바·호텔. 감성 여행과 나이트라이프에 적합." },
+                  { name: "스린구", emoji: "🌙", desc: "스린 야시장과 국립고궁박물원. 먹거리와 문화 체험 동시에." },
+                  { name: "베이터우구", emoji: "♨️", desc: "온천으로 유명. 온천 호텔·도서관·박물관이 있어 힐링 여행에 적합." },
+                  { name: "송산구", emoji: "✈️", desc: "송산공항과 라오허제 야시장. 교통 편리하고 야시장 탐방에 좋음." },
+                  { name: "다퉁구", emoji: "🏮", desc: "디화제가 있어 전통시장과 한약방. 대만의 정취를 느낄 수 있음." },
+                  { name: "네이후구", emoji: "🏢", desc: "IT 기업과 주거지역. 대형 쇼핑몰과 호수 공원으로 현지 생활 체험." },
+                  { name: "난강구", emoji: "🎪", desc: "난강 전시센터와 IT 산업 단지. 박람회·콘서트가 자주 열리는 곳." },
+                  { name: "원산구", emoji: "🐼", desc: "타이베이 동물원과 마오콩 곤돌라. 가족 단위 관광객에게 인기." },
+                ].map((district) => (
+                  <div
+                    key={district.name}
+                    className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                  >
+                    <span className="text-xl">{district.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-foreground text-sm">{district.name}</div>
+                      <p className="text-xs text-muted-foreground mt-0.5">{district.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* 섹션 3: 타이베이시 주요 여행 명소 */}
+            <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">✨</span>
+                <h2 className="text-lg font-bold text-foreground">타이베이시 주요 명소</h2>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { name: "타이베이 101", emoji: "🗼", desc: "대만의 랜드마크" },
+                  { name: "중정기념당", emoji: "🏛️", desc: "대만 현대사의 상징" },
+                  { name: "시먼딩", emoji: "🛍️", desc: "젊음의 패션 거리" },
+                  { name: "융캉제", emoji: "🥟", desc: "딘타이펑 본점 위치" },
+                  { name: "스린 야시장", emoji: "🌙", desc: "대만 최대 야시장" },
+                  { name: "국립고궁박물원", emoji: "🏺", desc: "세계적 박물관" },
+                  { name: "베이터우 온천", emoji: "♨️", desc: "힐링 온천 명소" },
+                ].map((spot) => (
+                  <div
+                    key={spot.name}
+                    className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-xl p-3 border border-amber-100 dark:border-amber-900/30"
+                  >
+                    <div className="text-2xl mb-1">{spot.emoji}</div>
+                    <div className="font-semibold text-foreground text-sm">{spot.name}</div>
+                    <p className="text-xs text-muted-foreground">{spot.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* 섹션 4: 신베이시 주요 여행 명소 */}
+            <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">🌿</span>
+                <h2 className="text-lg font-bold text-foreground">신베이시 주요 명소</h2>
+              </div>
+              <div className="grid gap-3">
+                {[
+                  { name: "예류지질공원", emoji: "🪨", desc: "기암괴석과 '여왕 머리 바위'로 유명한 해안 지질 공원" },
+                  { name: "지우펀 옛거리", emoji: "🏮", desc: "언덕 위 찻집과 야경이 매력적인 산간 마을" },
+                  { name: "스펀 폭포", emoji: "🎈", desc: "철로 위 스카이랜턴 체험, '대만의 나이아가라' 폭포" },
+                  { name: "진과스 황금박물관", emoji: "⛏️", desc: "옛 금광 마을을 테마로 한 역사문화 여행지" },
+                  { name: "우라이", emoji: "🌊", desc: "원주민 문화와 온천, 폭포가 함께 있는 힐링 여행지" },
+                  { name: "산샤 옛거리", emoji: "🧱", desc: "붉은 벽돌 아케이드와 전통 간식이 있는 거리" },
+                  { name: "비탄 풍경구", emoji: "🚣", desc: "강변 자전거·보트 체험, 야간 조명으로 유명한 데이트 코스" },
+                  { name: "산충구", emoji: "🏠", desc: "타이베이와 가까운 주거·상업 지역. 숙소 거점으로 적합" },
+                ].map((spot) => (
+                  <div
+                    key={spot.name}
+                    className="flex items-start gap-3 p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-100 dark:border-green-900/30"
+                  >
+                    <span className="text-2xl">{spot.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-foreground text-sm">{spot.name}</div>
+                      <p className="text-xs text-muted-foreground mt-0.5">{spot.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* 하단 안내 */}
+            <div className="text-center py-4">
+              <p className="text-xs text-muted-foreground">
+                🧳 즐거운 타이베이 여행 되세요!
+              </p>
+            </div>
+          </div>
+        </div>
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onLoginSuccess={(userData) => setUser(userData)}
+        />
+        <AddRestaurantModal
+          isOpen={addRestaurantModalOpen}
+          onClose={() => setAddRestaurantModalOpen(false)}
+          user={user}
+          onSuccess={() => {}}
+        />
+      </>
+    );
+  }
+
   if (currentView === "list") {
     return (
       <>
@@ -919,6 +1089,29 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {/* 대만 안내 페이지 버튼 */}
+          <button
+            onClick={() => {
+              setViewHistory(prev => [...prev, currentView]);
+              setCurrentView("guide");
+              window.scrollTo(0, 0);
+            }}
+            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 shadow-sm flex items-center justify-between hover:from-amber-600 hover:to-orange-600 transition-all active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <span className="text-2xl">📖</span>
+              </div>
+              <div className="text-left">
+                <h3 className="text-white font-bold text-base">타이베이 여행 가이드</h3>
+                <p className="text-white/80 text-xs">12개 구 · 명소 · 신베이시 완벽 정리</p>
+              </div>
+            </div>
+            <div className="text-white/80">
+              <ChevronDown className="w-6 h-6 -rotate-90" />
+            </div>
+          </button>
 
           {/* 화장실 찾기 버튼 */}
           <button
