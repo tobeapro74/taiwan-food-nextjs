@@ -320,13 +320,10 @@ export function RestaurantList({ title, restaurants, onBack, onSelect }: Restaur
       groups[region].sort((a, b) => (b.평점 || 0) - (a.평점 || 0));
     });
 
-    // 그룹을 맛집 수가 많은 순으로 정렬
-    const sortedRegions = Object.keys(groups).sort((a, b) => {
-      // "기타"는 항상 마지막
-      if (a === "기타") return 1;
-      if (b === "기타") return -1;
-      return groups[b].length - groups[a].length;
-    });
+    // 그룹을 맛집 수가 많은 순으로 정렬 ("기타"는 제외)
+    const sortedRegions = Object.keys(groups)
+      .filter(region => region !== "기타")  // "기타" 카테고리 제외
+      .sort((a, b) => groups[b].length - groups[a].length);
 
     return { groups, sortedRegions };
   }, [restaurantsWithRatings]);
