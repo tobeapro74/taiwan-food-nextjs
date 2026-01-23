@@ -66,6 +66,75 @@ function extractRegion(location: string): string {
 }
 
 /**
+ * 타이베이 12개 구 + 기타 지역 설명
+ */
+const DISTRICT_INFO: Record<string, { name: string; description: string }> = {
+  // 타이베이 12구
+  "중정구": {
+    name: "중정구 (Zhongzheng)",
+    description: "중정기념당과 타이베이 메인스테이션이 위치하고 있으며 시먼딩, 중산 상권과 가까이에 있어 교통과 관광의 중심지입니다."
+  },
+  "다안구": {
+    name: "다안구 (Da'an)",
+    description: "융캉제가 자리해 있으며 카페와 맛집이 밀집된 지역으로, 젊은 여행자들에게 인기 있는 감성 거리입니다."
+  },
+  "신이구": {
+    name: "신이구 (Xinyi)",
+    description: "타이베이 101타워와 대형 쇼핑몰이 모여 있는 금융·상업 중심지로, 야경과 쇼핑을 동시에 즐길 수 있습니다."
+  },
+  "완화구": {
+    name: "완화구 (Wanhua)",
+    description: "시먼딩이 위치해 있으며 젊은 층과 관광객이 모이는 패션·문화 거리입니다. 용산사 같은 전통 명소도 함께 있습니다."
+  },
+  "중산구": {
+    name: "중산구 (Zhongshan)",
+    description: "중산 카페거리와 세련된 바, 호텔이 밀집해 있어 감성 여행과 나이트라이프를 즐기기에 적합합니다."
+  },
+  "스린구": {
+    name: "스린구 (Shilin)",
+    description: "타이베이 최대 규모의 스린 야시장과 국립고궁박물원이 위치해 있어 먹거리와 문화 체험을 동시에 즐길 수 있습니다."
+  },
+  "베이터우구": {
+    name: "베이터우구 (Beitou)",
+    description: "온천으로 유명한 지역으로, 온천 호텔과 베이터우 도서관이 있어 힐링 여행에 적합합니다."
+  },
+  "송산구": {
+    name: "송산구 (Songshan)",
+    description: "송산공항과 라오허제 야시장이 위치해 있으며, 교통이 편리하고 야시장 먹거리 탐방에 좋은 곳입니다."
+  },
+  "다퉁구": {
+    name: "다퉁구 (Datong)",
+    description: "디화제가 자리해 있으며 전통시장과 한약방, 건축물이 많아 대만의 옛 정취를 느낄 수 있습니다."
+  },
+  "네이후구": {
+    name: "네이후구 (Neihu)",
+    description: "IT 기업과 주거지역이 밀집해 있으며, 대형 쇼핑몰과 호수 공원이 있어 현지인 생활을 체험할 수 있습니다."
+  },
+  "난강구": {
+    name: "난강구 (Nangang)",
+    description: "난강 전시센터와 IT 산업 단지가 위치해 있으며, 대형 콘서트와 박람회가 자주 열리는 지역입니다."
+  },
+  "원산구": {
+    name: "원산구 (Wenshan)",
+    description: "마오콩 곤돌라와 동물원이 있어 자연과 함께하는 여행에 적합하며, 가족 단위 관광객에게 인기가 많습니다."
+  },
+  // 신베이시
+  "단수이": {
+    name: "단수이 (Tamsui)",
+    description: "신베이시에 위치한 해안 도시로, 석양이 아름다운 단수이 올드스트리트와 홍마오청이 유명합니다."
+  },
+  "싼충구": {
+    name: "싼충구 (Sanchong)",
+    description: "신베이시에 위치하며 타이베이와 인접해 있어 접근성이 좋고 현지인 맛집이 많습니다."
+  },
+  // 타이중
+  "타이중": {
+    name: "타이중 (Taichung)",
+    description: "대만 중부의 대도시로, 펑자 야시장과 무지개 마을 등 다양한 볼거리가 있습니다."
+  },
+};
+
+/**
  * 지역명을 구(區) 단위로 정규화
  * 타이베이 행정구역 기준으로 매핑
  */
@@ -76,6 +145,7 @@ function normalizeRegion(region: string): string {
     "시먼": "완화구",
     "완화": "완화구",
     "완화구": "완화구",
+    "룽산": "완화구",
 
     // 다안구 (大安區) - 융캉제, 동문시장 일대
     "융캉제": "다안구",
@@ -114,6 +184,24 @@ function normalizeRegion(region: string): string {
     // 베이터우구 (北投區) - 온천
     "베이터우": "베이터우구",
     "베이터우구": "베이터우구",
+
+    // 송산구 (松山區) - 라오허제 야시장
+    "송산": "송산구",
+    "송산구": "송산구",
+    "라오허제": "송산구",
+
+    // 네이후구 (內湖區)
+    "네이후": "네이후구",
+    "네이후구": "네이후구",
+
+    // 난강구 (南港區)
+    "난강": "난강구",
+    "난강구": "난강구",
+
+    // 원산구 (文山區)
+    "원산": "원산구",
+    "원산구": "원산구",
+    "마오콩": "원산구",
 
     // 신베이시 (新北市)
     "단수이": "단수이",
@@ -219,31 +307,52 @@ export function RestaurantList({ title, restaurants, onBack, onSelect }: Restaur
         </div>
       </div>
 
+      {/* 안내 문구 */}
+      {groupedByRegion.sortedRegions.length > 0 && (
+        <div className="px-4 py-3 bg-muted/50 border-b border-border">
+          <p className="text-sm text-muted-foreground">
+            타이베이는 총 12개의 구로 구성되어 있으며, 맛집을 구별로 구분해 알려드려요.
+          </p>
+        </div>
+      )}
+
       {/* 지역별 그룹화된 결과 목록 */}
       <div className="p-4 space-y-6">
         {groupedByRegion.sortedRegions.length > 0 ? (
-          groupedByRegion.sortedRegions.map((region) => (
-            <section key={region}>
-              {/* 지역 헤더 */}
-              <div className="flex items-center gap-2 mb-3 sticky top-[60px] bg-background/95 backdrop-blur-sm py-2 -mx-4 px-4 z-[5]">
-                <MapPin className="w-4 h-4 text-primary" />
-                <h2 className="font-semibold text-foreground">{region}</h2>
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                  {groupedByRegion.groups[region].length}개
-                </span>
-              </div>
-              {/* 해당 지역 맛집 목록 */}
-              <div className="space-y-3">
-                {groupedByRegion.groups[region].map((restaurant, index) => (
-                  <RestaurantCard
-                    key={`${restaurant.이름}-${index}`}
-                    restaurant={restaurant}
-                    onClick={() => onSelect(restaurant)}
-                  />
-                ))}
-              </div>
-            </section>
-          ))
+          groupedByRegion.sortedRegions.map((region) => {
+            const districtInfo = DISTRICT_INFO[region];
+            return (
+              <section key={region}>
+                {/* 지역 헤더 */}
+                <div className="mb-3 sticky top-[60px] bg-background/95 backdrop-blur-sm py-2 -mx-4 px-4 z-[5]">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-primary" />
+                    <h2 className="font-semibold text-foreground">
+                      {districtInfo?.name || region}
+                    </h2>
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                      {groupedByRegion.groups[region].length}개
+                    </span>
+                  </div>
+                  {districtInfo?.description && (
+                    <p className="text-xs text-muted-foreground mt-1 ml-6 leading-relaxed">
+                      {districtInfo.description}
+                    </p>
+                  )}
+                </div>
+                {/* 해당 지역 맛집 목록 */}
+                <div className="space-y-3">
+                  {groupedByRegion.groups[region].map((restaurant, index) => (
+                    <RestaurantCard
+                      key={`${restaurant.이름}-${index}`}
+                      restaurant={restaurant}
+                      onClick={() => onSelect(restaurant)}
+                    />
+                  ))}
+                </div>
+              </section>
+            );
+          })
         ) : (
           <div className="text-center text-muted-foreground py-12">
             검색 결과가 없습니다.
