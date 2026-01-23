@@ -46,7 +46,7 @@ interface UserInfo {
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [currentView, setCurrentView] = useState<View>("home");
-  const [previousView, setPreviousView] = useState<View>("home"); // 이전 화면 추적
+  const [viewHistory, setViewHistory] = useState<View[]>([]); // 네비게이션 스택
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [listTitle, setListTitle] = useState("");
   const [listItems, setListItems] = useState<Restaurant[]>([]);
@@ -269,7 +269,7 @@ export default function Home() {
     const districtInfo = DISTRICT_INFO[district];
     setListTitle(`${districtInfo?.name || district} 맛집`);
     setListItems(restaurants);
-    setPreviousView(currentView); // 실제 현재 화면 저장 (home 또는 district-ranking)
+    setViewHistory(prev => [...prev, currentView]); // 현재 화면을 스택에 push
     setCurrentView("list");
     setActiveTab("home");
     window.scrollTo(0, 0);
@@ -291,7 +291,7 @@ export default function Home() {
   const handleSuggestionSelect = (restaurant: Restaurant) => {
     setSearchQuery("");
     setShowSuggestions(false);
-    setPreviousView("home");
+    setViewHistory(prev => [...prev, "home"]);
     setSelectedRestaurant(restaurant);
     setCurrentView("detail");
   };
@@ -434,7 +434,7 @@ export default function Home() {
   // 맛집 선택
   const handleRestaurantSelect = (restaurant: Restaurant) => {
     console.log("Selected restaurant:", { name: restaurant.이름, place_id: restaurant.place_id, category: restaurant.category });
-    setPreviousView(currentView); // 현재 화면 저장
+    setViewHistory(prev => [...prev, currentView]); // 현재 화면을 스택에 push
     setSelectedRestaurant(restaurant);
     setCurrentView("detail");
   };
@@ -459,7 +459,7 @@ export default function Home() {
           coordinates: customRestaurant.coordinates,
           registered_by: customRestaurant.registered_by,
         };
-        setPreviousView(currentView);
+        setViewHistory(prev => [...prev, currentView]);
         setSelectedRestaurant(restaurant);
         setCurrentView("detail");
       }
@@ -470,33 +470,27 @@ export default function Home() {
 
   // 뒤로가기
   const handleBack = useCallback(() => {
+    // 스택에서 이전 화면 가져오기
+    const previousView = viewHistory[viewHistory.length - 1] || "home";
+
+    // 스택에서 제거
+    setViewHistory(prev => prev.slice(0, -1));
+
+    // 이전 화면으로 이동
+    setCurrentView(previousView);
+
+    // 화면별 추가 처리
     if (currentView === "detail") {
-      // 이전 화면이 홈이면 홈으로, nearby면 nearby로, history면 history로, 리스트면 리스트로
-      if (previousView === "home") {
-        setCurrentView("home");
-        setActiveTab("home");
-      } else if (previousView === "nearby") {
-        setCurrentView("nearby");
-        setActiveTab("nearby");
-      } else if (previousView === "history") {
-        setCurrentView("history");
-      } else {
-        setCurrentView("list");
-      }
       setSelectedRestaurant(null);
-    } else if (currentView === "list") {
-      // 이전 화면이 district-ranking이면 거기로, 아니면 홈으로
-      if (previousView === "district-ranking") {
-        setCurrentView("district-ranking");
-      } else {
-        setCurrentView("home");
-      }
-      setActiveTab("home");
-    } else if (currentView === "nearby" || currentView === "history" || currentView === "district-ranking") {
-      setCurrentView("home");
+    }
+
+    // activeTab 설정
+    if (previousView === "nearby") {
+      setActiveTab("nearby");
+    } else {
       setActiveTab("home");
     }
-  }, [currentView, previousView]);
+  }, [currentView, viewHistory]);
 
   // 스와이프 뒤로가기 (홈이 아닌 화면에서만 활성화)
   useSwipeBack({
