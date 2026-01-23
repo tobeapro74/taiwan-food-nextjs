@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { User, LogOut, Search, X, MapPin, ChevronDown, Key, UserMinus, History } from "lucide-react";
+import { User, LogOut, Search, X, MapPin, ChevronDown, Key, UserMinus, History, ArrowLeft } from "lucide-react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -33,7 +33,7 @@ import {
 } from "@/data/taiwan-food";
 import { getRestaurantDistrict, isValidDistrict, DISTRICT_INFO } from "@/lib/district-utils";
 
-type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet";
+type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking";
 type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add";
 
 interface UserInfo {
@@ -483,7 +483,7 @@ export default function Home() {
         setCurrentView("list");
       }
       setSelectedRestaurant(null);
-    } else if (currentView === "list" || currentView === "nearby" || currentView === "history") {
+    } else if (currentView === "list" || currentView === "nearby" || currentView === "history" || currentView === "district-ranking") {
       setCurrentView("home");
       setActiveTab("home");
     }
@@ -608,6 +608,84 @@ export default function Home() {
           options={tourAreas}
           onSelect={handleTourSelect}
         />
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onLoginSuccess={(userData) => setUser(userData)}
+        />
+        <AddRestaurantModal
+          isOpen={addRestaurantModalOpen}
+          onClose={() => setAddRestaurantModalOpen(false)}
+          user={user}
+          onSuccess={() => {}}
+        />
+      </>
+    );
+  }
+
+  if (currentView === "district-ranking") {
+    return (
+      <>
+        <div className="min-h-screen pb-20">
+          {/* 헤더 */}
+          <div className="sticky top-0 z-10 bg-background border-b border-border shadow-sm safe-area-top">
+            <div className="flex items-center gap-2 p-3">
+              <Button
+                variant="ghost"
+                onClick={handleBack}
+                className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="font-semibold">📍 전체 지역별 맛집 랭킹</h1>
+            </div>
+          </div>
+
+          {/* 안내 문구 */}
+          <div className="px-4 py-3 bg-muted/50 border-b border-border">
+            <p className="text-sm text-muted-foreground">
+              타이베이 12개 구의 평균 평점 순위입니다. 지역을 클릭하면 해당 지역의 맛집을 볼 수 있어요.
+            </p>
+          </div>
+
+          {/* 지역 랭킹 목록 */}
+          <div className="p-4 space-y-2">
+            {districtRanking.map((item, index) => {
+              const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}`;
+              const districtInfo = DISTRICT_INFO[item.district];
+              return (
+                <button
+                  key={item.district}
+                  onClick={() => handleDistrictSelect(item.district, item.restaurants)}
+                  className="w-full flex items-center gap-3 p-4 rounded-xl bg-card hover:bg-muted transition-colors text-left shadow-sm"
+                >
+                  <span className={`text-2xl w-10 text-center ${index < 3 ? '' : 'text-muted-foreground text-base font-medium'}`}>
+                    {medal}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-foreground">
+                      {districtInfo?.name || item.district}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {districtInfo?.description?.slice(0, 40)}...
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {item.count}개 맛집
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-1 text-amber-500">
+                      <span className="text-lg">⭐</span>
+                      <span className="font-bold text-lg text-foreground">{item.avgRating.toFixed(2)}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">평균 평점</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
         <AuthModal
           isOpen={authModalOpen}
           onClose={() => setAuthModalOpen(false)}
@@ -905,14 +983,7 @@ export default function Home() {
                 <h2 className="text-base font-semibold text-foreground">📍 지역별 맛집 랭킹</h2>
                 <button
                   onClick={() => {
-                    setListTitle("전체 지역별 맛집 랭킹");
-                    // 전체 지역 랭킹을 보여주는 목록 (지역별 최고 맛집 1개씩)
-                    const topRestaurants = districtRanking.map(item => ({
-                      ...item.restaurants[0],
-                      특징: `${DISTRICT_INFO[item.district]?.name || item.district} 평균 ⭐${item.avgRating.toFixed(2)} (${item.count}개 맛집)`,
-                    }));
-                    setListItems(topRestaurants);
-                    setCurrentView("list");
+                    setCurrentView("district-ranking");
                     setActiveTab("home");
                     window.scrollTo(0, 0);
                   }}
