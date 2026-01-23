@@ -269,11 +269,11 @@ export default function Home() {
     const districtInfo = DISTRICT_INFO[district];
     setListTitle(`${districtInfo?.name || district} 맛집`);
     setListItems(restaurants);
-    setPreviousView("district-ranking"); // 이전 화면 저장
+    setPreviousView(currentView); // 실제 현재 화면 저장 (home 또는 district-ranking)
     setCurrentView("list");
     setActiveTab("home");
     window.scrollTo(0, 0);
-  }, []);
+  }, [currentView]);
 
   // 검색 처리
   const handleSearch = useCallback((query: string) => {
