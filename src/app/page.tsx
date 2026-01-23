@@ -271,6 +271,7 @@ export default function Home() {
     setListItems(restaurants);
     setCurrentView("list");
     setActiveTab("home");
+    window.scrollTo(0, 0);
   }, []);
 
   // 검색 처리
@@ -913,6 +914,7 @@ export default function Home() {
                     setListItems(topRestaurants);
                     setCurrentView("list");
                     setActiveTab("home");
+                    window.scrollTo(0, 0);
                   }}
                   className="text-xs text-primary hover:underline"
                 >
