@@ -269,6 +269,7 @@ export default function Home() {
     const districtInfo = DISTRICT_INFO[district];
     setListTitle(`${districtInfo?.name || district} 맛집`);
     setListItems(restaurants);
+    setPreviousView("district-ranking"); // 이전 화면 저장
     setCurrentView("list");
     setActiveTab("home");
     window.scrollTo(0, 0);
@@ -483,7 +484,15 @@ export default function Home() {
         setCurrentView("list");
       }
       setSelectedRestaurant(null);
-    } else if (currentView === "list" || currentView === "nearby" || currentView === "history" || currentView === "district-ranking") {
+    } else if (currentView === "list") {
+      // 이전 화면이 district-ranking이면 거기로, 아니면 홈으로
+      if (previousView === "district-ranking") {
+        setCurrentView("district-ranking");
+      } else {
+        setCurrentView("home");
+      }
+      setActiveTab("home");
+    } else if (currentView === "nearby" || currentView === "history" || currentView === "district-ranking") {
       setCurrentView("home");
       setActiveTab("home");
     }
