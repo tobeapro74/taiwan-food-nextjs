@@ -136,9 +136,12 @@ const DISTRICT_INFO: Record<string, { name: string; description: string }> = {
 
 /**
  * 지역명을 구(區) 단위로 정규화
- * 타이베이 행정구역 기준으로 매핑
+ * 타이베이 행정구역 기준으로 매핑 (한글 + 영어)
  */
 function normalizeRegion(region: string): string {
+  // 소문자로 변환하여 대소문자 구분 없이 매칭
+  const lowerRegion = region.toLowerCase();
+
   const districtMap: Record<string, string> = {
     // 완화구 (萬華區) - 시먼딩 일대
     "시먼딩": "완화구",
@@ -146,6 +149,8 @@ function normalizeRegion(region: string): string {
     "완화": "완화구",
     "완화구": "완화구",
     "룽산": "완화구",
+    "wanhua": "완화구",
+    "ximending": "완화구",
 
     // 다안구 (大安區) - 융캉제, 동문시장 일대
     "융캉제": "다안구",
@@ -153,65 +158,88 @@ function normalizeRegion(region: string): string {
     "다안": "다안구",
     "다안구": "다안구",
     "동문": "다안구",
+    "da'an": "다안구",
+    "daan": "다안구",
 
     // 중산구 (中山區)
     "중산": "중산구",
     "중산구": "중산구",
     "린동팡": "중산구",
     "민성": "중산구",
+    "zhongshan": "중산구",
 
     // 중정구 (中正區) - 타이베이역, 중정기념당
     "중정구": "중정구",
     "중정": "중정구",
     "타이베이역": "중정구",
+    "zhongzheng": "중정구",
 
     // 신이구 (信義區) - 타이베이101
     "신이": "신이구",
     "신이구": "신이구",
     "101": "신이구",
+    "xinyi": "신이구",
 
     // 다퉁구 (大同區) - 닝샤 야시장, 디화제
     "닝샤": "다퉁구",
     "다퉁": "다퉁구",
     "다퉁구": "다퉁구",
     "디화제": "다퉁구",
+    "datong": "다퉁구",
 
     // 스린구 (士林區) - 스린 야시장
     "스린": "스린구",
     "스린구": "스린구",
     "스린야시장": "스린구",
+    "shilin": "스린구",
 
     // 베이터우구 (北投區) - 온천
     "베이터우": "베이터우구",
     "베이터우구": "베이터우구",
+    "beitou": "베이터우구",
 
     // 송산구 (松山區) - 라오허제 야시장
     "송산": "송산구",
     "송산구": "송산구",
     "라오허제": "송산구",
+    "songshan": "송산구",
 
     // 네이후구 (內湖區)
     "네이후": "네이후구",
     "네이후구": "네이후구",
+    "neihu": "네이후구",
 
     // 난강구 (南港區)
     "난강": "난강구",
     "난강구": "난강구",
+    "nangang": "난강구",
 
     // 원산구 (文山區)
     "원산": "원산구",
     "원산구": "원산구",
     "마오콩": "원산구",
+    "wenshan": "원산구",
 
     // 신베이시 (新北市)
     "단수이": "단수이",
+    "tamsui": "단수이",
+    "danshui": "단수이",
     "싼충구": "싼충구",
+    "싼충": "싼충구",
+    "sanchong": "싼충구",
+    "sanchon": "싼충구",
 
     // 타이중 (台中)
     "펑자": "타이중",
+    "taichung": "타이중",
   };
 
-  return districtMap[region] || region;
+  // Plus Code 패턴 감지 (예: 3F4M+5G6) → 기타로 처리
+  if (/^[A-Z0-9]{4,}\+[A-Z0-9]+$/i.test(region)) {
+    return "기타";
+  }
+
+  return districtMap[lowerRegion] || districtMap[region] || region;
 }
 
 export function RestaurantList({ title, restaurants, onBack, onSelect }: RestaurantListProps) {
