@@ -30,8 +30,8 @@ function extractRegion(location: string): string {
     return region;
   }
 
-  // 도시명 목록 (제거 대상)
-  const cities = ["타이베이", "신베이시", "타이중", "가오슝", "타이난"];
+  // 도시명 목록 (제거 대상) - 타이베이시, 신베이시 위주
+  const cities = ["타이베이", "신베이시"];
 
   // 도시명 제거
   for (const city of cities) {
@@ -138,11 +138,6 @@ const DISTRICT_INFO: Record<string, { name: string; description: string }> = {
     name: "싼충구 (Sanchong)",
     description: "신베이시에 위치하며 타이베이와 인접해 있어 접근성이 좋고 현지인 맛집이 많습니다."
   },
-  // 타이중
-  "타이중": {
-    name: "타이중 (Taichung)",
-    description: "대만 중부의 대도시로, 펑자 야시장과 무지개 마을 등 다양한 볼거리가 있습니다."
-  },
 };
 
 /**
@@ -241,10 +236,6 @@ function normalizeRegion(region: string): string {
     "싼충": "싼충구",
     "sanchong": "싼충구",
     "sanchon": "싼충구",
-
-    // 타이중 (台中)
-    "펑자": "타이중",
-    "taichung": "타이중",
   };
 
   // Plus Code 패턴 매핑 (Google Plus Code → 해당 지역)
