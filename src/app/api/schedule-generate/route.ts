@@ -4,17 +4,58 @@ import {
   ScheduleGenerateRequest,
   DaySchedule,
   PreferenceType,
+  AgeGenderCount,
+  FlightTimeType,
+  AccommodationInfo,
   TIME_SLOT_KO,
+  AGE_GROUP_PREFERENCES,
+  TAIPEI_DISTRICT_OPTIONS,
 } from "@/lib/schedule-types";
+
+// 입출국 시간대 텍스트 변환
+const FLIGHT_TIME_TEXT: Record<FlightTimeType, string> = {
+  early_morning: "이른 아침 (06:00~09:00)",
+  morning: "오전 (09:00~12:00)",
+  afternoon: "오후 (12:00~17:00)",
+  evening: "저녁 (17:00~21:00)",
+  night: "밤/심야 (21:00~06:00)",
+};
+
+// 입국 시간대에 따른 첫날 시작 시간대
+const ARRIVAL_START_SLOT: Record<FlightTimeType, string> = {
+  early_morning: "오전부터 일정 가능 (공항에서 시내까지 이동 시간 고려)",
+  morning: "점심부터 일정 가능",
+  afternoon: "저녁부터 일정 가능",
+  evening: "밤 일정만 가능 (야시장 추천)",
+  night: "첫날은 숙소에서 휴식, 다음날부터 일정 시작",
+};
+
+// 출국 시간대에 따른 마지막날 일정
+const DEPARTURE_END_SLOT: Record<FlightTimeType, string> = {
+  early_morning: "마지막날은 전날 밤까지 일정, 당일은 공항 이동만",
+  morning: "마지막날 오전 공항 이동 필요, 전날 밤까지 일정 가능",
+  afternoon: "마지막날 오전까지 가벼운 일정 가능",
+  evening: "마지막날 오후까지 일정 가능",
+  night: "마지막날 저녁까지 일정 가능",
+};
 
 export async function POST(request: NextRequest) {
   try {
     const body: ScheduleGenerateRequest = await request.json();
-    const { days, travelers, gender, ageGroup, preferences, purpose } = body;
+    const {
+      days,
+      travelers,
+      preferences,
+      purpose,
+      ageGenderBreakdown,
+      arrivalTime = "morning",
+      departureTime = "afternoon",
+      accommodation
+    } = body;
 
     // 유효성 검사
-    if (!days || days < 1 || days > 7) {
-      return NextResponse.json({ success: false, error: "여행 일수는 1~7일이어야 합니다." });
+    if (!days || days < 1 || days > 14) {
+      return NextResponse.json({ success: false, error: "여행 일수는 1~14일이어야 합니다." });
     }
 
     if (!preferences || preferences.length === 0) {
@@ -25,19 +66,53 @@ export async function POST(request: NextRequest) {
     const allRestaurants = getAllRestaurants();
     const places = getPlaces();
 
-    // 평점 높은 음식점 추출 (상위 30개)
+    // 평점 높은 음식점 추출 (상위 40개)
     const topRestaurants = allRestaurants
       .filter((r) => r.평점 && r.평점 >= 4.0)
       .sort((a, b) => (b.평점 || 0) - (a.평점 || 0))
-      .slice(0, 30);
+      .slice(0, 40);
 
-    // GPT 프롬프트 구성
-    const systemPrompt = `당신은 타이베이 MZ세대 여행 전문가입니다.
-한국인 MZ세대의 취향을 잘 알고 있으며, 로컬 맛집과 핫플레이스를 추천합니다.
-응답은 반드시 JSON 형식으로만 해주세요. 다른 텍스트는 포함하지 마세요.`;
+    // 연령대별 인원 텍스트 생성
+    const ageBreakdownText = ageGenderBreakdown && ageGenderBreakdown.length > 0
+      ? ageGenderBreakdown.map((group: AgeGenderCount) => {
+          const ageLabel = {
+            "10s": "10대",
+            "20s": "20대",
+            "30s": "30대",
+            "40s": "40대",
+            "50s": "50대",
+            "60s_plus": "60대 이상"
+          }[group.ageGroup];
+          const parts = [];
+          if (group.male > 0) parts.push(`남 ${group.male}명`);
+          if (group.female > 0) parts.push(`여 ${group.female}명`);
+          return `${ageLabel}: ${parts.join(", ")}`;
+        }).join("\n  ")
+      : `${travelers}명`;
 
-    const genderText = gender === "mixed" ? "혼성" : gender === "male" ? "남성" : "여성";
-    const ageText = ageGroup === "20s" ? "20대" : ageGroup === "30s" ? "30대" : "40대 이상";
+    // 연령대별 취향 분석
+    const agePreferencesText = ageGenderBreakdown && ageGenderBreakdown.length > 0
+      ? ageGenderBreakdown.map((group: AgeGenderCount) => {
+          const prefs = AGE_GROUP_PREFERENCES[group.ageGroup];
+          const total = group.male + group.female;
+          if (total === 0) return "";
+          const ageLabel = {
+            "10s": "10대",
+            "20s": "20대",
+            "30s": "30대",
+            "40s": "40대",
+            "50s": "50대",
+            "60s_plus": "60대 이상"
+          }[group.ageGroup];
+          return `### ${ageLabel} (${total}명)
+- 음식: ${prefs.food}
+- 쇼핑: ${prefs.shopping}
+- 활동: ${prefs.activity}
+- 이동: ${prefs.mobility}`;
+        }).filter(Boolean).join("\n\n")
+      : "";
+
+    // 취향 텍스트
     const prefText = preferences
       .map((p: PreferenceType) => {
         const map: Record<PreferenceType, string> = {
@@ -52,6 +127,7 @@ export async function POST(request: NextRequest) {
       })
       .join(", ");
 
+    // 여행 목적 텍스트
     const purposeText = {
       healing: "힐링",
       sns: "SNS 감성",
@@ -60,23 +136,56 @@ export async function POST(request: NextRequest) {
       culture: "문화 체험",
     }[purpose];
 
+    // 맛집/관광지 목록
     const restaurantList = topRestaurants
       .map((r) => `- ${r.이름} (${r.위치}) ⭐${r.평점} - ${r.특징}`)
       .join("\n");
 
     const placesList = places
-      .slice(0, 15)
+      .slice(0, 20)
       .map((p) => `- ${p.이름} (${p.위치}) - ${p.특징}`)
       .join("\n");
+
+    // GPT 프롬프트 구성
+    const systemPrompt = `당신은 타이베이 여행 전문가입니다.
+다양한 연령대가 함께하는 여행 그룹의 일정을 만들 때, 모든 연령층이 만족할 수 있도록 균형 잡힌 일정을 구성합니다.
+특히 고령 여행자가 있을 경우 이동 거리와 휴식 시간을 충분히 고려합니다.
+응답은 반드시 JSON 형식으로만 해주세요. 다른 텍스트는 포함하지 마세요.`;
 
     const userPrompt = `타이베이 ${days}일 여행 일정을 만들어주세요.
 
 ## 여행자 정보
-- 인원: ${travelers}명
-- 성별: ${genderText}
-- 연령대: ${ageText}
-- 취향: ${prefText}
+- 총 인원: ${travelers}명
+- 구성:
+  ${ageBreakdownText}
+- 선호 취향: ${prefText}
 - 여행 목적: ${purposeText}
+
+## 항공편 정보
+- 입국 (Day 1): ${FLIGHT_TIME_TEXT[arrivalTime]}
+  → ${ARRIVAL_START_SLOT[arrivalTime]}
+- 출국 (Day ${days}): ${FLIGHT_TIME_TEXT[departureTime]}
+  → ${DEPARTURE_END_SLOT[departureTime]}
+
+## 숙소 정보
+${accommodation ? `- 숙소: ${accommodation.name || "미정"}
+- 위치: ${accommodation.district || "미정"}
+- 인근 명소: ${accommodation.districtId ? TAIPEI_DISTRICT_OPTIONS.find(d => d.id === accommodation.districtId)?.nearbyAttractions.join(", ") || "정보 없음" : "정보 없음"}
+→ **동선 최적화**: 숙소 인근 지역을 아침/저녁 일정에 배치하고, 먼 지역은 한낮에 방문` : "- 숙소 위치 미정 (일반적인 동선으로 구성)"}
+
+## 연령대별 취향 분석
+${agePreferencesText || "다양한 연령대 고려 필요"}
+
+## 중요: 다양한 연령대 배려 원칙
+1. **젊은 층 (10~30대)**: 야시장, 카페, SNS 핫플, 쇼핑 스팟 포함
+2. **중장년층 (40~50대)**: 유명 맛집, 편안한 이동(택시/버스), 품질 좋은 쇼핑
+3. **시니어 (60대+)**: 장시간 도보 피하기, 편안한 식당, 충분한 휴식 시간
+4. **공통**: 모두가 즐길 수 있는 관광 명소, 맛집 포함
+
+## 이동 관련 주의사항
+- 40대 이상이 있으면: 한 장소에서 30분 이상 걷는 일정 피하기
+- 50대 이상이 있으면: 가능하면 택시/관광버스 이용 권장
+- 60대 이상이 있으면: 오전/오후 각 1-2개 장소만, 중간에 카페 휴식 필수
 
 ## 추천 가능한 맛집 목록 (평점 순)
 ${restaurantList}
@@ -89,18 +198,8 @@ ${placesList}
   "schedule": [
     {
       "day": 1,
-      "theme": "로컬 감성 + 먹거리 + 쇼핑",
+      "theme": "시먼딩 탐방 + 야시장",
       "activities": [
-        {
-          "id": "d1_morning",
-          "timeSlot": "morning",
-          "timeSlotKo": "오전",
-          "type": "attraction",
-          "name": "용산사",
-          "location": "타이베이시 만화구",
-          "reason": "현지인들의 기도 문화 체험, 화려한 중국식 사원",
-          "tip": "향과 소원 종이는 무료 제공"
-        },
         {
           "id": "d1_lunch",
           "timeSlot": "lunch",
@@ -109,8 +208,9 @@ ${placesList}
           "name": "딩타이펑",
           "location": "타이베이 신이",
           "rating": 4.7,
-          "reason": "세계적으로 유명한 샤오롱바오",
-          "tip": "11시 전 방문 시 대기 없음"
+          "reason": "모든 연령대가 좋아하는 샤오롱바오",
+          "tip": "11시 전 방문 시 대기 없음",
+          "forAgeGroups": ["모든 연령"]
         },
         {
           "id": "d1_afternoon",
@@ -119,49 +219,29 @@ ${placesList}
           "type": "cafe",
           "name": "카페이름",
           "location": "위치",
-          "reason": "추천 이유",
-          "shoppingItems": ["예쁜 양산", "로컬 소품"]
-        },
-        {
-          "id": "d1_dinner",
-          "timeSlot": "dinner",
-          "timeSlotKo": "저녁",
-          "type": "restaurant",
-          "name": "야시장이름",
-          "location": "위치",
-          "rating": 4.4,
-          "reason": "추천 이유"
-        },
-        {
-          "id": "d1_night",
-          "timeSlot": "night",
-          "timeSlotKo": "밤",
-          "type": "shopping",
-          "name": "시먼딩",
-          "location": "타이베이 시먼딩",
-          "reason": "스트리트 패션, K-POP 굿즈",
-          "shoppingItems": ["스트리트 패션", "한정판 스니커즈"]
+          "reason": "중장년층 휴식 + 젊은층 포토존",
+          "tip": "에어컨 완비, 편안한 좌석"
         }
       ]
     }
   ],
   "tips": [
-    "야시장은 18:00 이후 방문하세요",
-    "현금을 충분히 준비하세요",
-    "MRT 이지카드 필수"
+    "40대 이상 동반 시 택시 이용을 권장합니다",
+    "야시장은 젊은 분들만 따로 다녀오셔도 좋아요",
+    "MRT 이지카드는 필수입니다"
   ],
   "budget": "1인당 약 NT$3,000~5,000/일 (숙박 제외)"
 }
 
 ## 중요 규칙
-1. 음식점은 반드시 위 맛집 목록에서 선택하세요 (이름을 정확히 사용)
-2. 관광지는 위 관광지 목록 또는 유명 명소(용산사, 중정기념당, 타이베이101 등)에서 선택
-3. 동선을 고려해 가까운 장소끼리 배치하세요
-4. MZ세대 감성에 맞는 카페, 포토존, 쇼핑 스팟을 포함하세요
-5. 야시장은 저녁/밤 시간에 배치하세요
-6. 각 일차별로 테마를 다르게 구성하세요
-7. shoppingItems는 해당 장소에서 살 수 있는 아이템을 배열로 제공하세요
-8. JSON만 출력하세요. 다른 설명 없이 JSON 객체만 반환하세요.`;
+1. 음식점은 반드시 위 맛집 목록에서 선택 (이름 정확히)
+2. 관광지는 위 목록 또는 유명 명소에서 선택
+3. **입국 시간대에 따라 Day 1 일정 조정** (늦은 입국이면 일정 축소)
+4. **출국 시간대에 따라 마지막 날 일정 조정** (이른 출국이면 일정 축소)
+5. 동선을 고려해 가까운 장소끼리 배치
+6. 각 일차별로 테마를 다르게 구성
+7. 60대 이상이 있으면 매 일정에 휴식 포인트 포함
+8. JSON만 출력. 다른 설명 없이 JSON 객체만 반환`;
 
     // OpenAI API 호출
     const openaiApiKey = process.env.OPENAI_API_KEY;
@@ -182,7 +262,7 @@ ${placesList}
           { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 4000,
+        max_tokens: 8000,
       }),
     });
 
@@ -202,13 +282,11 @@ ${placesList}
     // JSON 파싱
     let parsedSchedule;
     try {
-      // JSON 블록 추출 (```json ... ``` 형태 처리)
       let jsonStr = content;
       const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
       if (jsonMatch) {
         jsonStr = jsonMatch[1];
       } else {
-        // ```가 없는 경우 전체를 JSON으로 시도
         jsonStr = content.trim();
       }
       parsedSchedule = JSON.parse(jsonStr);
@@ -220,13 +298,11 @@ ${placesList}
     // 응답 데이터 검증 및 보강
     const schedule: DaySchedule[] = parsedSchedule.schedule || [];
 
-    // 각 활동에 timeSlotKo가 없으면 추가
     for (const day of schedule) {
       for (const activity of day.activities) {
         if (!activity.timeSlotKo && activity.timeSlot) {
           activity.timeSlotKo = TIME_SLOT_KO[activity.timeSlot as keyof typeof TIME_SLOT_KO] || activity.timeSlot;
         }
-        // 음식점 데이터 보강 (평점 등)
         if (activity.type === "restaurant" && !activity.rating) {
           const matchingRestaurant = allRestaurants.find(
             (r) => r.이름 === activity.name || r.이름.includes(activity.name)

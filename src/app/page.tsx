@@ -590,8 +590,15 @@ export default function Home() {
             setCurrentView("home");
             setActiveTab("home");
           }}
+          user={user}
+          onLoginClick={() => setAuthModalOpen(true)}
         />
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onLoginSuccess={(userData) => setUser(userData)}
+        />
       </>
     );
   }

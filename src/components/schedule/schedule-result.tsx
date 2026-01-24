@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, Share2, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
+import { Share2, RotateCcw, ChevronDown, ChevronUp, Save, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   TravelSchedule,
@@ -10,13 +10,22 @@ import {
   TIME_SLOT_ICON,
 } from "@/lib/schedule-types";
 
+interface User {
+  id: number;
+  name: string;
+  is_admin: boolean;
+}
+
 interface ScheduleResultProps {
   schedule: TravelSchedule;
   onBack: () => void;
+  user?: User | null;
 }
 
-export function ScheduleResult({ schedule, onBack }: ScheduleResultProps) {
+export function ScheduleResult({ schedule, onBack, user }: ScheduleResultProps) {
   const [expandedDays, setExpandedDays] = useState<number[]>([1]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   const toggleDay = (day: number) => {
     setExpandedDays((prev) =>
@@ -35,17 +44,42 @@ export function ScheduleResult({ schedule, onBack }: ScheduleResultProps) {
           text,
         });
       } catch (err) {
-        // 사용자가 취소한 경우
         console.log("Share cancelled");
       }
     } else {
-      // 클립보드 복사 fallback
       try {
         await navigator.clipboard.writeText(text);
         alert("일정이 클립보드에 복사되었습니다!");
       } catch (err) {
         console.error("Copy failed:", err);
       }
+    }
+  };
+
+  // 저장 기능
+  const handleSave = async () => {
+    if (!user || isSaved) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch("/api/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ schedule }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setIsSaved(true);
+        alert("일정이 저장되었습니다!");
+      } else {
+        alert(data.error || "저장에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      alert("저장 중 오류가 발생했습니다.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -71,6 +105,7 @@ export function ScheduleResult({ schedule, onBack }: ScheduleResultProps) {
               </p>
             </div>
           </div>
+          {/* 공유 버튼 */}
           <Button
             variant="ghost"
             onClick={handleShare}
@@ -119,6 +154,36 @@ export function ScheduleResult({ schedule, onBack }: ScheduleResultProps) {
           </section>
         )}
 
+        {/* 저장 버튼 (로그인 시에만) */}
+        {user && (
+          <button
+            onClick={handleSave}
+            disabled={isSaving || isSaved}
+            className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 ${
+              isSaved
+                ? "bg-green-500 text-white"
+                : "bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 active:scale-[0.98]"
+            } disabled:opacity-70`}
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                저장 중...
+              </>
+            ) : isSaved ? (
+              <>
+                <Check className="w-5 h-5" />
+                저장 완료
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                일정 저장하기
+              </>
+            )}
+          </button>
+        )}
+
         {/* 다시 만들기 버튼 */}
         <button
           onClick={onBack}
@@ -144,7 +209,6 @@ function DayCard({
 }) {
   return (
     <section className="bg-white dark:bg-card rounded-2xl shadow-md overflow-hidden">
-      {/* 헤더 (클릭하면 펼침/접힘) */}
       <button
         onClick={onToggle}
         className="w-full p-4 flex items-center justify-between bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-950/50 dark:to-purple-950/50"
@@ -165,7 +229,6 @@ function DayCard({
         )}
       </button>
 
-      {/* 활동 목록 */}
       {isExpanded && (
         <div className="p-4 space-y-3">
           {daySchedule.activities.map((activity, idx) => (
@@ -181,7 +244,6 @@ function DayCard({
 function ActivityItem({ activity }: { activity: ScheduleActivity }) {
   const icon = TIME_SLOT_ICON[activity.timeSlot] || "📍";
 
-  // 타입별 배경색
   const bgColor = {
     restaurant: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/30",
     cafe: "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/30",

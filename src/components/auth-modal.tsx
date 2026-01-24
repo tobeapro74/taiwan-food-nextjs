@@ -39,7 +39,17 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
     }
   }, [countdown]);
 
-  if (!isOpen) return null;
+  // 배경 스크롤 방지
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   // 인증 코드 발송
   const handleSendVerification = async () => {
@@ -211,17 +221,8 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
     onClose();
   };
 
-  // 배경 스크롤 방지
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+  // 모달이 닫혀있으면 렌더링하지 않음
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-[calc(env(safe-area-inset-bottom)+80px)]">
