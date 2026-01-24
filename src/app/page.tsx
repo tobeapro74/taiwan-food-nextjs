@@ -35,6 +35,7 @@ import { getRestaurantDistrict, isValidDistrict, DISTRICT_INFO } from "@/lib/dis
 
 type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking" | "guide";
 type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add";
+type GuideTabType = "overview" | "weather" | "transport" | "accommodation";
 
 interface UserInfo {
   id: number;
@@ -80,6 +81,9 @@ export default function Home() {
 
   // 맛집 등록 모달 상태
   const [addRestaurantModalOpen, setAddRestaurantModalOpen] = useState(false);
+
+  // 가이드 탭 상태
+  const [guideTab, setGuideTab] = useState<GuideTabType>("overview");
 
   // 실시간 평점 상태
   const [liveRatings, setLiveRatings] = useState<Record<string, { rating: number | null; userRatingsTotal: number | null }>>({});
@@ -700,6 +704,901 @@ export default function Home() {
   }
 
   if (currentView === "guide") {
+    // 개요 탭 콘텐츠
+    const OverviewContent = () => (
+      <div className="space-y-6">
+        {/* 섹션 1: 타이베이에 대하여 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">🏙️</span>
+            <h2 className="text-lg font-bold text-foreground">타이베이에 대하여</h2>
+          </div>
+          <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+            <p>
+              타이베이는 크게 <span className="font-semibold text-foreground">타이베이시(Taipei City)</span>와{" "}
+              <span className="font-semibold text-foreground">신베이시(New Taipei City)</span>로 나뉩니다.
+            </p>
+            <div className="grid gap-3">
+              <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30 rounded-xl p-4 border border-red-100 dark:border-red-900/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">🏛️</span>
+                  <span className="font-semibold text-foreground">타이베이시</span>
+                  <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full">12개 구</span>
+                </div>
+                <p className="text-xs">대만의 정치·경제·문화 중심지로, 관광 명소와 맛집이 집중되어 있습니다.</p>
+              </div>
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 border border-green-100 dark:border-green-900/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">🌿</span>
+                  <span className="font-semibold text-foreground">신베이시</span>
+                  <span className="bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full">29개 구</span>
+                </div>
+                <p className="text-xs">타이베이를 완전히 둘러싸고 있는 광역 특별시로, 생각보다 규모가 커요. 다양한 성격의 지역들이 모여 있어 자연·전통·근교 여행지가 풍부하고, 당일치기 코스로 인기가 높습니다.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 섹션 2: 타이베이시 12개 구 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">📍</span>
+            <h2 className="text-lg font-bold text-foreground">타이베이시 12개 구</h2>
+          </div>
+          <div className="grid gap-2">
+            {[
+              { name: "중정구", emoji: "🏛️", desc: "중정기념당과 타이베이 메인스테이션이 위치. 교통과 관광의 중심지." },
+              { name: "다안구", emoji: "☕", desc: "융캉제가 있어 카페와 맛집이 밀집된 감성 거리. 젊은 여행자들에게 인기." },
+              { name: "신이구", emoji: "🏙️", desc: "타이베이 101타워와 대형 쇼핑몰. 야경과 쇼핑 명소." },
+              { name: "완화구", emoji: "🛍️", desc: "시먼딩이 위치한 패션·문화 거리. 용산사 같은 전통 명소도 함께." },
+              { name: "중산구", emoji: "🍸", desc: "중산 카페거리와 세련된 바·호텔. 감성 여행과 나이트라이프에 적합." },
+              { name: "스린구", emoji: "🌙", desc: "스린 야시장과 국립고궁박물원. 먹거리와 문화 체험 동시에." },
+              { name: "베이터우구", emoji: "♨️", desc: "온천으로 유명. 온천 호텔·도서관·박물관이 있어 힐링 여행에 적합." },
+              { name: "송산구", emoji: "✈️", desc: "송산공항과 라오허제 야시장. 교통 편리하고 야시장 탐방에 좋음." },
+              { name: "다퉁구", emoji: "🏮", desc: "디화제가 있어 전통시장과 한약방. 대만의 정취를 느낄 수 있음." },
+              { name: "네이후구", emoji: "🏢", desc: "IT 기업과 주거지역. 대형 쇼핑몰과 호수 공원으로 현지 생활 체험." },
+              { name: "난강구", emoji: "🎪", desc: "난강 전시센터와 IT 산업 단지. 박람회·콘서트가 자주 열리는 곳." },
+              { name: "원산구", emoji: "🐼", desc: "타이베이 동물원과 마오콩 곤돌라. 가족 단위 관광객에게 인기." },
+            ].map((district) => (
+              <div
+                key={district.name}
+                className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+              >
+                <span className="text-xl">{district.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-foreground text-sm">{district.name}</div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{district.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 섹션 3: 타이베이시 주요 여행 명소 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">✨</span>
+            <h2 className="text-lg font-bold text-foreground">타이베이시 주요 명소</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { name: "타이베이 101", emoji: "🗼", desc: "대만의 랜드마크" },
+              { name: "중정기념당", emoji: "🏛️", desc: "대만 현대사의 상징" },
+              { name: "시먼딩", emoji: "🛍️", desc: "젊음의 패션 거리" },
+              { name: "융캉제", emoji: "🥟", desc: "딘타이펑 본점 위치" },
+              { name: "스린 야시장", emoji: "🌙", desc: "대만 최대 야시장" },
+              { name: "국립고궁박물원", emoji: "🏺", desc: "세계적 박물관" },
+              { name: "베이터우 온천", emoji: "♨️", desc: "힐링 온천 명소" },
+            ].map((spot) => (
+              <div
+                key={spot.name}
+                className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-xl p-3 border border-amber-100 dark:border-amber-900/30"
+              >
+                <div className="text-2xl mb-1">{spot.emoji}</div>
+                <div className="font-semibold text-foreground text-sm">{spot.name}</div>
+                <p className="text-xs text-muted-foreground">{spot.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 섹션 4: 신베이시 주요 여행 명소 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">🌿</span>
+            <h2 className="text-lg font-bold text-foreground">신베이시 주요 명소</h2>
+          </div>
+          <div className="grid gap-3">
+            {[
+              { name: "예류지질공원", emoji: "🪨", desc: "기암괴석과 '여왕 머리 바위'로 유명한 해안 지질 공원" },
+              { name: "지우펀 옛거리", emoji: "🏮", desc: "언덕 위 찻집과 야경이 매력적인 산간 마을" },
+              { name: "스펀 폭포", emoji: "🎈", desc: "철로 위 스카이랜턴 체험, '대만의 나이아가라' 폭포" },
+              { name: "진과스 황금박물관", emoji: "⛏️", desc: "옛 금광 마을을 테마로 한 역사문화 여행지" },
+              { name: "우라이", emoji: "🌊", desc: "원주민 문화와 온천, 폭포가 함께 있는 힐링 여행지" },
+              { name: "산샤 옛거리", emoji: "🧱", desc: "붉은 벽돌 아케이드와 전통 간식이 있는 거리" },
+              { name: "비탄 풍경구", emoji: "🚣", desc: "강변 자전거·보트 체험, 야간 조명으로 유명한 데이트 코스" },
+              { name: "산충구", emoji: "🏠", desc: "타이베이와 가까운 주거·상업 지역. 숙소 거점으로 적합" },
+            ].map((spot) => (
+              <div
+                key={spot.name}
+                className="flex items-start gap-3 p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-100 dark:border-green-900/30"
+              >
+                <span className="text-2xl">{spot.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-foreground text-sm">{spot.name}</div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{spot.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    );
+
+    // 날씨 탭 콘텐츠
+    const WeatherContent = () => (
+      <div className="space-y-6">
+        {/* MZ 핵심 요약 카드 */}
+        <section className="bg-gradient-to-r from-sky-500 to-cyan-500 rounded-2xl p-5 shadow-lg text-white">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-2xl">⚡</span>
+            <h2 className="text-lg font-bold">MZ를 위한 핵심 요약</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
+              <div className="text-xs opacity-80 mb-1">연평균 기온</div>
+              <div className="font-bold">서울보다 따뜻</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
+              <div className="text-xs opacity-80 mb-1">겨울 체감</div>
+              <div className="font-bold">서울 봄 날씨</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
+              <div className="text-xs opacity-80 mb-1">필수 준비물</div>
+              <div className="font-bold">휴대용 우산</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
+              <div className="text-xs opacity-80 mb-1">여름 특징</div>
+              <div className="font-bold">스콜 + 태풍</div>
+            </div>
+          </div>
+          <p className="text-xs mt-3 opacity-90">1년 내내 패딩 필요 없어요! 대신 우산은 챙기세요</p>
+        </section>
+
+        {/* 계절별 요약 카드 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">🌤️</span>
+            <h2 className="text-lg font-bold text-foreground">계절별 날씨</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gradient-to-br from-pink-50 to-rose-100 dark:from-pink-950/30 dark:to-rose-950/30 rounded-xl p-3 border border-pink-200 dark:border-pink-900/30">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">🌸</span>
+                <span className="font-semibold text-foreground text-sm">봄 (3~5월)</span>
+              </div>
+              <p className="text-xs text-muted-foreground">서울 초여름 느낌</p>
+              <p className="text-xs text-foreground font-medium mt-1">16~29°C</p>
+            </div>
+            <div className="bg-gradient-to-br from-orange-50 to-red-100 dark:from-orange-950/30 dark:to-red-950/30 rounded-xl p-3 border border-orange-200 dark:border-orange-900/30">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">☀️</span>
+                <span className="font-semibold text-foreground text-sm">여름 (6~9월)</span>
+              </div>
+              <p className="text-xs text-muted-foreground">서울 한여름과 동일</p>
+              <p className="text-xs text-foreground font-medium mt-1">24~34°C</p>
+            </div>
+            <div className="bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-950/30 dark:to-yellow-950/30 rounded-xl p-3 border border-amber-200 dark:border-amber-900/30">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">🍂</span>
+                <span className="font-semibold text-foreground text-sm">가을 (10~11월)</span>
+              </div>
+              <p className="text-xs text-muted-foreground">서울 늦봄~초여름</p>
+              <p className="text-xs text-foreground font-medium mt-1">19~28°C</p>
+            </div>
+            <div className="bg-gradient-to-br from-sky-50 to-blue-100 dark:from-sky-950/30 dark:to-blue-950/30 rounded-xl p-3 border border-sky-200 dark:border-sky-900/30">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">❄️</span>
+                <span className="font-semibold text-foreground text-sm">겨울 (12~2월)</span>
+              </div>
+              <p className="text-xs text-muted-foreground">서울 봄 같은 날씨</p>
+              <p className="text-xs text-foreground font-medium mt-1">13~20°C</p>
+            </div>
+          </div>
+        </section>
+
+        {/* 월별 상세 비교 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">📅</span>
+            <h2 className="text-lg font-bold text-foreground">월별 상세 비교</h2>
+            <span className="text-xs text-muted-foreground">(vs 서울)</span>
+          </div>
+          <div className="space-y-2">
+            {[
+              { month: "1월", temp: "13~19°C", seoul: "4월", desc: "서울보다 훨씬 따뜻, 봄 같은 겨울", color: "bg-sky-100 dark:bg-sky-900/30" },
+              { month: "2월", temp: "14~20°C", seoul: "4~5월", desc: "초봄~늦봄 날씨, 비 자주 옴", color: "bg-sky-100 dark:bg-sky-900/30" },
+              { month: "3월", temp: "16~22°C", seoul: "5월", desc: "서울의 늦봄과 유사", color: "bg-pink-100 dark:bg-pink-900/30" },
+              { month: "4월", temp: "19~26°C", seoul: "6월", desc: "서울 초여름 느낌", color: "bg-pink-100 dark:bg-pink-900/30" },
+              { month: "5월", temp: "22~29°C", seoul: "7월", desc: "본격 여름 시작, 장마철 비슷", color: "bg-pink-100 dark:bg-pink-900/30" },
+              { month: "6월", temp: "24~32°C", seoul: "7~8월", desc: "서울 한여름과 동일, 습도↑", color: "bg-orange-100 dark:bg-orange-900/30" },
+              { month: "7월", temp: "26~34°C", seoul: "8월", desc: "서울 가장 더운 시기와 같음", color: "bg-orange-100 dark:bg-orange-900/30" },
+              { month: "8월", temp: "26~33°C", seoul: "8월", desc: "서울 늦여름과 동일, 태풍 시즌", color: "bg-orange-100 dark:bg-orange-900/30" },
+              { month: "9월", temp: "24~31°C", seoul: "7월", desc: "서울보다 늦게까지 여름 지속", color: "bg-orange-100 dark:bg-orange-900/30" },
+              { month: "10월", temp: "22~28°C", seoul: "6월", desc: "서울 초여름 같은 가을", color: "bg-amber-100 dark:bg-amber-900/30" },
+              { month: "11월", temp: "19~23°C", seoul: "5월", desc: "서울 늦봄 같은 가을", color: "bg-amber-100 dark:bg-amber-900/30" },
+              { month: "12월", temp: "15~20°C", seoul: "4월", desc: "서울 봄 같은 겨울", color: "bg-sky-100 dark:bg-sky-900/30" },
+            ].map((item) => (
+              <div key={item.month} className={`flex items-center gap-3 p-3 rounded-xl ${item.color}`}>
+                <div className="w-12 text-center">
+                  <span className="font-bold text-foreground text-sm">{item.month}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-foreground">{item.temp}</span>
+                    <span className="text-[10px] text-muted-foreground">≈ 서울 {item.seoul}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 계절별 준비물 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">🎒</span>
+            <h2 className="text-lg font-bold text-foreground">계절별 준비물</h2>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 p-4 bg-sky-50 dark:bg-sky-950/30 rounded-xl border border-sky-100 dark:border-sky-900/30">
+              <span className="text-2xl">❄️</span>
+              <div className="flex-1">
+                <div className="font-medium text-foreground text-sm mb-2">겨울 (12~2월)</div>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">얇은 코트</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">긴팔</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">우산</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">가디건</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-4 bg-pink-50 dark:bg-pink-950/30 rounded-xl border border-pink-100 dark:border-pink-900/30">
+              <span className="text-2xl">🌸</span>
+              <div className="flex-1">
+                <div className="font-medium text-foreground text-sm mb-2">봄 (3~5월)</div>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">반팔</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">가디건</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">휴대용 우산</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">선크림</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-4 bg-orange-50 dark:bg-orange-950/30 rounded-xl border border-orange-100 dark:border-orange-900/30">
+              <span className="text-2xl">☀️</span>
+              <div className="flex-1">
+                <div className="font-medium text-foreground text-sm mb-2">여름 (6~9월)</div>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">시원한 옷</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">모자</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">선글라스</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">방수 신발</span>
+                  <span className="bg-red-100 dark:bg-red-900/30 px-2.5 py-1 rounded-full text-xs shadow-sm font-medium">우산 필수!</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-100 dark:border-amber-900/30">
+              <span className="text-2xl">🍂</span>
+              <div className="flex-1">
+                <div className="font-medium text-foreground text-sm mb-2">가을 (10~11월)</div>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">레이어드</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">얇은 긴팔</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">모자</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">선크림</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 팁 */}
+        <section className="bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-950/50 dark:to-amber-950/50 rounded-2xl p-5 shadow-md border border-yellow-200 dark:border-yellow-900/30">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-2xl">💡</span>
+            <h2 className="text-lg font-bold text-foreground">알아두면 좋은 팁</h2>
+          </div>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <div className="flex items-start gap-2">
+              <span className="text-green-500">✓</span>
+              <p>타이베이는 <span className="font-medium text-foreground">1년 내내 서울보다 따뜻</span>해요. 겨울에도 패딩 필요 없어요!</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-green-500">✓</span>
+              <p>여름엔 갑자기 쏟아지는 <span className="font-medium text-foreground">스콜(소나기)</span>이 많아요. 휴대용 우산 필수!</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-green-500">✓</span>
+              <p>8~9월은 <span className="font-medium text-foreground">태풍 시즌</span>이에요. 여행 전 날씨 확인하세요.</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-green-500">✓</span>
+              <p>실내 에어컨이 세서 <span className="font-medium text-foreground">여름에도 얇은 겉옷</span> 챙기면 좋아요.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+
+    // 교통 탭 콘텐츠
+    const TransportContent = () => (
+      <div className="space-y-6">
+        {/* MZ 핵심 요약 카드 */}
+        <section className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl p-5 shadow-lg text-white">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-2xl">⚡</span>
+            <h2 className="text-lg font-bold">MZ를 위한 핵심 요약</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
+              <div className="text-xs opacity-80 mb-1">필수 준비물</div>
+              <div className="font-bold">EasyCard 하나면 끝</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
+              <div className="text-xs opacity-80 mb-1">가장 편한 이동</div>
+              <div className="font-bold">MRT 중심 이동</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
+              <div className="text-xs opacity-80 mb-1">비용</div>
+              <div className="font-bold">한국보다 저렴</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
+              <div className="text-xs opacity-80 mb-1">초보자 난이도</div>
+              <div className="font-bold">매우 쉬움</div>
+            </div>
+          </div>
+          <p className="text-xs mt-3 opacity-90">서울 지하철보다 단순하고, 영어 안내도 충분해요!</p>
+        </section>
+
+        {/* 교통 시스템 개요 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">🚇</span>
+            <h2 className="text-lg font-bold text-foreground">교통 시스템 개요</h2>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+            타이베이는 <span className="font-semibold text-foreground">MRT(지하철)</span>를 중심으로
+            버스·택시·공유자전거·공항철도가 촘촘하게 연결된 구조예요.
+            대부분의 관광지는 MRT만으로도 이동 가능합니다.
+          </p>
+          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30">
+            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-2">
+              <span>💡</span>
+              <span className="font-semibold text-sm">알아두면 좋은 점</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              MRT는 1996년 개통 후 꾸준히 확장되어 현재 131개 역으로 구성된 대규모 네트워크예요.
+            </p>
+          </div>
+        </section>
+
+        {/* 교통수단 종류 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">🚆</span>
+            <h2 className="text-lg font-bold text-foreground">교통수단 종류</h2>
+          </div>
+          <div className="space-y-3">
+            {[
+              {
+                emoji: "🚇",
+                name: "MRT (Taipei Metro)",
+                tag: "추천",
+                tagColor: "bg-green-500",
+                desc: "가장 빠르고 편한 이동 수단. 주요 관광지 대부분 연결",
+                detail: "운영시간: 06:00~00:00 · 중국어/영어 안내"
+              },
+              {
+                emoji: "🚌",
+                name: "버스",
+                tag: "보조",
+                tagColor: "bg-blue-500",
+                desc: "MRT가 닿지 않는 지역까지 이동 가능",
+                detail: "EasyCard로 환승 자동 처리"
+              },
+              {
+                emoji: "✈️",
+                name: "공항 MRT",
+                tag: "공항↔시내",
+                tagColor: "bg-purple-500",
+                desc: "타오위안 공항에서 시내까지 약 35~40분",
+                detail: "일반/급행 열차 선택 가능"
+              },
+              {
+                emoji: "🚕",
+                name: "택시",
+                tag: "편리",
+                tagColor: "bg-yellow-500",
+                desc: "한국보다 저렴한 편, 야간 이동에 유용",
+                detail: "대부분 카드·EasyCard 결제 가능"
+              },
+              {
+                emoji: "🚲",
+                name: "YouBike (공유자전거)",
+                tag: "단거리",
+                tagColor: "bg-teal-500",
+                desc: "MRT역 주변에 거의 항상 있음",
+                detail: "짧은 거리 이동에 최고, 첫 30분 약 5 TWD"
+              },
+            ].map((item) => (
+              <div
+                key={item.name}
+                className="flex items-start gap-3 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+              >
+                <span className="text-2xl">{item.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-foreground text-sm">{item.name}</span>
+                    <span className={`${item.tagColor} text-white text-[10px] px-2 py-0.5 rounded-full`}>
+                      {item.tag}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{item.desc}</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">{item.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* EasyCard 사용법 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">💳</span>
+            <h2 className="text-lg font-bold text-foreground">EasyCard (이지카드)</h2>
+          </div>
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 rounded-xl p-4 border border-orange-100 dark:border-orange-900/30 mb-4">
+            <p className="text-sm text-foreground font-medium mb-2">
+              타이베이 교통의 핵심!
+            </p>
+            <p className="text-xs text-muted-foreground">
+              MRT·버스·YouBike·편의점·관광지까지 모두 결제 가능해요.
+            </p>
+          </div>
+
+          {/* 구매 장소 */}
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+              <span>🏪</span> 구매 장소
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {["MRT역", "공항", "7-Eleven", "FamilyMart"].map((place) => (
+                <span key={place} className="bg-muted px-3 py-1.5 rounded-full text-xs text-foreground">
+                  {place}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* 사용 방법 */}
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <span>📱</span> 사용 방법
+            </h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-xl">
+                <span className="text-xl">🚇</span>
+                <div>
+                  <div className="text-xs font-medium text-foreground">MRT</div>
+                  <div className="text-xs text-muted-foreground">개찰구에서 탭 인 → 탭 아웃</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-xl">
+                <span className="text-xl">🚌</span>
+                <div>
+                  <div className="text-xs font-medium text-foreground">버스</div>
+                  <div className="text-xs text-muted-foreground">탑승 시 탭 + 하차 시 탭</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-teal-50 dark:bg-teal-950/30 rounded-xl">
+                <span className="text-xl">🚲</span>
+                <div>
+                  <div className="text-xs font-medium text-foreground">YouBike</div>
+                  <div className="text-xs text-muted-foreground">단말기에 카드 태그 후 대여/반납</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 환불 안내 */}
+          <div className="bg-muted/50 rounded-xl p-3">
+            <div className="flex items-center gap-2 text-sm">
+              <span>💰</span>
+              <span className="font-medium text-foreground">환불</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              공항·MRT역에서 잔액 환불 가능 (소액 수수료 있음)
+            </p>
+          </div>
+        </section>
+
+        {/* 비용 구조 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">💰</span>
+            <h2 className="text-lg font-bold text-foreground">비용 가이드</h2>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 rounded-xl border border-blue-100 dark:border-blue-900/30">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🚇</span>
+                <div>
+                  <div className="font-medium text-foreground text-sm">MRT</div>
+                  <div className="text-xs text-muted-foreground">거리 기반 요금제</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-foreground">20~65 TWD</div>
+                <div className="text-xs text-muted-foreground">약 800~2,600원</div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl border border-green-100 dark:border-green-900/30">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🚌</span>
+                <div>
+                  <div className="font-medium text-foreground text-sm">버스</div>
+                  <div className="text-xs text-muted-foreground">기본 요금</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-foreground">15 TWD~</div>
+                <div className="text-xs text-muted-foreground">약 600원~</div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-xl border border-purple-100 dark:border-purple-900/30">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">✈️</span>
+                <div>
+                  <div className="font-medium text-foreground text-sm">공항 MRT</div>
+                  <div className="text-xs text-muted-foreground">일반 / 급행</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-foreground">150~160 TWD</div>
+                <div className="text-xs text-muted-foreground">약 6,000~6,400원</div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-950/30 dark:to-cyan-950/30 rounded-xl border border-teal-100 dark:border-teal-900/30">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🚲</span>
+                <div>
+                  <div className="font-medium text-foreground text-sm">YouBike</div>
+                  <div className="text-xs text-muted-foreground">첫 30분</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-foreground">~5 TWD</div>
+                <div className="text-xs text-muted-foreground">약 200원</div>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3 text-center">
+            💡 EasyCard 사용 시 소폭 할인 적용
+          </p>
+        </section>
+
+        {/* 환승 시스템 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">🔄</span>
+            <h2 className="text-lg font-bold text-foreground">환승 시스템</h2>
+          </div>
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl p-4 border border-indigo-100 dark:border-indigo-900/30 mb-4">
+            <p className="text-sm text-foreground mb-2">
+              EasyCard로 결제하면 <span className="font-bold">환승 할인 자동 적용!</span>
+            </p>
+            <p className="text-xs text-muted-foreground">별도 설정 없이 자동으로 처리돼요.</p>
+          </div>
+
+          {/* 환승 플로우 */}
+          <div className="flex items-center justify-center gap-2 py-4">
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center mb-1">
+                <span className="text-xl">🚇</span>
+              </div>
+              <span className="text-xs text-muted-foreground">MRT</span>
+            </div>
+            <div className="flex flex-col items-center px-2">
+              <span className="text-green-500 font-bold text-xs mb-1">할인</span>
+              <span className="text-muted-foreground">↔️</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center mb-1">
+                <span className="text-xl">🚌</span>
+              </div>
+              <span className="text-xs text-muted-foreground">버스</span>
+            </div>
+          </div>
+
+          <div className="bg-muted/50 rounded-xl p-3 mt-3">
+            <p className="text-xs text-muted-foreground text-center">
+              MRT 노선 간 환승도 직관적이고, 역 내부 안내가 잘 되어 있어 초행자도 헤매기 어려워요!
+            </p>
+          </div>
+        </section>
+      </div>
+    );
+
+    // 숙박 탭 콘텐츠
+    const AccommodationContent = () => (
+      <div className="space-y-6">
+        {/* MZ 핵심 요약 카드 */}
+        <section className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-5 shadow-lg text-white">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-2xl">⚡</span>
+            <h2 className="text-lg font-bold">MZ를 위한 핵심 요약</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
+              <div className="text-xs opacity-80 mb-1">최적 지역</div>
+              <div className="font-bold text-sm">시먼딩·중정구</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
+              <div className="text-xs opacity-80 mb-1">예산</div>
+              <div className="font-bold text-sm">호스텔 2~4만원</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
+              <div className="text-xs opacity-80 mb-1">핵심 팁</div>
+              <div className="font-bold text-sm">MRT 5분 거리</div>
+            </div>
+            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
+              <div className="text-xs opacity-80 mb-1">분위기</div>
+              <div className="font-bold text-sm">안전·가성비 좋음</div>
+            </div>
+          </div>
+          <p className="text-xs mt-3 opacity-90">주말·연휴는 미리 예약! 현지인도 많이 여행해요</p>
+        </section>
+
+        {/* 숙박 분위기 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">🏨</span>
+            <h2 className="text-lg font-bold text-foreground">타이베이 숙박 분위기</h2>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+            타이베이는 <span className="font-semibold text-foreground">가성비 좋은 호스텔</span>부터
+            감성 호텔, 온천 리조트까지 선택 폭이 넓은 도시예요.
+          </p>
+          <div className="bg-purple-50 dark:bg-purple-950/30 rounded-xl p-4 border border-purple-100 dark:border-purple-900/30">
+            <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 mb-2">
+              <span>💡</span>
+              <span className="font-semibold text-sm">알아두세요</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              대부분의 지역이 MRT 접근성이 좋아서 &apos;어느 역 근처냐&apos;가 숙소 퀄리티만큼 중요해요!
+            </p>
+          </div>
+        </section>
+
+        {/* 지역별 추천 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">📍</span>
+            <h2 className="text-lg font-bold text-foreground">지역별 추천</h2>
+          </div>
+          <div className="space-y-3">
+            {[
+              {
+                emoji: "🛍️",
+                name: "시먼딩 (Ximending)",
+                tag: "재미",
+                tagColor: "bg-pink-500",
+                vibe: "타이베이의 '홍대' 느낌",
+                pros: "쇼핑·야식·야경 최고",
+                cons: "조용한 분위기 X",
+                for: "활기찬 여행 원하는 MZ"
+              },
+              {
+                emoji: "🚇",
+                name: "중정구 (Zhongzheng)",
+                tag: "교통",
+                tagColor: "bg-blue-500",
+                vibe: "타이베이 메인역 중심",
+                pros: "공항MRT·고속철·지하철 연결",
+                cons: "관광지 감성 약함",
+                for: "첫 방문, 일정 짜기 편함"
+              },
+              {
+                emoji: "🏙️",
+                name: "신이 (Xinyi)",
+                tag: "세련",
+                tagColor: "bg-indigo-500",
+                vibe: "타이베이 101 주변",
+                pros: "깔끔·안전·고급 쇼핑몰",
+                cons: "가격대 높은 편",
+                for: "세련된 분위기 원하는 MZ"
+              },
+              {
+                emoji: "☕",
+                name: "중산 (Zhongshan)",
+                tag: "감성",
+                tagColor: "bg-amber-500",
+                vibe: "카페·바 밀집 지역",
+                pros: "힙한 분위기, 조용+편리",
+                cons: "관광지 접근성 중간",
+                for: "감성 카페 좋아하는 MZ"
+              },
+              {
+                emoji: "♨️",
+                name: "베이터우 (Beitou)",
+                tag: "힐링",
+                tagColor: "bg-teal-500",
+                vibe: "온천 호텔·리조트 밀집",
+                pros: "조용하고 자연친화적",
+                cons: "시내 관광에는 비효율적",
+                for: "휴식 중심 여행"
+              },
+            ].map((area) => (
+              <div
+                key={area.name}
+                className="p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xl">{area.emoji}</span>
+                  <span className="font-semibold text-foreground text-sm">{area.name}</span>
+                  <span className={`${area.tagColor} text-white text-[10px] px-2 py-0.5 rounded-full`}>
+                    {area.tag}
+                  </span>
+                </div>
+                <p className="text-xs text-foreground mb-2">{area.vibe}</p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-start gap-1">
+                    <span className="text-green-500">✓</span>
+                    <span className="text-muted-foreground">{area.pros}</span>
+                  </div>
+                  <div className="flex items-start gap-1">
+                    <span className="text-red-400">✗</span>
+                    <span className="text-muted-foreground">{area.cons}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-primary mt-2">→ {area.for}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 숙소 유형 & 예산 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">💰</span>
+            <h2 className="text-lg font-bold text-foreground">숙소 유형 & 예산</h2>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl border border-green-100 dark:border-green-900/30">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🎒</span>
+                <div>
+                  <div className="font-medium text-foreground text-sm">호스텔</div>
+                  <div className="text-xs text-muted-foreground">깔끔·가성비·공용 공간</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-foreground">20~40 USD</div>
+                <div className="text-xs text-muted-foreground">약 2~5만원</div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-950/30 dark:to-rose-950/30 rounded-xl border border-pink-100 dark:border-pink-900/30">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">📸</span>
+                <div>
+                  <div className="font-medium text-foreground text-sm">부티크 호텔</div>
+                  <div className="text-xs text-muted-foreground">감성·사진 맛집</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-foreground">60~120 USD</div>
+                <div className="text-xs text-muted-foreground">약 8~16만원</div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 rounded-xl border border-blue-100 dark:border-blue-900/30">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🏢</span>
+                <div>
+                  <div className="font-medium text-foreground text-sm">비즈니스 호텔</div>
+                  <div className="text-xs text-muted-foreground">깔끔·실용·교통 편리</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-foreground">80~150 USD</div>
+                <div className="text-xs text-muted-foreground">약 10~20만원</div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-950/30 dark:to-cyan-950/30 rounded-xl border border-teal-100 dark:border-teal-900/30">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">♨️</span>
+                <div>
+                  <div className="font-medium text-foreground text-sm">온천 리조트</div>
+                  <div className="text-xs text-muted-foreground">힐링·프라이빗</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-foreground">150~300 USD</div>
+                <div className="text-xs text-muted-foreground">약 20~40만원</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-green-50 dark:bg-green-950/30 rounded-xl p-3 mt-4 border border-green-100 dark:border-green-900/30">
+            <p className="text-xs text-muted-foreground text-center">
+              💡 타이베이는 호스텔 퀄리티가 특히 좋아서 가성비 숙소도 만족도 높아요!
+            </p>
+          </div>
+        </section>
+
+        {/* 숙소 고르는 팁 */}
+        <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">✨</span>
+            <h2 className="text-lg font-bold text-foreground">숙소 고르는 팁</h2>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-xl">
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-sm font-bold">1</span>
+              </div>
+              <div>
+                <div className="font-medium text-foreground text-sm">MRT역 도보 5분 이내</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  타이베이는 MRT 중심 도시! 역과의 거리 = 여행 편의성
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-pink-50 dark:bg-pink-950/30 rounded-xl">
+              <div className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-sm font-bold">2</span>
+              </div>
+              <div>
+                <div className="font-medium text-foreground text-sm">시먼딩 or 중정구 베이스</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  첫 방문이라면 가장 스트레스 없는 선택!
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl">
+              <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-sm font-bold">3</span>
+              </div>
+              <div>
+                <div className="font-medium text-foreground text-sm">야시장·카페 동선 고려</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  타이베이는 밤이 더 재밌는 도시! 숙소 주변 상권 중요
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/30 rounded-xl">
+              <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-sm font-bold">4</span>
+              </div>
+              <div>
+                <div className="font-medium text-foreground text-sm">주말·연휴는 미리 예약</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  현지 여행객도 많아 가격이 오르고 방이 빨리 차요
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+
+    const guideTabs = [
+      { id: "overview" as GuideTabType, label: "개요", emoji: "🏙️" },
+      { id: "weather" as GuideTabType, label: "날씨", emoji: "🌤️" },
+      { id: "transport" as GuideTabType, label: "교통", emoji: "🚇" },
+      { id: "accommodation" as GuideTabType, label: "숙박", emoji: "🏨" },
+    ];
+
     return (
       <>
         <div className="min-h-screen pb-20 bg-gradient-to-b from-amber-50 to-orange-50 dark:from-background dark:to-background">
@@ -718,135 +1617,35 @@ export default function Home() {
                 <p className="text-white/80 text-xs">대만 타이베이 완벽 정리</p>
               </div>
             </div>
+
+            {/* 탭 네비게이션 */}
+            <div className="flex bg-white/10 mx-4 mb-4 rounded-xl p-1">
+              {guideTabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setGuideTab(tab.id)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    guideTab === tab.id
+                      ? "bg-white text-amber-600 shadow-md"
+                      : "text-white/90 hover:bg-white/10"
+                  }`}
+                >
+                  <span>{tab.emoji}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="p-4 space-y-6">
-            {/* 섹션 1: 타이베이에 대하여 */}
-            <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">🏙️</span>
-                <h2 className="text-lg font-bold text-foreground">타이베이에 대하여</h2>
-              </div>
-              <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
-                <p>
-                  타이베이는 크게 <span className="font-semibold text-foreground">타이베이시(Taipei City)</span>와{" "}
-                  <span className="font-semibold text-foreground">신베이시(New Taipei City)</span>로 나뉩니다.
-                </p>
-                <div className="grid gap-3">
-                  <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30 rounded-xl p-4 border border-red-100 dark:border-red-900/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">🏛️</span>
-                      <span className="font-semibold text-foreground">타이베이시</span>
-                    </div>
-                    <p className="text-xs">대만의 정치·경제·문화 중심지로, 12개의 행정구가 있으며 관광 명소와 맛집이 집중되어 있습니다.</p>
-                  </div>
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 border border-green-100 dark:border-green-900/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">🌿</span>
-                      <span className="font-semibold text-foreground">신베이시</span>
-                    </div>
-                    <p className="text-xs">타이베이를 둘러싸고 있는 광역 도시로, 자연·전통·근교 여행지들이 많아 당일치기 코스로 인기가 높습니다.</p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* 섹션 2: 타이베이시 12개 구 */}
-            <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">📍</span>
-                <h2 className="text-lg font-bold text-foreground">타이베이시 12개 구</h2>
-              </div>
-              <div className="grid gap-2">
-                {[
-                  { name: "중정구", emoji: "🏛️", desc: "중정기념당과 타이베이 메인스테이션이 위치. 교통과 관광의 중심지." },
-                  { name: "다안구", emoji: "☕", desc: "융캉제가 있어 카페와 맛집이 밀집된 감성 거리. 젊은 여행자들에게 인기." },
-                  { name: "신이구", emoji: "🏙️", desc: "타이베이 101타워와 대형 쇼핑몰. 야경과 쇼핑 명소." },
-                  { name: "완화구", emoji: "🛍️", desc: "시먼딩이 위치한 패션·문화 거리. 용산사 같은 전통 명소도 함께." },
-                  { name: "중산구", emoji: "🍸", desc: "중산 카페거리와 세련된 바·호텔. 감성 여행과 나이트라이프에 적합." },
-                  { name: "스린구", emoji: "🌙", desc: "스린 야시장과 국립고궁박물원. 먹거리와 문화 체험 동시에." },
-                  { name: "베이터우구", emoji: "♨️", desc: "온천으로 유명. 온천 호텔·도서관·박물관이 있어 힐링 여행에 적합." },
-                  { name: "송산구", emoji: "✈️", desc: "송산공항과 라오허제 야시장. 교통 편리하고 야시장 탐방에 좋음." },
-                  { name: "다퉁구", emoji: "🏮", desc: "디화제가 있어 전통시장과 한약방. 대만의 정취를 느낄 수 있음." },
-                  { name: "네이후구", emoji: "🏢", desc: "IT 기업과 주거지역. 대형 쇼핑몰과 호수 공원으로 현지 생활 체험." },
-                  { name: "난강구", emoji: "🎪", desc: "난강 전시센터와 IT 산업 단지. 박람회·콘서트가 자주 열리는 곳." },
-                  { name: "원산구", emoji: "🐼", desc: "타이베이 동물원과 마오콩 곤돌라. 가족 단위 관광객에게 인기." },
-                ].map((district) => (
-                  <div
-                    key={district.name}
-                    className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
-                  >
-                    <span className="text-xl">{district.emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-foreground text-sm">{district.name}</div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{district.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* 섹션 3: 타이베이시 주요 여행 명소 */}
-            <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">✨</span>
-                <h2 className="text-lg font-bold text-foreground">타이베이시 주요 명소</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { name: "타이베이 101", emoji: "🗼", desc: "대만의 랜드마크" },
-                  { name: "중정기념당", emoji: "🏛️", desc: "대만 현대사의 상징" },
-                  { name: "시먼딩", emoji: "🛍️", desc: "젊음의 패션 거리" },
-                  { name: "융캉제", emoji: "🥟", desc: "딘타이펑 본점 위치" },
-                  { name: "스린 야시장", emoji: "🌙", desc: "대만 최대 야시장" },
-                  { name: "국립고궁박물원", emoji: "🏺", desc: "세계적 박물관" },
-                  { name: "베이터우 온천", emoji: "♨️", desc: "힐링 온천 명소" },
-                ].map((spot) => (
-                  <div
-                    key={spot.name}
-                    className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-xl p-3 border border-amber-100 dark:border-amber-900/30"
-                  >
-                    <div className="text-2xl mb-1">{spot.emoji}</div>
-                    <div className="font-semibold text-foreground text-sm">{spot.name}</div>
-                    <p className="text-xs text-muted-foreground">{spot.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* 섹션 4: 신베이시 주요 여행 명소 */}
-            <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">🌿</span>
-                <h2 className="text-lg font-bold text-foreground">신베이시 주요 명소</h2>
-              </div>
-              <div className="grid gap-3">
-                {[
-                  { name: "예류지질공원", emoji: "🪨", desc: "기암괴석과 '여왕 머리 바위'로 유명한 해안 지질 공원" },
-                  { name: "지우펀 옛거리", emoji: "🏮", desc: "언덕 위 찻집과 야경이 매력적인 산간 마을" },
-                  { name: "스펀 폭포", emoji: "🎈", desc: "철로 위 스카이랜턴 체험, '대만의 나이아가라' 폭포" },
-                  { name: "진과스 황금박물관", emoji: "⛏️", desc: "옛 금광 마을을 테마로 한 역사문화 여행지" },
-                  { name: "우라이", emoji: "🌊", desc: "원주민 문화와 온천, 폭포가 함께 있는 힐링 여행지" },
-                  { name: "산샤 옛거리", emoji: "🧱", desc: "붉은 벽돌 아케이드와 전통 간식이 있는 거리" },
-                  { name: "비탄 풍경구", emoji: "🚣", desc: "강변 자전거·보트 체험, 야간 조명으로 유명한 데이트 코스" },
-                  { name: "산충구", emoji: "🏠", desc: "타이베이와 가까운 주거·상업 지역. 숙소 거점으로 적합" },
-                ].map((spot) => (
-                  <div
-                    key={spot.name}
-                    className="flex items-start gap-3 p-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-100 dark:border-green-900/30"
-                  >
-                    <span className="text-2xl">{spot.emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-foreground text-sm">{spot.name}</div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{spot.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+          {/* 탭 콘텐츠 */}
+          <div className="p-4">
+            {guideTab === "overview" && <OverviewContent />}
+            {guideTab === "weather" && <WeatherContent />}
+            {guideTab === "transport" && <TransportContent />}
+            {guideTab === "accommodation" && <AccommodationContent />}
 
             {/* 하단 안내 */}
-            <div className="text-center py-4">
+            <div className="text-center py-6">
               <p className="text-xs text-muted-foreground">
                 🧳 즐거운 타이베이 여행 되세요!
               </p>
