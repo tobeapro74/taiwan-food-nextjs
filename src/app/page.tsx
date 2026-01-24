@@ -17,6 +17,7 @@ import { AddRestaurantModal } from "@/components/add-restaurant-modal";
 import { DeleteAccountModal } from "@/components/delete-account-modal";
 import { RestaurantHistoryList } from "@/components/restaurant-history";
 import { ToiletFinder } from "@/components/toilet-finder";
+import { ScheduleMain } from "@/components/schedule/schedule-main";
 import {
   Restaurant,
   categories,
@@ -33,8 +34,8 @@ import {
 } from "@/data/taiwan-food";
 import { getRestaurantDistrict, isValidDistrict, DISTRICT_INFO } from "@/lib/district-utils";
 
-type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking" | "guide";
-type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add";
+type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking" | "guide" | "schedule";
+type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add" | "schedule";
 type GuideTabType = "overview" | "weather" | "transport" | "accommodation";
 
 interface UserInfo {
@@ -333,6 +334,9 @@ export default function Home() {
       setListItems(getPlaces());
       setCurrentView("list");
       setActiveTab("places");
+    } else if (tab === "schedule") {
+      setCurrentView("schedule");
+      setActiveTab("schedule");
     }
   };
 
@@ -573,6 +577,20 @@ export default function Home() {
     return (
       <>
         <ToiletFinder onClose={handleBack} />
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
+      </>
+    );
+  }
+
+  if (currentView === "schedule") {
+    return (
+      <>
+        <ScheduleMain
+          onBack={() => {
+            setCurrentView("home");
+            setActiveTab("home");
+          }}
+        />
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
       </>
     );

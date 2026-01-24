@@ -1,9 +1,9 @@
 "use client";
 
-import { Home, Grid3X3, Store, Navigation, PlusCircle } from "lucide-react";
+import { Home, Grid3X3, Store, Navigation, PlusCircle, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add";
+type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add" | "schedule";
 
 interface User {
   id: number;
@@ -20,6 +20,7 @@ interface BottomNavProps {
 const navItems = [
   { id: "home" as const, label: "홈", icon: Home },
   { id: "nearby" as const, label: "주변맛집", icon: Navigation },
+  { id: "schedule" as const, label: "일정", icon: CalendarDays },
   { id: "add" as const, label: "등록", icon: PlusCircle, adminOnly: true },
   { id: "category" as const, label: "카테고리", icon: Grid3X3 },
   { id: "market" as const, label: "야시장", icon: Store },
