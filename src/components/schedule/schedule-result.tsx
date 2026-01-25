@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Share2, RotateCcw, ChevronDown, ChevronUp, Save, Check, Loader2, ArrowLeft, List, X, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -358,6 +358,16 @@ function PhotoPreviewModal({
 }) {
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
+  // 모달이 열릴 때 body 스크롤 막기
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleImageError = (index: number) => {
@@ -368,14 +378,14 @@ function PhotoPreviewModal({
     <>
       {/* 배경 오버레이 */}
       <div
-        className="fixed inset-0 bg-black/60 z-50 animate-fade-in"
+        className="fixed inset-0 bg-black/60 z-[100] animate-fade-in"
         onClick={onClose}
       />
       {/* 모달 */}
-      <div className="fixed inset-x-0 bottom-0 z-50 animate-slide-up">
-        <div className="bg-white dark:bg-card rounded-t-3xl max-h-[80vh] overflow-hidden shadow-2xl">
+      <div className="fixed inset-x-0 bottom-20 z-[100] animate-slide-up">
+        <div className="bg-white dark:bg-card rounded-t-3xl max-h-[70vh] overflow-hidden shadow-2xl">
           {/* 헤더 */}
-          <div className="sticky top-0 bg-white dark:bg-card border-b border-border p-4 flex items-center justify-between">
+          <div className="sticky top-0 bg-white dark:bg-card border-b border-border p-4 flex items-center justify-between z-10">
             <div>
               <h3 className="font-bold text-foreground">{placeName}</h3>
               <p className="text-xs text-muted-foreground">{photos.length}장의 사진</p>
@@ -388,7 +398,7 @@ function PhotoPreviewModal({
             </button>
           </div>
           {/* 사진 그리드 */}
-          <div className="p-4 overflow-y-auto max-h-[calc(80vh-80px)]">
+          <div className="p-4 pb-6 overflow-y-auto max-h-[calc(70vh-80px)] overscroll-contain">
             <div className="grid grid-cols-2 gap-2">
               {photos.map((photo, idx) => (
                 <div
