@@ -74,6 +74,7 @@ export interface ScheduleActivity {
   place_id?: string;
   category?: string;
   isEdited?: boolean;     // 사용자가 수정했는지
+  photos?: string[];      // 장소 사진 URL 배열 (최대 10장)
 }
 
 // 일차별 일정

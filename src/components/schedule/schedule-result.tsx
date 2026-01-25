@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Share2, RotateCcw, ChevronDown, ChevronUp, Save, Check, Loader2, ArrowLeft, List } from "lucide-react";
+import Image from "next/image";
+import { Share2, RotateCcw, ChevronDown, ChevronUp, Save, Check, Loader2, ArrowLeft, List, X, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   TravelSchedule,
@@ -27,6 +28,17 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
   const [expandedDays, setExpandedDays] = useState<number[]>([1]);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+
+  // 사진 모달 상태
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
+  const [selectedPlaceName, setSelectedPlaceName] = useState("");
+
+  const handlePhotoClick = (photos: string[], name: string) => {
+    setSelectedPhotos(photos);
+    setSelectedPlaceName(name);
+    setPhotoModalOpen(true);
+  };
 
   const toggleDay = (day: number) => {
     setExpandedDays((prev) =>
@@ -136,6 +148,7 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
             daySchedule={daySchedule}
             isExpanded={expandedDays.includes(daySchedule.day)}
             onToggle={() => toggleDay(daySchedule.day)}
+            onPhotoClick={handlePhotoClick}
           />
         ))}
 
@@ -205,6 +218,14 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
           새로운 일정 만들기
         </button>
       </div>
+
+      {/* 사진 미리보기 모달 */}
+      <PhotoPreviewModal
+        isOpen={photoModalOpen}
+        onClose={() => setPhotoModalOpen(false)}
+        photos={selectedPhotos}
+        placeName={selectedPlaceName}
+      />
     </div>
   );
 }
@@ -214,10 +235,12 @@ function DayCard({
   daySchedule,
   isExpanded,
   onToggle,
+  onPhotoClick,
 }: {
   daySchedule: DaySchedule;
   isExpanded: boolean;
   onToggle: () => void;
+  onPhotoClick?: (photos: string[], name: string) => void;
 }) {
   return (
     <section className="bg-white dark:bg-card rounded-2xl shadow-md overflow-hidden">
@@ -244,7 +267,7 @@ function DayCard({
       {isExpanded && (
         <div className="p-4 space-y-3">
           {daySchedule.activities.map((activity, idx) => (
-            <ActivityItem key={activity.id || idx} activity={activity} />
+            <ActivityItem key={activity.id || idx} activity={activity} onPhotoClick={onPhotoClick} />
           ))}
         </div>
       )}
@@ -253,8 +276,9 @@ function DayCard({
 }
 
 // 개별 활동 컴포넌트
-function ActivityItem({ activity }: { activity: ScheduleActivity }) {
+function ActivityItem({ activity, onPhotoClick }: { activity: ScheduleActivity; onPhotoClick?: (photos: string[], name: string) => void }) {
   const icon = TIME_SLOT_ICON[activity.timeSlot] || "📍";
+  const hasPhotos = activity.photos && activity.photos.length > 0;
 
   const bgColor = {
     restaurant: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/30",
@@ -263,8 +287,17 @@ function ActivityItem({ activity }: { activity: ScheduleActivity }) {
     shopping: "bg-pink-50 dark:bg-pink-950/30 border-pink-200 dark:border-pink-900/30",
   }[activity.type] || "bg-muted";
 
+  const handleClick = () => {
+    if (hasPhotos && onPhotoClick) {
+      onPhotoClick(activity.photos!, activity.name);
+    }
+  };
+
   return (
-    <div className={`p-4 rounded-xl border ${bgColor}`}>
+    <div
+      className={`p-4 rounded-xl border ${bgColor} ${hasPhotos ? "cursor-pointer active:scale-[0.98] transition-transform" : ""}`}
+      onClick={handleClick}
+    >
       <div className="flex items-start gap-3">
         <div className="text-2xl">{icon}</div>
         <div className="flex-1 min-w-0">
@@ -273,6 +306,12 @@ function ActivityItem({ activity }: { activity: ScheduleActivity }) {
             {activity.rating && (
               <span className="text-xs text-amber-500 flex items-center gap-0.5">
                 ⭐ {activity.rating}
+              </span>
+            )}
+            {hasPhotos && (
+              <span className="text-xs text-indigo-500 flex items-center gap-0.5">
+                <Camera className="w-3 h-3" />
+                {activity.photos!.length}
               </span>
             )}
           </div>
@@ -302,6 +341,98 @@ function ActivityItem({ activity }: { activity: ScheduleActivity }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// 사진 미리보기 모달
+function PhotoPreviewModal({
+  isOpen,
+  onClose,
+  photos,
+  placeName,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  photos: string[];
+  placeName: string;
+}) {
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+
+  if (!isOpen) return null;
+
+  const handleImageError = (index: number) => {
+    setImageErrors((prev) => new Set(prev).add(index));
+  };
+
+  return (
+    <>
+      {/* 배경 오버레이 */}
+      <div
+        className="fixed inset-0 bg-black/60 z-50 animate-fade-in"
+        onClick={onClose}
+      />
+      {/* 모달 */}
+      <div className="fixed inset-x-0 bottom-0 z-50 animate-slide-up">
+        <div className="bg-white dark:bg-card rounded-t-3xl max-h-[80vh] overflow-hidden shadow-2xl">
+          {/* 헤더 */}
+          <div className="sticky top-0 bg-white dark:bg-card border-b border-border p-4 flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-foreground">{placeName}</h3>
+              <p className="text-xs text-muted-foreground">{photos.length}장의 사진</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          {/* 사진 그리드 */}
+          <div className="p-4 overflow-y-auto max-h-[calc(80vh-80px)]">
+            <div className="grid grid-cols-2 gap-2">
+              {photos.map((photo, idx) => (
+                <div
+                  key={idx}
+                  className="aspect-square rounded-xl overflow-hidden bg-muted relative"
+                >
+                  {!imageErrors.has(idx) ? (
+                    <Image
+                      src={photo}
+                      alt={`${placeName} 사진 ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      onError={() => handleImageError(idx)}
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <Camera className="w-8 h-8" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slide-up {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+      `}</style>
+    </>
   );
 }
 

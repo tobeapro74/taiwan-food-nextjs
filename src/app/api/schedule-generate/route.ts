@@ -39,6 +39,49 @@ const DEPARTURE_END_SLOT: Record<FlightTimeType, string> = {
   night: "마지막날 저녁까지 일정 가능",
 };
 
+// 장소 사진 가져오기 (최대 10장)
+async function fetchPlacePhotos(placeName: string): Promise<string[]> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) return [];
+
+  try {
+    // Text Search로 장소 검색
+    const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
+      placeName + " Taiwan Taipei"
+    )}&language=ko&key=${apiKey}`;
+
+    const searchResponse = await fetch(searchUrl);
+    const searchData = await searchResponse.json();
+
+    if (searchData.status !== "OK" || !searchData.results?.length) {
+      return [];
+    }
+
+    const placeId = searchData.results[0].place_id;
+
+    // Place Details로 사진 정보 가져오기
+    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=photos&language=ko&key=${apiKey}`;
+    const detailsResponse = await fetch(detailsUrl);
+    const detailsData = await detailsResponse.json();
+
+    if (detailsData.status !== "OK" || !detailsData.result?.photos) {
+      return [];
+    }
+
+    // 최대 10장의 사진 URL 생성
+    const photoUrls: string[] = [];
+    for (const photo of detailsData.result.photos.slice(0, 10)) {
+      const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photo.photo_reference}&key=${apiKey}`;
+      photoUrls.push(photoUrl);
+    }
+
+    return photoUrls;
+  } catch (error) {
+    console.error(`Failed to fetch photos for ${placeName}:`, error);
+    return [];
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: ScheduleGenerateRequest = await request.json();
@@ -314,6 +357,19 @@ ${placesList}
         }
       }
     }
+
+    // 각 장소의 사진 가져오기 (병렬 처리)
+    const photoPromises: Promise<void>[] = [];
+    for (const day of schedule) {
+      for (const activity of day.activities) {
+        photoPromises.push(
+          fetchPlacePhotos(activity.name).then((photos) => {
+            activity.photos = photos;
+          })
+        );
+      }
+    }
+    await Promise.all(photoPromises);
 
     return NextResponse.json({
       success: true,
