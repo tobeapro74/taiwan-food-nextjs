@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Share2, RotateCcw, ChevronDown, ChevronUp, Save, Check, Loader2, ArrowLeft, List, X, Camera } from "lucide-react";
+import { Share2, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Save, Check, Loader2, ArrowLeft, List, X, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   TravelSchedule,
@@ -357,6 +357,7 @@ function PhotoPreviewModal({
   placeName: string;
 }) {
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   // 모달이 열릴 때 body 스크롤 막기
   useEffect(() => {
@@ -364,16 +365,49 @@ function PhotoPreviewModal({
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
+      setSelectedIndex(null); // 모달 닫힐 때 선택 초기화
     }
     return () => {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
 
+  // 키보드 네비게이션
+  useEffect(() => {
+    if (selectedIndex === null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        setSelectedIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : prev));
+      } else if (e.key === "ArrowRight") {
+        setSelectedIndex((prev) => (prev !== null && prev < photos.length - 1 ? prev + 1 : prev));
+      } else if (e.key === "Escape") {
+        setSelectedIndex(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedIndex, photos.length]);
+
   if (!isOpen) return null;
 
   const handleImageError = (index: number) => {
     setImageErrors((prev) => new Set(prev).add(index));
+  };
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedIndex !== null && selectedIndex > 0) {
+      setSelectedIndex(selectedIndex - 1);
+    }
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedIndex !== null && selectedIndex < photos.length - 1) {
+      setSelectedIndex(selectedIndex + 1);
+    }
   };
 
   return (
@@ -411,7 +445,8 @@ function PhotoPreviewModal({
             {photos.map((photo, idx) => (
               <div
                 key={idx}
-                className="aspect-square rounded-xl overflow-hidden bg-muted relative"
+                className="aspect-square rounded-xl overflow-hidden bg-muted relative cursor-pointer active:scale-[0.98] transition-transform"
+                onClick={() => !imageErrors.has(idx) && setSelectedIndex(idx)}
               >
                 {!imageErrors.has(idx) ? (
                   <Image
@@ -433,6 +468,63 @@ function PhotoPreviewModal({
           </div>
         </div>
       </div>
+
+      {/* 사진 확대 뷰 */}
+      {selectedIndex !== null && (
+        <div
+          className="fixed inset-0 z-[110] bg-black/95 flex items-center justify-center animate-fade-in"
+          onClick={() => setSelectedIndex(null)}
+        >
+          {/* 닫기 버튼 */}
+          <button
+            onClick={() => setSelectedIndex(null)}
+            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+          >
+            <X className="w-6 h-6 text-white" />
+          </button>
+
+          {/* 사진 카운터 */}
+          <div className="absolute top-4 left-4 z-10 text-white/80 text-sm">
+            {selectedIndex + 1} / {photos.length}
+          </div>
+
+          {/* 이전 버튼 */}
+          {selectedIndex > 0 && (
+            <button
+              onClick={handlePrev}
+              className="absolute left-2 z-10 w-12 h-12 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+            >
+              <ChevronLeft className="w-8 h-8 text-white" />
+            </button>
+          )}
+
+          {/* 다음 버튼 */}
+          {selectedIndex < photos.length - 1 && (
+            <button
+              onClick={handleNext}
+              className="absolute right-2 z-10 w-12 h-12 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+            >
+              <ChevronRight className="w-8 h-8 text-white" />
+            </button>
+          )}
+
+          {/* 확대된 사진 */}
+          <div
+            className="relative w-full h-full max-w-[90vw] max-h-[80vh] m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={photos[selectedIndex]}
+              alt={`${placeName} 사진 ${selectedIndex + 1}`}
+              fill
+              className="object-contain"
+              sizes="90vw"
+              priority
+              unoptimized
+            />
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes fade-in {
