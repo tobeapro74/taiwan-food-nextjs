@@ -42,8 +42,8 @@ export function BottomNav({ activeTab, onTabChange, user }: BottomNavProps) {
   });
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-bottom z-50">
-      <div className="max-w-md mx-auto flex justify-around items-center py-2">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-bottom z-[90]">
+      <div className="max-w-md mx-auto flex justify-around items-center py-1">
         {visibleItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -53,7 +53,7 @@ export function BottomNav({ activeTab, onTabChange, user }: BottomNavProps) {
               key={item.id}
               onClick={() => onTabChange(item.id)}
               className={cn(
-                "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all hover:scale-[1.1] active:scale-[0.95]",
+                "flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[52px] px-2 py-1.5 rounded-lg transition-all active:scale-[0.95] active:bg-muted/50",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
