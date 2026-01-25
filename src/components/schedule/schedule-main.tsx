@@ -366,7 +366,12 @@ export function ScheduleMain({ onBack, user, onLoginClick }: ScheduleMainProps) 
 
   // 저장된 일정 보기 화면
   if (viewMode === "view" && viewingSchedule) {
-    return <ScheduleResult schedule={viewingSchedule} onBack={handleReset} onGoToSavedList={showSavedList} user={user} />;
+    const handleBackToList = () => {
+      setViewingSchedule(null);
+      setSelectedScheduleId(null);
+      setViewMode("list");
+    };
+    return <ScheduleResult schedule={viewingSchedule} onBack={handleBackToList} onGoToSavedList={showSavedList} user={user} />;
   }
 
   // 저장된 일정 목록 화면
