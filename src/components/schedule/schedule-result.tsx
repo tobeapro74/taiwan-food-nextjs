@@ -475,16 +475,16 @@ function PhotoPreviewModal({
           className="fixed inset-0 z-[110] bg-black/95 flex items-center justify-center animate-fade-in"
           onClick={() => setSelectedIndex(null)}
         >
-          {/* 닫기 버튼 */}
+          {/* 닫기 버튼 - safe area 고려 */}
           <button
             onClick={() => setSelectedIndex(null)}
-            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+            className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 mt-8 z-10 w-12 h-12 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
           >
             <X className="w-6 h-6 text-white" />
           </button>
 
-          {/* 사진 카운터 */}
-          <div className="absolute top-4 left-4 z-10 text-white/80 text-sm">
+          {/* 사진 카운터 - safe area 고려 */}
+          <div className="absolute top-[max(1rem,env(safe-area-inset-top))] left-4 mt-8 z-10 text-white/80 text-sm flex items-center h-12">
             {selectedIndex + 1} / {photos.length}
           </div>
 
