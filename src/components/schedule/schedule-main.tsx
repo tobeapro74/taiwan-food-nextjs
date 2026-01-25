@@ -39,6 +39,7 @@ interface ScheduleMainProps {
   onBack: () => void;
   user?: User | null;
   onLoginClick?: () => void;
+  initialViewMode?: "create" | "list";
 }
 
 // 초기 연령대별 인원 상태
@@ -48,9 +49,9 @@ const initialAgeGenderCounts: AgeGenderCount[] = DETAILED_AGE_OPTIONS.map((opt) 
   female: 0,
 }));
 
-export function ScheduleMain({ onBack, user, onLoginClick }: ScheduleMainProps) {
+export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "create" }: ScheduleMainProps) {
   // 뷰 모드: "create" | "list" | "view"
-  const [viewMode, setViewMode] = useState<"create" | "list" | "view">("create");
+  const [viewMode, setViewMode] = useState<"create" | "list" | "view">(initialViewMode);
 
   // 저장된 일정 목록
   const [savedSchedules, setSavedSchedules] = useState<SavedScheduleItem[]>([]);
@@ -207,6 +208,14 @@ export function ScheduleMain({ onBack, user, onLoginClick }: ScheduleMainProps) 
       setLoadingSaved(false);
     }
   };
+
+  // initialViewMode가 "list"일 때 자동으로 저장된 일정 불러오기
+  useEffect(() => {
+    if (initialViewMode === "list" && user) {
+      loadSavedSchedules();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialViewMode, user]);
 
   // 저장된 일정 상세 보기
   const viewSavedSchedule = async (id: string) => {
