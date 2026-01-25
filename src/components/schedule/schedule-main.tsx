@@ -388,18 +388,28 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
     return (
       <div className="min-h-screen pb-20 bg-gradient-to-b from-indigo-50 to-purple-50 dark:from-background dark:to-background">
         <div className="sticky top-0 z-10 bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg safe-area-top">
-          <div className="flex items-center gap-3 p-4">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                onClick={onBack}
+                className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-white/20 hover:bg-white/30 text-white"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <h1 className="font-bold text-white text-lg">저장된 일정</h1>
+                <p className="text-white/80 text-xs">{savedSchedules.length}개의 일정</p>
+              </div>
+            </div>
             <Button
               variant="ghost"
               onClick={() => setViewMode("create")}
-              className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-white/20 hover:bg-white/30 text-white"
+              className="h-11 px-4 rounded-full bg-white/20 hover:bg-white/30 text-white text-sm font-medium"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <Plus className="h-4 w-4 mr-1" />
+              일정 만들기
             </Button>
-            <div>
-              <h1 className="font-bold text-white text-lg">저장된 일정</h1>
-              <p className="text-white/80 text-xs">{savedSchedules.length}개의 일정</p>
-            </div>
           </div>
         </div>
 

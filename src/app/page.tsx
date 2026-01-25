@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { User, LogOut, Search, X, MapPin, ChevronDown, Key, UserMinus, History, ArrowLeft, Calendar } from "lucide-react";
+import { User, LogOut, Search, X, MapPin, ChevronDown, Key, UserMinus, History, ArrowLeft } from "lucide-react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -1794,18 +1794,6 @@ export default function Home() {
                     >
                       <History className="w-4 h-4" />
                       등록 히스토리
-                    </button>
-                    <button
-                      onClick={() => {
-                        setScheduleInitialViewMode("list");
-                        setCurrentView("schedule");
-                        setActiveTab("schedule");
-                        setUserMenuOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2"
-                    >
-                      <Calendar className="w-4 h-4" />
-                      저장된 일정
                     </button>
                     <button
                       onClick={() => {
