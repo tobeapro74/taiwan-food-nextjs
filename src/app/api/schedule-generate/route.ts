@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllRestaurants, getPlaces } from "@/data/taiwan-food";
+import { connectToDatabase } from "@/lib/mongodb";
 import {
   ScheduleGenerateRequest,
   DaySchedule,
@@ -39,13 +40,31 @@ const DEPARTURE_END_SLOT: Record<FlightTimeType, string> = {
   night: "마지막날 저녁까지 일정 가능",
 };
 
-// 장소 사진 가져오기 (최대 10장)
+// 장소 사진 캐시 조회/저장
+interface PlacePhotoCache {
+  placeName: string;
+  photos: string[];
+  placeId?: string;
+  cachedAt: Date;
+}
+
+// 장소 사진 가져오기 (캐싱 적용, 최대 10장)
 async function fetchPlacePhotos(placeName: string): Promise<string[]> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) return [];
 
   try {
-    // Text Search로 장소 검색
+    // 1. 캐시에서 먼저 조회
+    const db = await connectToDatabase();
+    const cacheCollection = db.collection<PlacePhotoCache>("place_photos_cache");
+
+    const cached = await cacheCollection.findOne({ placeName });
+    if (cached && cached.photos.length > 0) {
+      // 캐시 히트 - API 호출 없이 반환
+      return cached.photos;
+    }
+
+    // 2. 캐시 미스 - Google API 호출
     const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
       placeName + " Taiwan Taipei"
     )}&language=ko&key=${apiKey}`;
@@ -74,6 +93,20 @@ async function fetchPlacePhotos(placeName: string): Promise<string[]> {
       const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photo.photo_reference}&key=${apiKey}`;
       photoUrls.push(photoUrl);
     }
+
+    // 3. 캐시에 저장 (upsert)
+    await cacheCollection.updateOne(
+      { placeName },
+      {
+        $set: {
+          placeName,
+          photos: photoUrls,
+          placeId,
+          cachedAt: new Date(),
+        },
+      },
+      { upsert: true }
+    );
 
     return photoUrls;
   } catch (error) {
