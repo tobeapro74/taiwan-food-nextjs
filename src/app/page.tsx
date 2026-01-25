@@ -61,9 +61,6 @@ export default function Home() {
   // 홈 화면 야시장 필터
   const [selectedMarket, setSelectedMarket] = useState("전체");
 
-  // 일정 화면 초기 모드
-  const [scheduleInitialViewMode, setScheduleInitialViewMode] = useState<"create" | "list">("create");
-
   // 검색 상태
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -592,11 +589,9 @@ export default function Home() {
           onBack={() => {
             setCurrentView("home");
             setActiveTab("home");
-            setScheduleInitialViewMode("create");
           }}
           user={user}
           onLoginClick={() => setAuthModalOpen(true)}
-          initialViewMode={scheduleInitialViewMode}
         />
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
         <AuthModal

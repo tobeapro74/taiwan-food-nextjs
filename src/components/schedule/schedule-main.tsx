@@ -53,6 +53,9 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
   // 뷰 모드: "create" | "list" | "view"
   const [viewMode, setViewMode] = useState<"create" | "list" | "view">(initialViewMode);
 
+  // 초기 로딩 상태 (저장된 일정 확인 중)
+  const [isInitializing, setIsInitializing] = useState(true);
+
   // 저장된 일정 목록
   const [savedSchedules, setSavedSchedules] = useState<SavedScheduleItem[]>([]);
   const [loadingSaved, setLoadingSaved] = useState(false);
@@ -209,13 +212,37 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
     }
   };
 
-  // initialViewMode가 "list"일 때 자동으로 저장된 일정 불러오기
+  // 마운트 시 저장된 일정 확인 후 초기 화면 결정
   useEffect(() => {
-    if (initialViewMode === "list" && user) {
-      loadSavedSchedules();
-    }
+    const initializeView = async () => {
+      if (!user) {
+        setIsInitializing(false);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/schedules");
+        const data = await response.json();
+        if (data.success) {
+          setSavedSchedules(data.data);
+          // 저장된 일정이 있으면 list, 없으면 create
+          if (data.data.length > 0) {
+            setViewMode("list");
+          } else {
+            setViewMode("create");
+          }
+        }
+      } catch (error) {
+        console.error("Failed to check saved schedules:", error);
+        setViewMode("create");
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    initializeView();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialViewMode, user]);
+  }, [user]);
 
   // 저장된 일정 상세 보기
   const viewSavedSchedule = async (id: string) => {
@@ -368,6 +395,18 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
             <LogIn className="w-4 h-4 mr-2" />
             로그인 / 회원가입
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // 초기화 중 로딩 화면
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen pb-20 bg-gradient-to-b from-indigo-50 to-purple-50 dark:from-background dark:to-background">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] p-8">
+          <Loader2 className="w-10 h-10 animate-spin text-indigo-500 mb-4" />
+          <p className="text-sm text-muted-foreground">일정을 불러오는 중...</p>
         </div>
       </div>
     );
