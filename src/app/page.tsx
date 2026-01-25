@@ -594,10 +594,30 @@ export default function Home() {
           onLoginClick={() => setAuthModalOpen(true)}
         />
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
+        <CategorySheet
+          open={categorySheetOpen}
+          onOpenChange={setCategorySheetOpen}
+          title="카테고리 선택"
+          options={categories}
+          onSelect={handleCategorySelect}
+        />
+        <CategorySheet
+          open={marketSheetOpen}
+          onOpenChange={setMarketSheetOpen}
+          title="야시장 선택"
+          options={markets}
+          onSelect={handleMarketSelect}
+        />
         <AuthModal
           isOpen={authModalOpen}
           onClose={() => setAuthModalOpen(false)}
           onLoginSuccess={(userData) => setUser(userData)}
+        />
+        <AddRestaurantModal
+          isOpen={addRestaurantModalOpen}
+          onClose={() => setAddRestaurantModalOpen(false)}
+          user={user}
+          onSuccess={() => {}}
         />
       </>
     );
