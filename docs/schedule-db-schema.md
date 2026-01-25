@@ -392,6 +392,51 @@
 
 ---
 
+## 7. `place_photos_cache` - 장소 사진 캐시 (현재 사용 중)
+
+```javascript
+{
+  _id: ObjectId,
+
+  placeName: "딩타이펑",        // 장소명 (검색 키)
+  photos: [                     // 사진 URL 배열 (최대 10장)
+    "https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=...",
+    "https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=...",
+    // ...
+  ],
+  placeId: "ChIJ...",           // Google Place ID (옵션)
+  cachedAt: ISODate("2025-01-25T10:00:00Z")  // 캐싱 시점
+}
+```
+
+### 사용 목적
+- AI 일정 생성 시 장소별 사진 조회
+- Google Places API 비용 절감 (~80% 절약)
+- 캐시 미스 시에만 API 호출
+
+---
+
+## 8. `schedules` - 사용자 저장 일정 (현재 사용 중)
+
+```javascript
+{
+  _id: ObjectId,
+
+  userId: 123,                  // 사용자 ID
+  schedule: {                   // 전체 일정 데이터 (TravelSchedule 타입)
+    id: "schedule_...",
+    createdAt: "2025-01-25T...",
+    input: { ... },             // 사용자 입력 (days, travelers, preferences 등)
+    schedule: [ ... ],          // 일차별 일정 (DaySchedule[])
+    tips: [ ... ],              // 여행 팁
+    budget: "1인당 약 NT$3,000~5,000/일"
+  },
+  savedAt: ISODate("2025-01-25T10:00:00Z")
+}
+```
+
+---
+
 ## 요약: 컬렉션 목록
 
 | 컬렉션 | 용도 | 예상 문서 수 |
@@ -402,6 +447,8 @@
 | `schedule_templates` | 검증된 일정 템플릿 | 20~50개 |
 | `schedule_route_combinations` | 동선 조합 | 50~100개 |
 | `schedule_special_tips` | 특별 주의사항 | 20~30개 |
+| **`place_photos_cache`** | **장소 사진 URL 캐시** | **무제한 (자동 증가)** |
+| **`schedules`** | **사용자 저장 일정** | **무제한 (사용자당 다수)** |
 
 ---
 

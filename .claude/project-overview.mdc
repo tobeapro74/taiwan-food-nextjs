@@ -63,8 +63,12 @@ src/
 │
 ├── components/
 │   ├── ui/            # shadcn/ui 기반
+│   ├── schedule/      # AI 일정 생성
+│   │   ├── schedule-main.tsx    # 일정 생성/목록 메인
+│   │   └── schedule-result.tsx  # 일정 결과 (사진 모달 포함)
 │   ├── toilet-finder.tsx    # 화장실 찾기
 │   ├── restaurant-history.tsx # 등록 히스토리
+│   ├── bottom-nav.tsx       # 하단 네비게이션 (z-[90])
 │   └── *.tsx          # 비즈니스 컴포넌트
 │
 ├── data/
@@ -73,6 +77,7 @@ src/
 └── lib/
     ├── mongodb.ts     # DB 연결
     ├── district-utils.ts # 지역(구) 유틸리티 (extractRegion, normalizeRegion, DISTRICT_INFO)
+    ├── schedule-types.ts # 일정 관련 타입 정의
     ├── types.ts       # 타입 정의
     └── utils.ts       # 유틸리티
 ```
@@ -120,7 +125,18 @@ page.tsx (메인 페이지)
 │   └── ReviewSection
 │       └── ReviewModal
 │
-├── BottomNav (네비게이션)
+├── AI 일정 생성 (schedule view)
+│   ├── ScheduleMain (일정 생성/목록)
+│   │   ├── 일정 생성 폼
+│   │   ├── 저장된 일정 목록
+│   │   └── 일정 생성 결과
+│   └── ScheduleResult (일정 상세)
+│       ├── DayCard (일차별 카드)
+│       ├── ActivityItem (활동 항목)
+│       └── PhotoPreviewModal (사진 모달)
+│           └── 사진 전체화면 확대 뷰
+│
+├── BottomNav (네비게이션, z-[90])
 │
 └── CategorySheet (바텀 시트 모달)
 ```
@@ -144,6 +160,9 @@ page.tsx (메인 페이지)
 | GET/POST/PUT/PATCH/DELETE | /api/custom-restaurants | 사용자 맛집 CRUD |
 | GET/POST | /api/restaurant-history | 등록 히스토리 |
 | POST | /api/ratings | 실시간 평점 조회 |
+| POST | /api/schedule-generate | AI 일정 생성 (Claude API + 사진 캐싱) |
+| GET/POST | /api/schedules | 저장된 일정 목록/저장 |
+| GET/DELETE | /api/schedules/[id] | 일정 상세/삭제 |
 | GET | /api/seven-eleven-toilet | 7-ELEVEN 화장실 검색 |
 | GET | /api/familymart-toilet | FamilyMart 화장실 검색 |
 | GET | /api/cron/refresh-reviews | 리뷰 정보 갱신 (Cron) |
@@ -173,6 +192,8 @@ page.tsx (메인 페이지)
 | email_verifications | 이메일 인증 코드 |
 | seven_eleven_toilets | 7-ELEVEN 화장실 매장 (타이베이+신베이) |
 | familymart_stores | FamilyMart 매장 (타이베이+신베이) |
+| schedules | 사용자 저장 여행 일정 |
+| place_photos_cache | 장소 사진 URL 캐시 (Google Places API)
 
 ## Vercel Cron Jobs
 
@@ -209,6 +230,22 @@ ADMIN_SECRET_KEY=...
 ```
 
 ## 최근 변경사항
+
+### 2025-01-25
+- **일정 사진 모달 기능 대폭 개선**
+  - PhotoPreviewModal을 RestaurantEditModal 패턴으로 통일
+  - 드래그 핸들, max-h-[85vh], safe-area 패딩 적용
+  - 사진 개별 확대 기능 추가 (전체화면 라이트박스)
+  - 좌/우 화살표 및 키보드 네비게이션 (← → ESC)
+  - 사진 카운터 표시 (1/10)
+  - 닫기 버튼 위치 safe-area 고려하여 조정
+- **하단 네비게이션 UX 개선**
+  - z-index z-50 → z-[90] 상향 (일정 화면 위로 표시)
+  - 버튼 최소 터치 영역 56x52px로 확대
+  - 터치 피드백 효과 추가 (active:bg-muted/50)
+- **일정 화면에서 모달 렌더링 버그 수정**
+  - schedule view에 CategorySheet, MarketSheet, AddRestaurantModal 추가
+  - 일정 화면에서 카테고리/야시장/등록 클릭 시 즉시 모달 표시
 
 ### 2025-01-24
 - **지역별 맛집 랭킹 기능 추가**
