@@ -344,7 +344,7 @@ function ActivityItem({ activity, onPhotoClick }: { activity: ScheduleActivity; 
   );
 }
 
-// 사진 미리보기 모달
+// 사진 미리보기 모달 (RestaurantEditModal 패턴 적용)
 function PhotoPreviewModal({
   isOpen,
   onClose,
@@ -362,6 +362,8 @@ function PhotoPreviewModal({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
     }
     return () => {
       document.body.style.overflow = "";
@@ -375,65 +377,77 @@ function PhotoPreviewModal({
   };
 
   return (
-    <>
+    <div className="fixed inset-0 z-[100] flex items-end justify-center">
       {/* 배경 오버레이 */}
       <div
-        className="fixed inset-0 bg-black/60 z-[100] animate-fade-in"
+        className="absolute inset-0 bg-black/50 animate-fade-in"
         onClick={onClose}
       />
-      {/* 모달 */}
-      <div className="fixed inset-x-0 bottom-20 z-[100] animate-slide-up">
-        <div className="bg-white dark:bg-card rounded-t-3xl max-h-[70vh] overflow-hidden shadow-2xl">
-          {/* 헤더 */}
-          <div className="sticky top-0 bg-white dark:bg-card border-b border-border p-4 flex items-center justify-between z-10">
-            <div>
-              <h3 className="font-bold text-foreground">{placeName}</h3>
-              <p className="text-xs text-muted-foreground">{photos.length}장의 사진</p>
-            </div>
-            <button
-              onClick={onClose}
-              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+
+      {/* 바텀시트 */}
+      <div className="relative bg-background w-full max-w-lg rounded-t-3xl overflow-hidden animate-slide-up max-h-[85vh] flex flex-col pb-[env(safe-area-inset-bottom)]">
+        {/* 드래그 핸들 */}
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+        </div>
+
+        {/* 헤더 */}
+        <div className="px-5 pb-3 flex items-center justify-between border-b">
+          <div>
+            <h2 className="text-lg font-semibold">{placeName}</h2>
+            <p className="text-xs text-muted-foreground">{photos.length}장의 사진</p>
           </div>
-          {/* 사진 그리드 */}
-          <div className="p-4 pb-6 overflow-y-auto max-h-[calc(70vh-80px)] overscroll-contain">
-            <div className="grid grid-cols-2 gap-2">
-              {photos.map((photo, idx) => (
-                <div
-                  key={idx}
-                  className="aspect-square rounded-xl overflow-hidden bg-muted relative"
-                >
-                  {!imageErrors.has(idx) ? (
-                    <Image
-                      src={photo}
-                      alt={`${placeName} 사진 ${idx + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 50vw, 33vw"
-                      onError={() => handleImageError(idx)}
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <Camera className="w-8 h-8" />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-muted transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* 사진 그리드 - 스크롤 가능 */}
+        <div className="p-4 overflow-y-auto flex-1">
+          <div className="grid grid-cols-2 gap-2">
+            {photos.map((photo, idx) => (
+              <div
+                key={idx}
+                className="aspect-square rounded-xl overflow-hidden bg-muted relative"
+              >
+                {!imageErrors.has(idx) ? (
+                  <Image
+                    src={photo}
+                    alt={`${placeName} 사진 ${idx + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 50vw, 33vw"
+                    onError={() => handleImageError(idx)}
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                    <Camera className="w-8 h-8" />
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>
+
       <style jsx>{`
         @keyframes fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
         }
         @keyframes slide-up {
-          from { transform: translateY(100%); }
-          to { transform: translateY(0); }
+          from {
+            transform: translateY(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
         }
         .animate-fade-in {
           animation: fade-in 0.2s ease-out;
@@ -442,7 +456,7 @@ function PhotoPreviewModal({
           animation: slide-up 0.3s ease-out;
         }
       `}</style>
-    </>
+    </div>
   );
 }
 
