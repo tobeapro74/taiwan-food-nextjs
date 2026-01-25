@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Share2, RotateCcw, ChevronDown, ChevronUp, Save, Check, Loader2 } from "lucide-react";
+import { Share2, RotateCcw, ChevronDown, ChevronUp, Save, Check, Loader2, ArrowLeft, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   TravelSchedule,
@@ -19,10 +19,11 @@ interface User {
 interface ScheduleResultProps {
   schedule: TravelSchedule;
   onBack: () => void;
+  onGoToSavedList?: () => void;
   user?: User | null;
 }
 
-export function ScheduleResult({ schedule, onBack, user }: ScheduleResultProps) {
+export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: ScheduleResultProps) {
   const [expandedDays, setExpandedDays] = useState<number[]>([1]);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -94,25 +95,36 @@ export function ScheduleResult({ schedule, onBack, user }: ScheduleResultProps) 
               onClick={onBack}
               className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-white/20 hover:bg-white/30 text-white"
             >
-              <RotateCcw className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
               <h1 className="font-bold text-white text-lg">
                 나의 {schedule.input.days}일 일정
               </h1>
               <p className="text-white/80 text-xs">
-                {schedule.input.travelers}명 · {schedule.input.ageGroup === "20s" ? "20대" : schedule.input.ageGroup === "30s" ? "30대" : "40대+"}
+                {schedule.input.travelers}명 · {schedule.input.ageGroup === "20s" ? "20대" : schedule.input.ageGroup === "30s" ? "30대" : "40대+"} · {new Date(schedule.createdAt).toLocaleDateString("ko-KR")}
               </p>
             </div>
           </div>
-          {/* 공유 버튼 */}
-          <Button
-            variant="ghost"
-            onClick={handleShare}
-            className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-white/20 hover:bg-white/30 text-white"
-          >
-            <Share2 className="h-5 w-5" />
-          </Button>
+          {/* 저장된 일정 & 공유 버튼 */}
+          <div className="flex items-center gap-2">
+            {onGoToSavedList && (
+              <Button
+                variant="ghost"
+                onClick={onGoToSavedList}
+                className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-white/20 hover:bg-white/30 text-white"
+              >
+                <List className="h-5 w-5" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              onClick={handleShare}
+              className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-white/20 hover:bg-white/30 text-white"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </div>
 

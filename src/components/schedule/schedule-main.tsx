@@ -366,7 +366,7 @@ export function ScheduleMain({ onBack, user, onLoginClick }: ScheduleMainProps) 
 
   // 저장된 일정 보기 화면
   if (viewMode === "view" && viewingSchedule) {
-    return <ScheduleResult schedule={viewingSchedule} onBack={handleReset} user={user} />;
+    return <ScheduleResult schedule={viewingSchedule} onBack={handleReset} onGoToSavedList={showSavedList} user={user} />;
   }
 
   // 저장된 일정 목록 화면
@@ -444,7 +444,7 @@ export function ScheduleMain({ onBack, user, onLoginClick }: ScheduleMainProps) 
 
   // 결과 화면
   if (schedule) {
-    return <ScheduleResult schedule={schedule} onBack={handleReset} user={user} />;
+    return <ScheduleResult schedule={schedule} onBack={handleReset} onGoToSavedList={showSavedList} user={user} />;
   }
 
   // 로딩 화면
