@@ -1374,3 +1374,334 @@ window.open(url, "_blank");
 
 ### 관련 파일
 - `src/components/toilet-finder.tsx` - `openDirections` 함수 수정 (138-152줄)
+
+---
+
+## 15. 성능 최적화 마이그레이션 (2026-01-30)
+
+### 배경
+앱의 속도 향상과 API 호출 최소화를 위해 5단계 마이그레이션을 진행함.
+
+### 마이그레이션 전 문제점
+
+| 항목 | 문제점 |
+|------|--------|
+| **데이터베이스** | 인덱스 없음 → 풀 스캔으로 쿼리 느림 |
+| **캐싱** | MongoDB 수동 캐시만 사용, 페이지 새로고침 시 초기화 |
+| **API 호출** | RestaurantCard당 2개 요청 (이미지 + 평점), 홈 화면에서 20+ API 호출 |
+| **클라이언트** | 순수 fetch + useState, 중복 요청 발생 |
+| **렌더링** | 완전 CSR, 초기 로딩 느림 |
+
+---
+
+### Phase 1: MongoDB 인덱스 최적화
+
+#### 생성된 파일
+- `src/app/api/migrate/create-indexes/route.ts`
+
+#### 적용 방법
+```bash
+# 인덱스 생성 (POST)
+curl -X POST "https://your-domain/api/migrate/create-indexes?key=ADMIN_SECRET_KEY"
+
+# 현재 인덱스 상태 확인 (GET)
+curl "https://your-domain/api/migrate/create-indexes?key=ADMIN_SECRET_KEY"
+```
+
+#### 생성되는 인덱스 목록
+
+| 컬렉션 | 인덱스 | 용도 |
+|--------|--------|------|
+| `google_reviews_cache` | `restaurantName`, `placeId` | 리뷰 조회 |
+| `google_reviews_cache` | `updatedAt` (TTL 24시간) | 자동 캐시 정리 |
+| `custom_restaurants` | `place_id` (unique), `name`, `category` | 맛집 조회 |
+| `reviews` | `restaurant_name`, `member_id`, `user_id` | 리뷰 조회 |
+| `members` | `id` (unique), `email` (unique) | 회원 조회 |
+| `image_cache` | `restaurantName`, `createdAt` (TTL 7일) | 이미지 캐시 |
+| `schedules` | `user_id`, `created_at` | 일정 조회 |
+
+#### 예상 효과
+- `google_reviews_cache` 조회: ~50ms → ~5ms
+- `custom_restaurants` 조회: ~30ms → ~3ms
+
+---
+
+### Phase 2: 캐싱 전략 강화
+
+#### 생성된 파일
+- `src/lib/cache.ts` - 서버 사이드 LRU 캐시
+- `src/lib/client-cache.ts` - 클라이언트 LocalStorage 캐시
+
+#### 서버 LRU 캐시 구조
+```typescript
+// src/lib/cache.ts
+import { ratingCache, reviewCache, imageUrlCache, CacheHeaders } from '@/lib/cache';
+
+// 평점 캐시 (최대 1000개, 5분 TTL)
+ratingCache.get(restaurantName);
+ratingCache.set(restaurantName, { rating, reviewsCount });
+
+// 이미지 URL 캐시 (최대 500개, 24시간 TTL)
+imageUrlCache.get(restaurantName);
+imageUrlCache.set(restaurantName, photoUrl);
+
+// HTTP 캐시 헤더 적용
+return NextResponse.json(data, { headers: CacheHeaders.RATING });
+```
+
+#### 클라이언트 캐시 구조
+```typescript
+// src/lib/client-cache.ts
+import { localCache, CacheKeys, CacheTTL, cachedFetch } from '@/lib/client-cache';
+
+// LocalStorage 캐시
+localCache.set(CacheKeys.rating('딩타이펑'), data, CacheTTL.RATING);
+const cached = localCache.get(CacheKeys.rating('딩타이펑'));
+
+// 캐시 with fallback (메모리 → LocalStorage → fetch)
+const data = await cachedFetch(
+  CacheKeys.rating(name),
+  () => fetch('/api/ratings', { ... }),
+  CacheTTL.RATING
+);
+```
+
+#### HTTP Cache-Control 헤더
+| 타입 | 헤더 값 | 용도 |
+|------|---------|------|
+| `RATING` | `s-maxage=300, stale-while-revalidate=600` | 평점 (5분) |
+| `REVIEW` | `s-maxage=3600, stale-while-revalidate=7200` | 리뷰 (1시간) |
+| `IMAGE` | `max-age=86400, immutable` | 이미지 (24시간) |
+| `SHORT` | `s-maxage=60, stale-while-revalidate=300` | 홈 데이터 (1분) |
+
+---
+
+### Phase 3: API 호출 통합
+
+#### 생성된 파일
+- `src/app/api/batch/route.ts` - 배치 API
+- `src/app/api/home-data/route.ts` - 홈 화면 통합 API
+
+#### 배치 API 사용법
+```typescript
+// 여러 맛집의 데이터를 한 번에 조회
+const response = await fetch('/api/batch', {
+  method: 'POST',
+  body: JSON.stringify({
+    restaurants: ['딩타이펑', '푸항또우장', '용캉우육면'],
+    include: ['rating', 'photo', 'reviews']
+  })
+});
+
+const { results } = await response.json();
+// results['딩타이펑'].rating
+// results['딩타이펑'].photo.photoUrl
+```
+
+#### 홈 화면 통합 API
+```typescript
+// GET /api/home-data
+// 한 번의 호출로 인기 맛집 + 야시장 맛집 + 사용자 등록 맛집 조회
+const response = await fetch('/api/home-data');
+const { data } = await response.json();
+// data.popularRatings
+// data.marketRatings
+// data.customRestaurants
+```
+
+#### API 호출 비교
+| 화면 | 변경 전 | 변경 후 | 감소율 |
+|------|---------|---------|--------|
+| 홈 (10개 카드) | 20+ | 2 | 90% |
+| 맛집 목록 (20개) | 40+ | 1 | 97% |
+| 맛집 상세 | 3 | 1 | 67% |
+
+---
+
+### Phase 4: 클라이언트 최적화
+
+#### 생성된 파일
+- `src/hooks/useApi.ts` - SWR 기반 커스텀 Hooks
+- `src/components/ui/skeleton.tsx` - Skeleton 로딩 컴포넌트 (업데이트)
+- `src/components/virtual-restaurant-list.tsx` - Virtual Scroll 컴포넌트
+
+#### SWR Hooks 사용법
+```typescript
+import { useHomeData, useRatings, useRestaurantPhoto, useBatchData } from '@/hooks/useApi';
+
+// 홈 화면 데이터
+const { popularRatings, marketRatings, customRestaurants, isLoading } = useHomeData();
+
+// 평점 조회
+const { ratings, isLoading, refresh } = useRatings(['딩타이펑', '푸항또우장']);
+
+// 이미지 조회
+const { photoUrl, isLoading } = useRestaurantPhoto('딩타이펑');
+
+// 배치 조회
+const { results, isLoading } = useBatchData(
+  ['딩타이펑', '푸항또우장'],
+  ['rating', 'photo']
+);
+```
+
+#### SWR 기본 설정
+```typescript
+{
+  revalidateOnFocus: false,      // 포커스 시 재검증 안함
+  revalidateOnReconnect: true,   // 네트워크 복구 시 재검증
+  dedupingInterval: 60000,       // 1분 동안 중복 요청 방지
+  errorRetryCount: 2,            // 에러 시 2회 재시도
+}
+```
+
+#### Skeleton 컴포넌트
+```typescript
+import {
+  Skeleton,
+  RestaurantCardSkeleton,
+  RestaurantListSkeleton,
+  HomePageSkeleton,
+  ReviewSkeleton
+} from '@/components/ui/skeleton';
+
+// 사용 예시
+{isLoading ? <RestaurantListSkeleton count={6} /> : <RestaurantList />}
+```
+
+#### Virtual Scroll 사용법
+```typescript
+import { VirtualGrid } from '@/components/virtual-restaurant-list';
+
+// 대량의 맛집 목록을 효율적으로 렌더링
+<VirtualGrid
+  restaurants={restaurants}
+  onSelect={(r) => handleSelect(r)}
+  renderItem={(restaurant, index) => (
+    <RestaurantCard key={restaurant.이름} restaurant={restaurant} />
+  )}
+  rowHeight={220}
+  overscan={3}
+/>
+```
+
+---
+
+### Phase 5: 서버 사이드 최적화
+
+#### 수정된 파일
+- `next.config.ts` - 이미지 최적화 + 헤더 설정
+- `src/app/api/cache-stats/route.ts` - Edge Runtime 캐시 통계 API
+
+#### next.config.ts 주요 변경
+```typescript
+const nextConfig: NextConfig = {
+  images: {
+    formats: ['image/avif', 'image/webp'],  // 이미지 포맷 최적화
+    minimumCacheTTL: 86400,                  // 24시간 캐시
+    deviceSizes: [640, 750, 828, 1080, 1200],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256],
+  },
+  experimental: {
+    optimizePackageImports: [                // 번들 최적화
+      'lucide-react',
+      '@radix-ui/react-dialog',
+      // ...
+    ],
+  },
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [{
+          key: 'Cache-Control',
+          value: 'public, s-maxage=60, stale-while-revalidate=300',
+        }],
+      },
+      {
+        source: '/:all*(svg|jpg|jpeg|png|gif|ico|webp|avif)',
+        headers: [{
+          key: 'Cache-Control',
+          value: 'public, max-age=31536000, immutable',  // 1년 캐시
+        }],
+      },
+    ];
+  },
+};
+```
+
+#### Edge Runtime 캐시 통계 API
+```bash
+# 캐시 통계 확인
+curl "https://your-domain/api/cache-stats?key=ADMIN_SECRET_KEY"
+
+# 모든 캐시 무효화
+curl -X POST "https://your-domain/api/cache-stats?key=ADMIN_SECRET_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"type": "all"}'
+
+# 특정 맛집 캐시 무효화
+curl -X POST "https://your-domain/api/cache-stats?key=ADMIN_SECRET_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"type": "restaurant", "name": "딩타이펑"}'
+```
+
+---
+
+### 적용 후 패키지 설치
+
+```bash
+npm install swr @tanstack/react-virtual
+```
+
+---
+
+### 예상 성능 개선
+
+| 지표 | 이전 | 이후 | 개선율 |
+|------|------|------|--------|
+| First Contentful Paint | 3.0s | 1.5s | 50% |
+| API 호출 (홈 화면) | 20+ | 2-3 | 90% |
+| 메모리 캐시 히트율 | 0% | 80%+ | - |
+| Lighthouse 점수 | 60 | 90+ | 50% |
+
+---
+
+### 관련 파일 목록
+
+**Phase 1:**
+- `src/app/api/migrate/create-indexes/route.ts`
+
+**Phase 2:**
+- `src/lib/cache.ts`
+- `src/lib/client-cache.ts`
+- `src/app/api/ratings/route.ts` (수정)
+- `src/app/api/place-photo/route.ts` (수정)
+
+**Phase 3:**
+- `src/app/api/batch/route.ts`
+- `src/app/api/home-data/route.ts`
+
+**Phase 4:**
+- `src/hooks/useApi.ts`
+- `src/components/ui/skeleton.tsx` (수정)
+- `src/components/virtual-restaurant-list.tsx`
+- `package.json` (수정)
+
+**Phase 5:**
+- `next.config.ts` (수정)
+- `src/app/api/cache-stats/route.ts`
+
+**문서:**
+- `docs/MIGRATION_PLAN.md` - 전체 계획
+- `docs/MIGRATION_GUIDE.md` - 적용 가이드
+
+---
+
+### 롤백 방법
+
+1. **Phase 1 (인덱스)**: MongoDB Atlas에서 인덱스 삭제
+2. **Phase 2 (캐시)**: `cache.ts` import 제거, 기존 코드로 복원
+3. **Phase 3 (API)**: 기존 개별 API 사용
+4. **Phase 4 (SWR)**: `useApi.ts` 대신 기존 fetch 사용
+5. **Phase 5 (설정)**: `next.config.ts` 이전 버전으로 복원
