@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { getDb } from "@/lib/mongodb";
+import { imageUrlCache, CacheHeaders } from "@/lib/cache";
 
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
 
@@ -81,7 +82,17 @@ export async function GET(request: NextRequest) {
   const publicId = toPublicId(query);
 
   try {
-    // 1. MongoDB 캐시 확인 (가장 빠름)
+    // 0. 서버 메모리 캐시 확인 (가장 빠름)
+    const cacheKey = restaurantName || query;
+    const memCached = imageUrlCache.get(cacheKey);
+    if (memCached) {
+      return NextResponse.json(
+        { photoUrl: memCached, cached: true, source: 'memory' },
+        { headers: CacheHeaders.IMAGE }
+      );
+    }
+
+    // 1. MongoDB 캐시 확인
     if (restaurantName) {
       const cached = await getCachedImage(restaurantName);
       if (cached) {
@@ -95,12 +106,13 @@ export async function GET(request: NextRequest) {
             message: cached.businessStatus === "CLOSED_PERMANENTLY" ? "폐업" : "임시휴업"
           });
         }
+        // 메모리 캐시에 저장
+        imageUrlCache.set(cacheKey, cached.photoUrl);
         // 캐시된 이미지 반환
-        return NextResponse.json({
-          photoUrl: cached.photoUrl,
-          buildingName: cached.buildingName,
-          cached: true
-        });
+        return NextResponse.json(
+          { photoUrl: cached.photoUrl, buildingName: cached.buildingName, cached: true },
+          { headers: CacheHeaders.IMAGE }
+        );
       }
     }
 
@@ -203,7 +215,13 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      return NextResponse.json({ photoUrl: optimizedUrl, cached: false, uploaded: true, buildingName });
+      // 메모리 캐시에 저장
+      imageUrlCache.set(cacheKey, optimizedUrl);
+
+      return NextResponse.json(
+        { photoUrl: optimizedUrl, cached: false, uploaded: true, buildingName },
+        { headers: CacheHeaders.IMAGE }
+      );
     } catch (uploadError) {
       console.error("Cloudinary upload error:", uploadError);
       // 업로드 실패해도 Google 원본 URL 반환
