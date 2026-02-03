@@ -56,6 +56,12 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
 
+  // 개발 환경용 mock 위치 (시먼딩 행복당)
+  const DEV_MOCK_LOCATION = {
+    lat: 25.0421,
+    lng: 121.5074,
+  };
+
   // 위치 권한 요청 및 가까운 매장 검색
   const findNearbyToilets = async (type: StoreType) => {
     setLoading(true);
@@ -63,16 +69,26 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
     setLocationError(null);
 
     try {
-      // 위치 권한 요청
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        });
-      });
+      let latitude: number;
+      let longitude: number;
 
-      const { latitude, longitude } = position.coords;
+      // 개발 환경에서는 mock 위치 사용
+      if (process.env.NODE_ENV === "development") {
+        latitude = DEV_MOCK_LOCATION.lat;
+        longitude = DEV_MOCK_LOCATION.lng;
+        console.log("🧪 개발 모드: 시먼딩 행복당 위치 사용", { latitude, longitude });
+      } else {
+        // 프로덕션에서는 실제 위치 사용
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          });
+        });
+        latitude = position.coords.latitude;
+        longitude = position.coords.longitude;
+      }
       setUserLocation({ lat: latitude, lng: longitude });
 
       // API 호출 (타입에 따라 다른 엔드포인트)

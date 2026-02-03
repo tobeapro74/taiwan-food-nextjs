@@ -318,16 +318,20 @@ export default function Home() {
       setActiveTab("nearby");
     } else if (tab === "add") {
       // 맛집 등록 - 관리자 또는 박병철만 가능
+      setActiveTab("add");
       if (!user) {
         setAuthModalOpen(true);
       } else if (user.is_admin || user.name === "박병철") {
         setAddRestaurantModalOpen(true);
       }
     } else if (tab === "category") {
+      setActiveTab("category");
       setCategorySheetOpen(true);
     } else if (tab === "market") {
+      setActiveTab("market");
       setMarketSheetOpen(true);
     } else if (tab === "tour") {
+      setActiveTab("tour");
       setTourSheetOpen(true);
     } else if (tab === "places") {
       setListTitle("갈만한 곳");

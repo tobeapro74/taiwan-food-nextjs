@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 개발 표시기(N 로고) 숨기기
+  devIndicators: false,
+
   // 이미지 최적화
   images: {
     remotePatterns: [
