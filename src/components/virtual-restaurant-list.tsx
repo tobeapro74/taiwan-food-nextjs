@@ -138,7 +138,7 @@ function VirtualGridComponent({
               className="grid grid-cols-2 gap-3 px-4"
             >
               {row.map((restaurant, colIndex) => (
-                <div key={restaurant.이름 || colIndex}>
+                <div key={restaurant.name || colIndex}>
                   {renderItem(restaurant, baseIndex + colIndex)}
                 </div>
               ))}
@@ -168,6 +168,6 @@ export const OptimizedCard = memo(function OptimizedCard({
   return <>{children}</>;
 }, (prevProps, nextProps) => {
   // 맛집 이름이 같으면 리렌더링 방지
-  return prevProps.restaurant.이름 === nextProps.restaurant.이름 &&
+  return prevProps.restaurant.name === nextProps.restaurant.name &&
          prevProps.index === nextProps.index;
 });
