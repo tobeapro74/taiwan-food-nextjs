@@ -16,6 +16,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // App Store 심사용 테스트 계정
+    if (email === "test@test.com" && password === "test1234") {
+      const testUser = {
+        id: 9999,
+        name: "테스트 사용자",
+        email: "test@test.com",
+        is_admin: false,
+        profile_image: null,
+      };
+
+      const token = jwt.sign(
+        {
+          userId: testUser.id,
+          email: testUser.email,
+          name: testUser.name,
+          is_admin: testUser.is_admin,
+          profile_image: testUser.profile_image,
+        },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      const response = NextResponse.json({
+        success: true,
+        data: testUser,
+      });
+
+      response.cookies.set("auth_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60,
+        path: "/",
+      });
+
+      return response;
+    }
+
     const db = await connectToDatabase();
     const membersCollection = db.collection("members");
 
