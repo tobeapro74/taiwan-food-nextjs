@@ -41,6 +41,10 @@ src/
 │   │   ├── restaurant-history/ # 등록 히스토리 API
 │   │   ├── seven-eleven-toilet/ # 7-ELEVEN 화장실 검색
 │   │   ├── familymart-toilet/ # FamilyMart 매장 검색
+│   │   ├── schedule-generate/ # AI 여행 일정 생성 (Claude API)
+│   │   ├── schedules/         # 일정 저장/조회 API
+│   │   ├── hotel-search/      # 호텔 검색 API
+│   │   ├── home-data/         # 홈 화면 데이터 API
 │   │   ├── cron/              # Cron Jobs
 │   │   │   ├── refresh-reviews/ # 리뷰 정보 갱신
 │   │   │   ├── sync-seven-eleven/ # 7-ELEVEN 동기화
@@ -48,6 +52,8 @@ src/
 │   │   ├── ratings/           # 실시간 평점 조회 API
 │   │   ├── upload/            # 이미지 업로드 (Cloudinary)
 │   │   └── place-photo/       # Google Places 이미지 프록시
+│   ├── privacy/               # 개인정보 처리방침 페이지
+│   ├── support/               # 고객지원 페이지
 │   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx               # 메인 페이지
@@ -108,6 +114,9 @@ CRON_SECRET=your_cron_secret
 
 # Admin Secret Key (관리자 등록용)
 ADMIN_SECRET_KEY=your_admin_secret
+
+# Claude API (AI 일정 생성)
+ANTHROPIC_API_KEY=your_anthropic_api_key
 ```
 
 ## 실행 방법
@@ -176,3 +185,13 @@ git push
 - **계정 삭제 기능**
 - iOS 스타일 스와이프 뒤로가기
 - PWA 지원 (홈 화면 추가)
+- **App Store 아이콘 적용** (PWA 바로가기 아이콘)
+
+### AI 여행 일정 생성
+- Claude API 기반 맞춤형 일정 생성
+- 여행 일수, 인원, 취향 선택
+- 일정 저장 및 관리
+
+### 정책 페이지
+- **개인정보 처리방침** (/privacy)
+- **고객지원** (/support)

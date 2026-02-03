@@ -30,10 +30,10 @@
 └───────┼─────────────┼─────────────┼─────────────┼───────────────┘
         │             │             │             │
         ▼             ▼             ▼             ▼
-┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐
-│  MongoDB  │  │  MongoDB  │  │  MongoDB  │  │Cloudinary │  │  Google   │  │  Resend   │
-│  (Users)  │  │ (Reviews) │  │ (Stores)  │  │  (Image)  │  │  Places   │  │  (Email)  │
-└───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘
+┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐
+│  MongoDB  │  │  MongoDB  │  │  MongoDB  │  │Cloudinary │  │  Google   │  │  Resend   │  │  Claude   │
+│  (Users)  │  │ (Reviews) │  │ (Stores)  │  │  (Image)  │  │  Places   │  │  (Email)  │  │   (AI)    │
+└───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘
 ```
 
 ## 컴포넌트 구조
@@ -69,10 +69,27 @@ src/
 │   │   ├── restaurant-prices/[name]/route.ts # GET: 가격/전화번호 조회
 │   │   ├── seven-eleven-toilet/route.ts # GET: 7-ELEVEN 화장실 검색
 │   │   ├── familymart-toilet/route.ts # GET: FamilyMart 매장 검색
+│   │   ├── schedule-generate/
+│   │   │   └── route.ts              # POST: AI 여행 일정 생성 (Claude API)
+│   │   ├── schedules/
+│   │   │   ├── route.ts              # GET/POST: 일정 목록/저장
+│   │   │   └── [id]/route.ts         # GET/DELETE: 일정 상세/삭제
+│   │   ├── hotel-search/
+│   │   │   └── route.ts              # GET: 호텔 검색 (Google Places)
+│   │   ├── home-data/
+│   │   │   └── route.ts              # GET: 홈 화면 데이터 일괄 조회
+│   │   ├── batch/
+│   │   │   └── route.ts              # POST: 배치 API 호출
+│   │   ├── cache-stats/
+│   │   │   └── route.ts              # GET: 캐시 통계
 │   │   └── cron/
 │   │       ├── refresh-reviews/route.ts # GET: 리뷰 정보 갱신 (Cron)
 │   │       ├── sync-seven-eleven/route.ts # GET: 7-ELEVEN 동기화 (Cron)
 │   │       └── sync-familymart/route.ts # GET: FamilyMart 동기화 (Cron)
+│   ├── privacy/
+│   │   └── page.tsx                  # 개인정보 처리방침 페이지
+│   ├── support/
+│   │   └── page.tsx                  # 고객지원 페이지
 │   ├── globals.css                # 전역 스타일
 │   ├── layout.tsx                 # 루트 레이아웃
 │   └── page.tsx                   # 메인 페이지 (SPA 라우팅)

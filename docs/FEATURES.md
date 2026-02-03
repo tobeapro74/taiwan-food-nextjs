@@ -225,15 +225,33 @@
 ## 8. PWA 지원
 
 ### 8.1 매니페스트
-- 앱 이름: 대만맛집정보
+- 앱 이름: 대만맛집 (타이페이)
+- 짧은 이름: 대만맛집
 - 테마 색상: #FF6B6B
 - 홈 화면 추가 지원
+- standalone 모드
 
 ### 8.2 아이콘
-- 192x192, 512x512 PNG
-- Apple Touch Icon
+- **App Store 아이콘 적용** (Foodie Map 딤섬 아이콘)
+- 192x192, 512x512 PNG (PWA 바로가기용)
+- Apple Touch Icon (180x180)
+- Next.js App Router 아이콘 (icon.png, apple-icon.png)
+- favicon (32x32)
 
-### 8.3 뷰포트 설정
+### 8.3 아이콘 파일 구조
+```
+public/icons/
+├── icon-192.png        # PWA 홈 화면 아이콘
+├── icon-512.png        # PWA 스플래시 화면
+├── apple-touch-icon.png # iOS 홈 화면
+└── 대만맛집_아이콘_2.png  # 원본 App Store 아이콘 (1024x1024)
+
+src/app/
+├── icon.png            # 브라우저 favicon (32x32)
+└── apple-icon.png      # iOS Safari (180x180)
+```
+
+### 8.4 뷰포트 설정
 - 모바일 최적화
 - Safe Area 지원 (iOS 노치)
 
@@ -484,3 +502,32 @@
 - 홈, 주변맛집, 일정, 등록(관리자), 카테고리, 야시장
 - 활성 탭: primary 색상
 - 비활성 탭: muted-foreground
+
+## 18. 정책 페이지
+
+### 18.1 개인정보 처리방침 (/privacy)
+- 수집하는 개인정보 항목
+- 개인정보 수집 목적
+- 개인정보 보유 기간
+- 제3자 제공
+- 이용자 권리
+- 쿠키 사용
+- 연락처
+
+### 18.2 고객지원 (/support)
+- 자주 묻는 질문 (FAQ)
+- 문의 방법 안내
+- 앱 사용 가이드
+- 문제 신고
+
+## 19. iOS 앱 배포
+
+### 19.1 Capacitor 기반 WebView 앱
+- Next.js 웹앱을 iOS 앱으로 래핑
+- Bundle ID: com.taiwanfood.app
+- 서버 URL: https://taiwan-yummy-food.com
+
+### 19.2 App Store 심사용 테스트 계정
+- 이메일: test@test.com
+- 비밀번호: test1234
+- 회원가입 테스트: @test.com/@example.com 이메일 + 인증코드 123456

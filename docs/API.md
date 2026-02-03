@@ -1045,3 +1045,180 @@ fields=place_id,name,formatted_address,geometry,rating,user_ratings_total,
 - `/src/app/api/places-search/route.ts` - 주소 검색 (sessionToken 적용)
 - `/src/app/api/google-place-details/route.ts` - 장소 상세 (sessionToken + fields 최적화)
 - `/src/app/api/place-photo/route.ts` - 이미지 캐싱 (Cloudinary + MongoDB)
+
+---
+
+## AI 여행 일정 API
+
+### POST /api/schedule-generate
+AI 여행 일정 생성 (Claude API)
+
+**Request Body**
+```json
+{
+  "days": 3,
+  "travelers": {
+    "adults": 2,
+    "children": 0,
+    "seniors": 0
+  },
+  "preferences": ["맛집", "야경", "쇼핑"],
+  "purpose": "맛집투어",
+  "arrival_time": "오전",
+  "departure_time": "저녁",
+  "accommodation_area": "시먼딩"
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "data": {
+    "schedule": [
+      {
+        "day": 1,
+        "date": "도착일",
+        "activities": [
+          {
+            "time": "14:00",
+            "name": "딩타이펑 본점",
+            "type": "맛집",
+            "address": "...",
+            "tip": "...",
+            "duration": "90분"
+          }
+        ]
+      }
+    ],
+    "tips": ["여행 팁 1", "여행 팁 2"],
+    "estimated_budget": "1인당 약 3만원/일"
+  }
+}
+```
+
+---
+
+### GET /api/schedules
+저장된 일정 목록 조회 (인증 필요)
+
+**Response**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "...",
+      "title": "3박 4일 대만 여행",
+      "days": 4,
+      "created_at": "2025-02-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### POST /api/schedules
+일정 저장 (인증 필요)
+
+**Request Body**
+```json
+{
+  "title": "3박 4일 대만 여행",
+  "schedule": { ... },
+  "days": 4,
+  "preferences": ["맛집", "야경"]
+}
+```
+
+**Response**
+```json
+{
+  "success": true,
+  "data": { "insertedId": "..." }
+}
+```
+
+---
+
+### GET /api/schedules/[id]
+일정 상세 조회 (인증 필요)
+
+**Response**
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "...",
+    "title": "3박 4일 대만 여행",
+    "schedule": { ... },
+    "days": 4,
+    "preferences": ["맛집", "야경"],
+    "created_at": "2025-02-01T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+### DELETE /api/schedules/[id]
+일정 삭제 (인증 필요, 본인 일정만)
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "일정이 삭제되었습니다."
+}
+```
+
+---
+
+## 홈 화면 데이터 API
+
+### GET /api/home-data
+홈 화면에 필요한 데이터 일괄 조회
+
+**Response**
+```json
+{
+  "success": true,
+  "data": {
+    "popularRestaurants": [...],
+    "districtRankings": [...],
+    "customRestaurants": [...],
+    "deletedStaticIds": [...]
+  }
+}
+```
+
+---
+
+## 호텔 검색 API
+
+### GET /api/hotel-search
+호텔/숙소 검색 (Google Places API)
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| area | O | 검색 지역 (예: "시먼딩", "타이베이역") |
+| limit | X | 최대 결과 수 (기본: 5) |
+
+**Response**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "place_id": "ChIJ...",
+      "name": "호텔명",
+      "address": "주소",
+      "rating": 4.5,
+      "reviews_count": 500,
+      "price_level": 3
+    }
+  ]
+}
+```

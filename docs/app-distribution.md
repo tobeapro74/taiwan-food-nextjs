@@ -29,7 +29,9 @@ App Store 출시를 위한 전체 과정을 단계별로 정리한 문서입니�
 | 웹 URL | https://taiwan-yummy-food.com |
 | Vercel URL | https://taiwan-food-nextjs.vercel.app |
 | 개인정보 처리방침 | https://taiwan-yummy-food.com/privacy |
+| 고객지원 | https://taiwan-yummy-food.com/support |
 | GitHub | https://github.com/tobeapro74/taiwan-food-nextjs |
+| 테스트 계정 | test@test.com / test1234 |
 
 ---
 
@@ -77,6 +79,18 @@ App Store 출시를 위한 전체 과정을 단계별로 정리한 문서입니�
 - [x] **개인정보 처리방침 페이지** (2025-02-03)
   - /privacy 페이지 생성
   - https://taiwan-yummy-food.com/privacy
+
+- [x] **고객지원 페이지** (2025-02-03)
+  - /support 페이지 생성
+  - https://taiwan-yummy-food.com/support
+
+- [x] **테스트 계정 추가** (2025-02-03)
+  - App Store 심사용 테스트 계정 (test@test.com / test1234)
+
+- [x] **PWA 바로가기 아이콘 적용** (2025-02-03)
+  - App Store 아이콘(Foodie Map 딤섬)을 PWA 아이콘으로 적용
+  - icon-192.png, icon-512.png, apple-touch-icon.png 생성
+  - Next.js App Router용 icon.png, apple-icon.png 생성
 
 - [x] **Git 커밋 및 배포** (2025-02-03)
   - Vercel 자동 배포 완료
@@ -402,7 +416,7 @@ If you want to test sign-up:
 
 | 버전 | 빌드 | 날짜 | 상태 | 비고 |
 |------|------|------|------|------|
-| 1.0 | 1 | 2025-02-03 | 준비 중 | 최초 제출 준비 |
+| 1.0 | 1 | 2026-02-03 | 준비 중 | 최초 제출 준비 |
 
 ---
 
@@ -436,4 +450,4 @@ git push
 
 ---
 
-*마지막 업데이트: 2025년 2월 3일*
+*마지막 업데이트: 2026년 2월 3일*
