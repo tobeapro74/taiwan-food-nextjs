@@ -10,8 +10,8 @@ const config: CapacitorConfig = {
     scrollEnabled: true,
   },
   server: {
-    // 배포된 웹앱 URL을 로드
-    url: 'https://taiwan-yummy-food.com',
+    // 배포된 웹앱 URL을 로드 (www 포함 - 리다이렉트 방지)
+    url: 'https://www.taiwan-yummy-food.com',
     cleartext: false,
   },
   plugins: {
