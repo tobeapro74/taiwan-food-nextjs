@@ -107,6 +107,8 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
     return restaurants;
   }, [customRestaurants]);
 
+  const [showOutsideTaiwanNotice, setShowOutsideTaiwanNotice] = useState(false);
+
   // 대만 영역 확인 (위도 21.9~25.4, 경도 119.3~122.1)
   const isInTaiwan = useMemo(() => {
     if (!coordinates) return false;
@@ -116,11 +118,12 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
     );
   }, [coordinates]);
 
-  // 대만 밖 위치 감지 시 자동으로 시먼딩으로 전환
+  // 대만 밖 위치 감지 시 자동으로 시먼딩으로 전환 + 알림 표시
   useEffect(() => {
     if (coordinates && !isInTaiwan && !isMockLocation) {
       const defaultLocation = MOCK_LOCATIONS["시먼딩"];
       if (defaultLocation) {
+        setShowOutsideTaiwanNotice(true);
         setMockLocation("시먼딩");
       }
     }
@@ -136,6 +139,30 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+      {/* 대만 외 지역 안내 모달 */}
+      {showOutsideTaiwanNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-xl">
+            <div className="text-center mb-4">
+              <span className="text-4xl">📍</span>
+            </div>
+            <h3 className="text-lg font-bold text-center text-gray-900 dark:text-white mb-3">
+              대만 외 지역 감지
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 text-center leading-relaxed mb-5">
+              이 서비스는 대만 타이베이 내에서 이용 가능합니다.
+              현재 대만 외 지역에 계시므로, 시먼딩(西門町) 기준의 샘플 데이터를 보여드립니다.
+            </p>
+            <button
+              onClick={() => setShowOutsideTaiwanNotice(false)}
+              className="w-full py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 헤더 */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 py-2 shadow-sm safe-area-top">
         <div className="flex items-center gap-2">

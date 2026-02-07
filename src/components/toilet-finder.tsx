@@ -55,6 +55,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
   const [error, setError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [showOutsideTaiwanNotice, setShowOutsideTaiwanNotice] = useState(false);
 
   // 기본 위치 (시먼딩 행복당) - 개발 환경 및 대만 외 지역 폴백용
   const DEFAULT_TAIWAN_LOCATION = {
@@ -122,11 +123,12 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
         latitude = position.coords.latitude;
         longitude = position.coords.longitude;
 
-        // 대만 범위 밖이면 기본 대만 위치(시먼딩) 사용
+        // 대만 범위 밖이면 기본 대만 위치(시먼딩) 사용 + 알림 표시
         const isInTaiwan = latitude >= 21.9 && latitude <= 25.4 && longitude >= 119.3 && longitude <= 122.1;
         if (!isInTaiwan) {
           latitude = DEFAULT_TAIWAN_LOCATION.lat;
           longitude = DEFAULT_TAIWAN_LOCATION.lng;
+          setShowOutsideTaiwanNotice(true);
         }
       }
       setUserLocation({ lat: latitude, lng: longitude });
@@ -213,6 +215,30 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
+      {/* 대만 외 지역 안내 모달 */}
+      {showOutsideTaiwanNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-xl">
+            <div className="text-center mb-4">
+              <span className="text-4xl">📍</span>
+            </div>
+            <h3 className="text-lg font-bold text-center text-gray-900 dark:text-white mb-3">
+              대만 외 지역 감지
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 text-center leading-relaxed mb-5">
+              이 서비스는 대만 타이베이 내에서 이용 가능합니다.
+              현재 대만 외 지역에 계시므로, 시먼딩(西門町) 기준의 샘플 데이터를 보여드립니다.
+            </p>
+            <button
+              onClick={() => setShowOutsideTaiwanNotice(false)}
+              className="w-full py-3 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 헤더 */}
       <div className="sticky top-0 z-10 bg-background border-b border-border shadow-sm safe-area-top">
         <div className="flex items-center gap-2 p-3">
