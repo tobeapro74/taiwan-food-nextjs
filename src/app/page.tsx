@@ -582,6 +582,20 @@ export default function Home() {
       <>
         <ToiletFinder onClose={handleBack} />
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
+        <CategorySheet
+          open={categorySheetOpen}
+          onOpenChange={setCategorySheetOpen}
+          title="카테고리 선택"
+          options={categories}
+          onSelect={handleCategorySelect}
+        />
+        <CategorySheet
+          open={marketSheetOpen}
+          onOpenChange={setMarketSheetOpen}
+          title="야시장 선택"
+          options={markets}
+          onSelect={handleMarketSelect}
+        />
       </>
     );
   }
