@@ -199,16 +199,19 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
     }
   };
 
-  // 구글맵 길찾기 열기 (iOS PWA 호환)
+  // 구글맵 열기 (iOS PWA 호환)
   const openDirections = (store: SevenElevenStore | FamilyMartStore) => {
     let url: string;
+    const storeLabel = 'name' in store ? store.name : '';
+    const destName = encodeURIComponent(`${storeLabel} ${store.address}`);
 
     if (isSampleMode) {
-      // 샘플 모드: 시먼딩 행복당에서 출발하는 길찾기
-      url = `https://www.google.com/maps/dir/?api=1&origin=${DEFAULT_TAIWAN_LOCATION.lat},${DEFAULT_TAIWAN_LOCATION.lng}&destination=${store.coordinates.lat},${store.coordinates.lng}&travelmode=walking`;
+      // 샘플 모드: 행복당 → 매장 길찾기 (핀에 이름 표시)
+      const originName = encodeURIComponent('行福堂 西門町');
+      url = `https://www.google.com/maps/dir/?api=1&origin=${originName}&destination=${destName}&travelmode=walking`;
     } else {
       url = store.google_maps_directions_url ||
-        `https://www.google.com/maps/dir/?api=1&destination=${store.coordinates.lat},${store.coordinates.lng}&travelmode=walking`;
+        `https://www.google.com/maps/dir/?api=1&destination=${destName}&travelmode=walking`;
     }
 
     const link = document.createElement('a');
