@@ -62,6 +62,46 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
     lng: 121.5074,
   };
 
+  // Geolocation을 Promise로 감싸되, iOS WKWebView에서 콜백이 누락되는 경우를 대비한 수동 타임아웃 추가
+  const getGeolocation = (): Promise<GeolocationPosition> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("GEOLOCATION_NOT_SUPPORTED"));
+        return;
+      }
+
+      let settled = false;
+
+      // iOS에서 권한 미설정 시 콜백이 호출되지 않는 경우 대비
+      const fallbackTimeout = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          reject(new Error("MANUAL_TIMEOUT"));
+        }
+      }, 15000);
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(fallbackTimeout);
+          resolve(position);
+        },
+        (error) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(fallbackTimeout);
+          reject(error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000,
+        }
+      );
+    });
+  };
+
   // 위치 권한 요청 및 가까운 매장 검색
   const findNearbyToilets = async (type: StoreType) => {
     setLoading(true);
@@ -79,13 +119,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
         console.log("🧪 개발 모드: 시먼딩 행복당 위치 사용", { latitude, longitude });
       } else {
         // 프로덕션에서는 실제 위치 사용
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0,
-          });
-        });
+        const position = await getGeolocation();
         latitude = position.coords.latitude;
         longitude = position.coords.longitude;
       }
@@ -116,15 +150,19 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
       if (err instanceof GeolocationPositionError) {
         switch (err.code) {
           case err.PERMISSION_DENIED:
-            setLocationError("위치 권한이 거부되었습니다. 설정에서 위치 권한을 허용해주세요.");
+            setLocationError("위치 권한이 거부되었습니다. 설정 > 개인정보 보호 > 위치 서비스에서 '대만맛집' 앱의 위치 권한을 허용해주세요.");
             break;
           case err.POSITION_UNAVAILABLE:
-            setLocationError("위치 정보를 가져올 수 없습니다.");
+            setLocationError("위치 정보를 가져올 수 없습니다. 잠시 후 다시 시도해주세요.");
             break;
           case err.TIMEOUT:
-            setLocationError("위치 요청 시간이 초과되었습니다.");
+            setLocationError("위치 요청 시간이 초과되었습니다. 다시 시도해주세요.");
             break;
         }
+      } else if (err instanceof Error && err.message === "MANUAL_TIMEOUT") {
+        setLocationError("위치 요청 시간이 초과되었습니다. 위치 권한을 확인해주세요.");
+      } else if (err instanceof Error && err.message === "GEOLOCATION_NOT_SUPPORTED") {
+        setLocationError("이 기기에서는 위치 서비스를 지원하지 않습니다.");
       } else {
         setError("오류가 발생했습니다. 다시 시도해주세요.");
       }

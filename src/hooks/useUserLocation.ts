@@ -42,6 +42,7 @@ export function useUserLocation(): UseUserLocationReturn {
 
   /**
    * 실제 GPS 위치 요청
+   * - iOS WKWebView에서 geolocation이 콜백 없이 멈출 수 있으므로 수동 타임아웃 추가
    */
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -55,8 +56,25 @@ export function useUserLocation(): UseUserLocationReturn {
 
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
+    let settled = false;
+
+    // iOS WKWebView에서 권한 미설정 시 콜백이 호출되지 않는 경우를 대비한 수동 타임아웃
+    const fallbackTimeout = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        setState((prev) => ({
+          ...prev,
+          error: "위치 요청 시간이 초과되었습니다. 위치 권한을 확인하거나, 주소 검색 또는 테스트 위치를 사용해주세요.",
+          isLoading: false,
+        }));
+      }
+    }, 15000);
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(fallbackTimeout);
         setState({
           coordinates: {
             lat: position.coords.latitude,
@@ -71,16 +89,19 @@ export function useUserLocation(): UseUserLocationReturn {
         });
       },
       (error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(fallbackTimeout);
         let errorMessage = "위치를 가져올 수 없습니다.";
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = "위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.";
+            errorMessage = "위치 권한이 거부되었습니다. 설정 > 개인정보 보호 > 위치 서비스에서 '대만맛집' 앱의 위치 권한을 허용해주세요.";
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = "위치 정보를 사용할 수 없습니다.";
+            errorMessage = "위치 정보를 사용할 수 없습니다. 주소 검색 또는 테스트 위치를 사용해주세요.";
             break;
           case error.TIMEOUT:
-            errorMessage = "위치 요청 시간이 초과되었습니다.";
+            errorMessage = "위치 요청 시간이 초과되었습니다. 다시 시도하거나 주소 검색을 사용해주세요.";
             break;
         }
         setState((prev) => ({
@@ -92,7 +113,7 @@ export function useUserLocation(): UseUserLocationReturn {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 0,
+        maximumAge: 300000,
       }
     );
   }, []);
