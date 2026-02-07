@@ -56,6 +56,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [showOutsideTaiwanNotice, setShowOutsideTaiwanNotice] = useState(false);
+  const [isSampleMode, setIsSampleMode] = useState(false);
 
   // 기본 위치 (시먼딩 행복당) - 개발 환경 및 대만 외 지역 폴백용
   const DEFAULT_TAIWAN_LOCATION = {
@@ -128,6 +129,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
         if (!isInTaiwan) {
           latitude = DEFAULT_TAIWAN_LOCATION.lat;
           longitude = DEFAULT_TAIWAN_LOCATION.lng;
+          setIsSampleMode(true);
           setShowOutsideTaiwanNotice(true);
         }
       }
@@ -199,11 +201,16 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
 
   // 구글맵 길찾기 열기 (iOS PWA 호환)
   const openDirections = (store: SevenElevenStore | FamilyMartStore) => {
-    const url = store.google_maps_directions_url ||
-      `https://www.google.com/maps/dir/?api=1&destination=${store.coordinates.lat},${store.coordinates.lng}&travelmode=walking`;
+    let url: string;
 
-    // Create and click a link element for better iOS PWA support
-    // window.open can cause blank page issues on iOS PWA
+    if (isSampleMode) {
+      // 샘플 모드: 시먼딩 행복당에서 출발하는 길찾기
+      url = `https://www.google.com/maps/dir/?api=1&origin=${DEFAULT_TAIWAN_LOCATION.lat},${DEFAULT_TAIWAN_LOCATION.lng}&destination=${store.coordinates.lat},${store.coordinates.lng}&travelmode=walking`;
+    } else {
+      url = store.google_maps_directions_url ||
+        `https://www.google.com/maps/dir/?api=1&destination=${store.coordinates.lat},${store.coordinates.lng}&travelmode=walking`;
+    }
+
     const link = document.createElement('a');
     link.href = url;
     link.target = '_blank';
