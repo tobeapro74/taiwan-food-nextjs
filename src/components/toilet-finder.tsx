@@ -56,8 +56,8 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
 
-  // 개발 환경용 mock 위치 (시먼딩 행복당)
-  const DEV_MOCK_LOCATION = {
+  // 기본 위치 (시먼딩 행복당) - 개발 환경 및 대만 외 지역 폴백용
+  const DEFAULT_TAIWAN_LOCATION = {
     lat: 25.0421,
     lng: 121.5074,
   };
@@ -112,16 +112,22 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
       let latitude: number;
       let longitude: number;
 
-      // 개발 환경에서는 mock 위치 사용
+      // 개발 환경에서는 기본 위치 사용
       if (process.env.NODE_ENV === "development") {
-        latitude = DEV_MOCK_LOCATION.lat;
-        longitude = DEV_MOCK_LOCATION.lng;
-        console.log("🧪 개발 모드: 시먼딩 행복당 위치 사용", { latitude, longitude });
+        latitude = DEFAULT_TAIWAN_LOCATION.lat;
+        longitude = DEFAULT_TAIWAN_LOCATION.lng;
       } else {
         // 프로덕션에서는 실제 위치 사용
         const position = await getGeolocation();
         latitude = position.coords.latitude;
         longitude = position.coords.longitude;
+
+        // 대만 범위 밖이면 기본 대만 위치(시먼딩) 사용
+        const isInTaiwan = latitude >= 21.9 && latitude <= 25.4 && longitude >= 119.3 && longitude <= 122.1;
+        if (!isInTaiwan) {
+          latitude = DEFAULT_TAIWAN_LOCATION.lat;
+          longitude = DEFAULT_TAIWAN_LOCATION.lng;
+        }
       }
       setUserLocation({ lat: latitude, lng: longitude });
 

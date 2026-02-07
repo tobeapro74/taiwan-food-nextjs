@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { MapPin, Navigation, ChevronDown, ArrowLeft, Loader2, Search, X, Star } from "lucide-react";
 import { useUserLocation, getMockLocationList } from "@/hooks/useUserLocation";
-import { filterByRadius, RADIUS_OPTIONS } from "@/lib/geo-utils";
+import { filterByRadius, RADIUS_OPTIONS, MOCK_LOCATIONS } from "@/lib/geo-utils";
 import { taiwanFoodMap, Restaurant } from "@/data/taiwan-food";
 import { Badge } from "@/components/ui/badge";
 
@@ -106,6 +106,25 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
 
     return restaurants;
   }, [customRestaurants]);
+
+  // 대만 영역 확인 (위도 21.9~25.4, 경도 119.3~122.1)
+  const isInTaiwan = useMemo(() => {
+    if (!coordinates) return false;
+    return (
+      coordinates.lat >= 21.9 && coordinates.lat <= 25.4 &&
+      coordinates.lng >= 119.3 && coordinates.lng <= 122.1
+    );
+  }, [coordinates]);
+
+  // 대만 밖 위치 감지 시 자동으로 시먼딩으로 전환
+  useEffect(() => {
+    if (coordinates && !isInTaiwan && !isMockLocation) {
+      const defaultLocation = MOCK_LOCATIONS["시먼딩"];
+      if (defaultLocation) {
+        setMockLocation("시먼딩");
+      }
+    }
+  }, [coordinates, isInTaiwan, isMockLocation, setMockLocation]);
 
   // 주변 맛집 필터링
   const nearbyRestaurants = useMemo(() => {
