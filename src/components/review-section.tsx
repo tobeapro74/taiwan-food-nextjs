@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Star, Plus, User, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -111,10 +112,10 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
       if (data.success) {
         setReviews((prev) => prev.filter((r) => r.id !== reviewId));
       } else {
-        alert(data.error || "삭제에 실패했습니다.");
+        toast.error(data.error || "삭제에 실패했습니다.");
       }
     } catch {
-      alert("삭제 중 오류가 발생했습니다.");
+      toast.error("삭제에 실패했습니다.");
     }
   };
 

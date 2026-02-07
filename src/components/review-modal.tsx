@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { toast } from "sonner";
 import { X, Star, ImagePlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -157,13 +158,13 @@ export function ReviewModal({
     // 4개 제한 체크
     const remainingSlots = MAX_PHOTOS - photos.length;
     if (remainingSlots <= 0) {
-      alert(`사진은 최대 ${MAX_PHOTOS}개까지만 추가할 수 있습니다.`);
+      toast.warning(`사진은 최대 ${MAX_PHOTOS}개까지 추가할 수 있습니다.`);
       return;
     }
 
     const filesToUpload = Array.from(files).slice(0, remainingSlots);
     if (files.length > remainingSlots) {
-      alert(`${remainingSlots}개만 추가됩니다. (최대 ${MAX_PHOTOS}개)`);
+      toast.warning(`${remainingSlots}개만 추가됩니다. (최대 ${MAX_PHOTOS}개)`);
     }
 
     setIsUploading(true);
@@ -172,7 +173,7 @@ export function ReviewModal({
       for (const file of filesToUpload) {
         // 이미지 파일 체크
         if (!file.type.startsWith("image/")) {
-          alert("이미지 파일만 업로드 가능합니다.");
+          toast.warning("이미지 파일만 업로드할 수 있습니다.");
           continue;
         }
 
@@ -192,18 +193,18 @@ export function ReviewModal({
             setPhotos((prev) => [...prev, result.url]);
           } else {
             console.error("업로드 실패:", result.error);
-            alert(result.error || "사진 업로드에 실패했습니다.");
+            toast.error(result.error || "사진 업로드에 실패했습니다.");
           }
         } catch (fileError) {
           console.error("파일 처리 오류:", fileError);
           const errorMsg = fileError instanceof Error ? fileError.message : "파일 처리 중 오류";
-          alert(`사진 처리 실패: ${errorMsg}`);
+          toast.error(`사진 처리에 실패했습니다: ${errorMsg}`);
         }
       }
     } catch (error) {
       console.error("사진 업로드 오류:", error);
       const errorMsg = error instanceof Error ? error.message : "알 수 없는 오류";
-      alert(`사진 업로드 중 오류: ${errorMsg}`);
+      toast.error(`사진 업로드에 실패했습니다: ${errorMsg}`);
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
@@ -219,12 +220,12 @@ export function ReviewModal({
 
   const handleSubmit = async () => {
     if (!user) {
-      alert("로그인이 필요합니다.");
+      toast.warning("로그인이 필요합니다.");
       return;
     }
 
     if (rating === 0) {
-      alert("평점을 선택해주세요.");
+      toast.warning("평점을 선택해주세요.");
       return;
     }
 
@@ -254,7 +255,7 @@ export function ReviewModal({
       const result = await response.json();
 
       if (result.success) {
-        alert(isEditMode ? "리뷰가 수정되었습니다." : "리뷰가 등록되었습니다.");
+        toast.success(isEditMode ? "리뷰 수정을 완료했습니다." : "리뷰 등록을 완료했습니다.");
         onSubmit();
         onClose();
         // 초기화
@@ -266,11 +267,11 @@ export function ReviewModal({
         setPhotos([]);
         setMealType(null);
       } else {
-        alert(result.error || (isEditMode ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다."));
+        toast.error(result.error || (isEditMode ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다."));
       }
     } catch (error) {
       console.error("리뷰 작성 오류:", error);
-      alert(isEditMode ? "리뷰 수정 중 오류가 발생했습니다." : "리뷰 등록 중 오류가 발생했습니다.");
+      toast.error(isEditMode ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
     }
@@ -458,28 +459,6 @@ export function ReviewModal({
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slide-up {
-          from {
-            transform: translateY(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.2s ease-out;
-        }
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }

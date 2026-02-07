@@ -459,21 +459,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
         </form>
       </div>
 
-      <style jsx>{`
-        @keyframes scale-in {
-          from {
-            transform: scale(0.95);
-            opacity: 0;
-          }
-          to {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-        .animate-scale-in {
-          animation: scale-in 0.2s ease-out;
-        }
-      `}</style>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, AlertTriangle, Loader2 } from "lucide-react";
@@ -61,7 +62,7 @@ export function DeleteAccountModal({
       const data = await res.json();
 
       if (data.success) {
-        alert("회원탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.");
+        toast.success("회원탈퇴를 완료했습니다. 이용해 주셔서 감사합니다.");
         onSuccess();
         onClose();
       } else {

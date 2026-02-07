@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import Image from "next/image";
 import { Share2, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Save, Check, Loader2, ArrowLeft, List, X, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,7 +63,7 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
     } else {
       try {
         await navigator.clipboard.writeText(text);
-        alert("일정이 클립보드에 복사되었습니다!");
+        toast.success("일정을 클립보드에 복사했습니다.");
       } catch (err) {
         console.error("Copy failed:", err);
       }
@@ -84,13 +85,13 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
       const data = await response.json();
       if (data.success) {
         setIsSaved(true);
-        alert("일정이 저장되었습니다!");
+        toast.success("일정 저장을 완료했습니다.");
       } else {
-        alert(data.error || "저장에 실패했습니다.");
+        toast.error(data.error || "저장에 실패했습니다.");
       }
     } catch (error) {
       console.error("Save error:", error);
-      alert("저장 중 오류가 발생했습니다.");
+      toast.error("저장에 실패했습니다.");
     } finally {
       setIsSaving(false);
     }
@@ -526,28 +527,6 @@ function PhotoPreviewModal({
         </div>
       )}
 
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slide-up {
-          from {
-            transform: translateY(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.2s ease-out;
-        }
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 }

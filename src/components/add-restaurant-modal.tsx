@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import { X, Search, MapPin, Star, Clock, Phone, Globe, ChevronRight, Loader2, Check, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -147,11 +148,11 @@ export function AddRestaurantModal({
 
         setStep("details");
       } else {
-        alert(data.error || "장소 정보를 가져올 수 없습니다.");
+        toast.error(data.error || "장소 정보를 가져오는 데 실패했습니다.");
       }
     } catch (error) {
       console.error("상세 정보 조회 오류:", error);
-      alert("장소 정보 조회 중 오류가 발생했습니다.");
+      toast.error("장소 정보 조회에 실패했습니다.");
     } finally {
       setIsLoadingDetails(false);
     }
@@ -160,7 +161,7 @@ export function AddRestaurantModal({
   // 맛집 등록
   const handleSubmit = async () => {
     if (!selectedPlace || !selectedCategory) {
-      alert("카테고리를 선택해주세요.");
+      toast.warning("카테고리를 선택해주세요.");
       return;
     }
 
@@ -196,11 +197,11 @@ export function AddRestaurantModal({
           onClose();
         }, 1500);
       } else {
-        alert(data.error || "맛집 등록에 실패했습니다.");
+        toast.error(data.error || "맛집 등록에 실패했습니다.");
       }
     } catch (error) {
       console.error("등록 오류:", error);
-      alert("맛집 등록 중 오류가 발생했습니다.");
+      toast.error("맛집 등록에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
     }
