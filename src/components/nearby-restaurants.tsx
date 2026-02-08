@@ -138,18 +138,18 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
   }, [allRestaurants, coordinates, selectedRadius]);
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-background">
       {/* 대만 외 지역 안내 모달 */}
       {showOutsideTaiwanNotice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-xl">
+          <div className="bg-card rounded-2xl max-w-sm w-full p-6 shadow-xl">
             <div className="text-center mb-4">
               <span className="text-4xl">📍</span>
             </div>
-            <h3 className="text-lg font-bold text-center text-gray-900 dark:text-white mb-3">
+            <h3 className="text-lg font-bold text-center text-foreground mb-3">
               대만 외 지역 감지
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 text-center leading-relaxed mb-5">
+            <p className="text-sm text-muted-foreground text-center leading-relaxed mb-5">
               이 서비스는 대만 타이베이 내에서 이용 가능합니다.
               현재 대만 외 지역에 계시므로, 시먼딩(西門町) 기준의 샘플 데이터를 보여드립니다.
             </p>
@@ -164,17 +164,17 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
       )}
 
       {/* 헤더 */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 py-2 shadow-sm safe-area-top">
+      <div className="bg-card border-b border-border px-3 py-2 shadow-sm safe-area-top">
         <div className="flex items-center gap-2">
           <button
             onClick={onBack}
-            className="h-11 w-11 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors bg-black/5 dark:bg-white/10"
+            className="h-11 w-11 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-muted rounded-full transition-colors bg-black/5"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <h1 className="text-lg font-bold">맛집알리미</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               주변 맛집을 찾아보세요
             </p>
           </div>
@@ -182,7 +182,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
       </div>
 
       {/* 위치 선택 섹션 */}
-      <div className="bg-white dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-card p-4 border-b border-border">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-red-500" />
@@ -206,7 +206,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
 
         {/* 위치 선택 드롭다운 */}
         {showLocationPicker && (
-          <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="mt-3 p-3 bg-muted rounded-lg">
             {/* 현재 위치 버튼 */}
             <div className="mb-3">
               <button
@@ -228,7 +228,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
 
             {/* 주소 검색 입력창 */}
             <div className="mb-3">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              <div className="text-xs text-muted-foreground mb-2">
                 또는 주소로 검색:
               </div>
               <div className="flex gap-2">
@@ -243,7 +243,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                       }
                     }}
                     placeholder="예: 시먼딩, 타이베이역, 西門町..."
-                    className="w-full px-3 py-2 pr-8 text-sm border border-gray-200 dark:border-gray-500 rounded-lg bg-white dark:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 pr-8 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   {addressInput && (
                     <button
@@ -251,7 +251,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                         setAddressInput("");
                         clearSearchResults();
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -274,7 +274,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
             {/* 검색 결과 목록 */}
             {searchResults.length > 0 && (
               <div className="mb-3">
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                <div className="text-xs text-muted-foreground mb-2">
                   검색 결과:
                 </div>
                 <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -286,7 +286,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                         setAddressInput("");
                         setShowLocationPicker(false);
                       }}
-                      className="w-full text-left px-3 py-2 text-sm bg-white dark:bg-gray-600 border border-gray-200 dark:border-gray-500 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                      className="w-full text-left px-3 py-2 text-sm bg-card border border-border rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
                     >
                       <div className="flex items-start gap-2">
                         <MapPin className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
@@ -302,44 +302,44 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
             <div className="mb-3">
               <button
                 onClick={() => setShowManualInput(!showManualInput)}
-                className="text-xs text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1 hover:text-blue-500"
+                className="text-xs text-muted-foreground mb-2 flex items-center gap-1 hover:text-blue-500"
               >
                 <ChevronDown className={`w-3 h-3 transition-transform ${showManualInput ? "rotate-180" : ""}`} />
                 직접 좌표 입력 (GPS 좌표)
               </button>
 
               {showManualInput && (
-                <div className="p-3 bg-white dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-500">
+                <div className="p-3 bg-card rounded-lg border border-border">
                   <div className="space-y-2">
                     <div>
-                      <label className="text-xs text-gray-500 dark:text-gray-400">위치 이름 (선택)</label>
+                      <label className="text-xs text-muted-foreground">위치 이름 (선택)</label>
                       <input
                         type="text"
                         value={manualName}
                         onChange={(e) => setManualName(e.target.value)}
                         placeholder="예: 내 호텔, 현재 위치"
-                        className="w-full px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-500 rounded bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-1.5 text-sm border border-border rounded bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-xs text-gray-500 dark:text-gray-400">위도 (Lat)</label>
+                        <label className="text-xs text-muted-foreground">위도 (Lat)</label>
                         <input
                           type="text"
                           value={manualLat}
                           onChange={(e) => setManualLat(e.target.value)}
                           placeholder="25.0421"
-                          className="w-full px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-500 rounded bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-1.5 text-sm border border-border rounded bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-gray-500 dark:text-gray-400">경도 (Lng)</label>
+                        <label className="text-xs text-muted-foreground">경도 (Lng)</label>
                         <input
                           type="text"
                           value={manualLng}
                           onChange={(e) => setManualLng(e.target.value)}
                           placeholder="121.5074"
-                          className="w-full px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-500 rounded bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-1.5 text-sm border border-border rounded bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                     </div>
@@ -362,14 +362,14 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                       이 좌표로 설정
                     </button>
                   </div>
-                  <div className="mt-2 text-xs text-gray-400">
+                  <div className="mt-2 text-xs text-muted-foreground/70">
                     Tip: 구글맵에서 위치를 길게 누르면 좌표를 복사할 수 있어요
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            <div className="text-xs text-muted-foreground mb-2">
               또는 테스트 위치 선택:
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -383,7 +383,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                   className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
                     locationName === location.name
                       ? "bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300"
-                      : "bg-white dark:bg-gray-600 border-gray-200 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-500"
+                      : "bg-card border-border hover:bg-muted"
                   }`}
                 >
                   {location.name}
@@ -403,7 +403,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
         {/* 반경 선택 */}
         {coordinates && (
           <div className="mt-3">
-            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">검색 반경</div>
+            <div className="text-sm text-muted-foreground mb-2">검색 반경</div>
             <div className="flex gap-2">
               {RADIUS_OPTIONS.map((option) => (
                 <button
@@ -412,7 +412,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                   className={`px-3 py-1.5 text-sm rounded-full transition-colors ${
                     selectedRadius === option.value
                       ? "bg-blue-500 text-white"
-                      : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500"
+                      : "bg-muted text-foreground/70 hover:bg-muted/80"
                   }`}
                 >
                   {option.label}
@@ -427,36 +427,46 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
       <div className="flex-1 overflow-y-auto p-4">
         {!coordinates ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <MapPin className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-4" />
-            <p className="text-gray-500 dark:text-gray-400 mb-2">
+            <MapPin className="w-12 h-12 text-muted-foreground/40 mb-4" />
+            <p className="text-muted-foreground mb-2">
               위치를 선택하면 주변 맛집을 찾아드려요
             </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500">
+            <p className="text-sm text-muted-foreground/70">
               위 버튼을 눌러 위치를 설정해주세요
             </p>
           </div>
         ) : isLoadingCustom ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">
-              맛집 데이터를 불러오는 중...
-            </p>
+          <div className="space-y-3">
+            <div className="animate-shimmer h-4 w-40 rounded-md mb-3" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-card rounded-2xl p-4 border border-border/40 shadow-card">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="animate-shimmer h-5 w-32 rounded-md" />
+                  <div className="animate-shimmer h-6 w-16 rounded-full" />
+                </div>
+                <div className="animate-shimmer h-4 w-full rounded-md mb-2" />
+                <div className="flex gap-3">
+                  <div className="animate-shimmer h-3 w-24 rounded-md" />
+                  <div className="animate-shimmer h-3 w-16 rounded-md" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : nearbyRestaurants.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <MapPin className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-4" />
-            <p className="text-gray-500 dark:text-gray-400 mb-2">
+            <MapPin className="w-12 h-12 text-muted-foreground/40 mb-4" />
+            <p className="text-muted-foreground mb-2">
               {selectedRadius >= 1000 ? `${selectedRadius / 1000}km` : `${selectedRadius}m`} 이내에 맛집이 없습니다
             </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500">
+            <p className="text-sm text-muted-foreground/70">
               검색 반경을 늘려보세요
             </p>
           </div>
         ) : (
           <>
-            <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            <div className="text-sm text-muted-foreground mb-3">
               {selectedRadius >= 1000 ? `${selectedRadius / 1000}km` : `${selectedRadius}m`} 이내{" "}
-              <span className="font-medium text-gray-700 dark:text-gray-300">
+              <span className="font-medium text-foreground/70">
                 {nearbyRestaurants.length}개
               </span>
               의 맛집
@@ -490,11 +500,11 @@ function NearbyRestaurantCard({ restaurant, distance, onSelect }: NearbyRestaura
   return (
     <button
       onClick={onSelect}
-      className="w-full text-left bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-700"
+      className="w-full text-left bg-card rounded-2xl p-4 shadow-card hover:shadow-card-hover transition-all duration-200 border border-border/40"
     >
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <h3 className="font-bold text-gray-900 dark:text-white truncate">{restaurant.이름}</h3>
+          <h3 className="font-bold text-foreground truncate">{restaurant.이름}</h3>
           {isCustom && (
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">
               {restaurant.category}
@@ -506,11 +516,11 @@ function NearbyRestaurantCard({ restaurant, distance, onSelect }: NearbyRestaura
         </span>
       </div>
       {restaurant.특징 && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
+        <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
           {restaurant.특징}
         </p>
       )}
-      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
+      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
         <span className="flex items-center gap-1">
           <MapPin className="w-3 h-3" />
           <span className="truncate max-w-[150px]">{restaurant.위치}</span>
@@ -520,7 +530,7 @@ function NearbyRestaurantCard({ restaurant, distance, onSelect }: NearbyRestaura
             <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
             {restaurant.평점.toFixed(1)}
             {restaurant.리뷰수 && (
-              <span className="text-gray-400">({restaurant.리뷰수.toLocaleString()})</span>
+              <span className="text-muted-foreground/70">({restaurant.리뷰수.toLocaleString()})</span>
             )}
           </span>
         )}

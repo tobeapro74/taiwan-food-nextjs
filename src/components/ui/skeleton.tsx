@@ -4,7 +4,7 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="skeleton"
-      className={cn("bg-accent animate-pulse rounded-md", className)}
+      className={cn("animate-shimmer rounded-md", className)}
       {...props}
     />
   )
@@ -15,7 +15,7 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
  */
 function RestaurantCardSkeleton() {
   return (
-    <div className="rounded-2xl overflow-hidden border bg-white dark:bg-gray-800 shadow-sm">
+    <div className="rounded-2xl overflow-hidden border border-border/40 bg-card shadow-card">
       <Skeleton className="h-32 w-full rounded-none" />
       <div className="p-3 space-y-2">
         <Skeleton className="h-5 w-3/4" />

@@ -224,18 +224,18 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-background">
       {/* 대만 외 지역 안내 모달 */}
       {showOutsideTaiwanNotice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-xl">
+          <div className="bg-card rounded-2xl max-w-sm w-full p-6 shadow-xl">
             <div className="text-center mb-4">
               <span className="text-4xl">📍</span>
             </div>
-            <h3 className="text-lg font-bold text-center text-gray-900 dark:text-white mb-3">
+            <h3 className="text-lg font-bold text-center text-foreground mb-3">
               대만 외 지역 감지
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 text-center leading-relaxed mb-5">
+            <p className="text-sm text-muted-foreground text-center leading-relaxed mb-5">
               이 서비스는 대만 타이베이 내에서 이용 가능합니다.
               현재 대만 외 지역에 계시므로, 시먼딩(西門町) 기준의 샘플 데이터를 보여드립니다.
             </p>
@@ -277,7 +277,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
             className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all ${
               storeType === "7eleven"
                 ? "bg-green-500 text-white shadow-md"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
             🏪 7-ELEVEN
@@ -287,7 +287,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
             className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all ${
               storeType === "familymart"
                 ? "bg-blue-500 text-white shadow-md"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
             🏬 FamilyMart
@@ -298,7 +298,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
       <div className="p-4 space-y-4">
         {/* 새로고침 버튼 */}
         <div className="flex justify-between items-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-muted-foreground">
             {userLocation
               ? "현재 위치 기준 2km 이내"
               : "위치 정보를 가져오는 중..."}
@@ -317,11 +317,25 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
 
         {/* 로딩 상태 */}
         {loading && (
-          <div className="flex flex-col items-center justify-center py-12 space-y-4">
-            <Loader2 className="w-10 h-10 animate-spin text-green-500" />
-            <p className="text-gray-600 dark:text-gray-400">
-              가까운 화장실을 찾는 중...
-            </p>
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className={`bg-card rounded-2xl p-4 border ${i === 0 ? 'border-2 border-green-500/30' : 'border-border/40'} shadow-card`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      {i === 0 && <div className="animate-shimmer h-5 w-20 rounded-full" />}
+                      <div className="animate-shimmer h-5 w-36 rounded-md" />
+                    </div>
+                    <div className="animate-shimmer h-4 w-full rounded-md" />
+                    <div className="animate-shimmer h-4 w-32 rounded-md" />
+                  </div>
+                  <div className="flex flex-col items-end gap-2 ml-3">
+                    <div className="animate-shimmer h-8 w-16 rounded-md" />
+                    <div className="animate-shimmer h-8 w-20 rounded-md" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
@@ -354,8 +368,8 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
 
         {/* 에러 메시지 */}
         {error && !loading && !locationError && (
-          <Card className="border-gray-200 dark:border-gray-700">
-            <CardContent className="p-4 text-center text-gray-600 dark:text-gray-400">
+          <Card className="border-border">
+            <CardContent className="p-4 text-center text-muted-foreground">
               {error}
             </CardContent>
           </Card>
@@ -367,10 +381,10 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
             {sevenElevenStores.map((store, index) => (
               <Card
                 key={store._id}
-                className={`overflow-hidden transition-all hover:shadow-lg cursor-pointer ${
+                className={`overflow-hidden transition-all duration-200 hover:shadow-card-hover cursor-pointer ${
                   index === 0
-                    ? "border-green-500 dark:border-green-400 border-2"
-                    : "border-gray-200 dark:border-gray-700"
+                    ? "border-green-500 border-2"
+                    : "border-border/40"
                 }`}
                 onClick={() => openDirections(store)}
               >
@@ -389,19 +403,19 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                             ATM
                           </span>
                         )}
-                        <h3 className="font-bold text-gray-900 dark:text-white truncate">
+                        <h3 className="font-bold text-foreground truncate">
                           7-ELEVEN {store.name}
                         </h3>
                       </div>
 
                       {/* 주소 */}
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-1">
+                      <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                         <MapPin className="w-4 h-4 flex-shrink-0" />
                         <span className="truncate">{store.address}</span>
                       </p>
 
                       {/* 영업시간 */}
-                      <p className="text-sm text-gray-500 dark:text-gray-500 mt-1 flex items-center gap-1">
+                      <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                         <Clock className="w-4 h-4 flex-shrink-0" />
                         <span>
                           {store.opening_hours}
@@ -411,7 +425,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
 
                       {/* 전화번호 */}
                       {store.phone && (
-                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1 flex items-center gap-1">
+                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                           <Phone className="w-4 h-4 flex-shrink-0" />
                           <span>{store.phone}</span>
                         </p>
@@ -450,10 +464,10 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
             {familyMartStores.map((store, index) => (
               <Card
                 key={store.place_id}
-                className={`overflow-hidden transition-all hover:shadow-lg cursor-pointer ${
+                className={`overflow-hidden transition-all duration-200 hover:shadow-card-hover cursor-pointer ${
                   index === 0
-                    ? "border-blue-500 dark:border-blue-400 border-2"
-                    : "border-gray-200 dark:border-gray-700"
+                    ? "border-blue-500 border-2"
+                    : "border-border/40"
                 }`}
                 onClick={() => openDirections(store)}
               >
@@ -467,20 +481,20 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                             가장 가까움
                           </span>
                         )}
-                        <h3 className="font-bold text-gray-900 dark:text-white truncate">
+                        <h3 className="font-bold text-foreground truncate">
                           {store.name}
                         </h3>
                       </div>
 
                       {/* 주소 */}
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-1">
+                      <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                         <MapPin className="w-4 h-4 flex-shrink-0" />
                         <span className="truncate">{store.address}</span>
                       </p>
 
                       {/* 영업 상태 */}
                       {store.opening_hours && (
-                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1 flex items-center gap-1">
+                        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                           <Clock className="w-4 h-4 flex-shrink-0" />
                           <span className={store.opening_hours.open_now ? "text-green-600" : "text-red-500"}>
                             {store.opening_hours.open_now ? "영업 중" : "영업 종료"}
@@ -516,15 +530,15 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
         )}
 
         {/* 안내 문구 */}
-        <div className="mt-6 mb-24 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+        <div className="mt-6 mb-24 p-4 bg-muted rounded-lg">
           {storeType === "7eleven" ? (
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+            <p className="text-xs text-muted-foreground text-center">
               💡 7-ELEVEN 매장 중 화장실을 개방하는 매장만 표시됩니다.
               <br />
               데이터는 매일 오전 6시에 자동 업데이트됩니다.
             </p>
           ) : (
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+            <p className="text-xs text-muted-foreground text-center">
               💡 대만 FamilyMart(全家)는 대부분 화장실을 이용할 수 있습니다.
               <br />
               일부 매장은 화장실이 없거나 직원 전용일 수 있습니다.

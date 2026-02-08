@@ -103,22 +103,22 @@ export function GoogleReviews({ restaurantName }: GoogleReviewsProps) {
     return (
       <div className="space-y-3 mt-4">
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded bg-muted animate-pulse" />
+          <div className="w-5 h-5 rounded animate-shimmer" />
           <h3 className="font-semibold">Google 리뷰</h3>
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="p-4 rounded-lg bg-muted/30 animate-pulse">
+            <div key={i} className="p-4 rounded-lg border border-border/40">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-muted" />
+                <div className="w-10 h-10 rounded-full animate-shimmer" />
                 <div className="space-y-2">
-                  <div className="w-24 h-4 bg-muted rounded" />
-                  <div className="w-16 h-3 bg-muted rounded" />
+                  <div className="w-24 h-4 animate-shimmer rounded" />
+                  <div className="w-16 h-3 animate-shimmer rounded" />
                 </div>
               </div>
               <div className="space-y-2">
-                <div className="w-full h-4 bg-muted rounded" />
-                <div className="w-3/4 h-4 bg-muted rounded" />
+                <div className="w-full h-4 animate-shimmer rounded" />
+                <div className="w-3/4 h-4 animate-shimmer rounded" />
               </div>
             </div>
           ))}

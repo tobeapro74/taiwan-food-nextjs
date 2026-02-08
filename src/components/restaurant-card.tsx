@@ -114,10 +114,10 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
   if (variant === "horizontal") {
     return (
       <Card
-        className="flex-shrink-0 w-44 cursor-pointer transition-all hover:scale-[1.05] hover:shadow-lg active:scale-[0.98] overflow-hidden shadow-sm"
+        className="flex-shrink-0 w-44 cursor-pointer transition-all duration-200 hover:scale-[1.03] hover:shadow-card-hover active:scale-[0.98] overflow-hidden"
         onClick={onClick}
       >
-        <div className="h-28 relative overflow-hidden bg-muted">
+        <div className="h-32 relative overflow-hidden bg-muted">
           {isLoading && (
             <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted/50 to-muted" />
           )}
@@ -163,12 +163,12 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
 
   return (
     <Card
-      className="cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] overflow-hidden shadow-sm"
+      className="cursor-pointer transition-all duration-200 hover:scale-[1.01] hover:shadow-card-hover active:scale-[0.98] overflow-hidden"
       onClick={onClick}
     >
       <CardContent className="p-0">
         <div className="flex">
-          <div className="w-24 h-24 relative overflow-hidden flex-shrink-0 bg-muted">
+          <div className="w-28 h-28 relative overflow-hidden flex-shrink-0 bg-muted rounded-l-2xl">
             {isLoading && (
               <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted/50 to-muted" />
             )}

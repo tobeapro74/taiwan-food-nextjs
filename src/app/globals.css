@@ -46,34 +46,34 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
-/* 밝은 테마 (N2골프 스타일) */
+/* 밝은 테마 (Creamy Warm Tone) */
 :root {
   --radius: 0.625rem;
-  /* 배경: 연한 회색 (카드와 구분) */
-  --background: hsl(220, 14%, 96%);
+  /* 배경: 따뜻한 크리미 톤 */
+  --background: hsl(30, 20%, 97%);
   --foreground: hsl(224, 71%, 4%);
-  /* 카드: 순수 흰색 */
-  --card: hsl(0, 0%, 100%);
+  /* 카드: 따뜻한 흰색 */
+  --card: hsl(35, 25%, 99.5%);
   --card-foreground: hsl(224, 71%, 4%);
   --popover: hsl(0, 0%, 100%);
   --popover-foreground: hsl(224, 71%, 4%);
   /* 주요 색상: 대만 느낌의 따뜻한 주황-빨강 */
   --primary: hsl(15, 90%, 55%);
   --primary-foreground: hsl(0, 0%, 100%);
-  /* 보조 색상: 밝은 회색 */
-  --secondary: hsl(220, 14%, 96%);
-  --secondary-foreground: hsl(220, 9%, 46%);
+  /* 보조 색상: 따뜻한 회색 */
+  --secondary: hsl(30, 15%, 95%);
+  --secondary-foreground: hsl(25, 8%, 44%);
   /* 음소거 색상 */
-  --muted: hsl(220, 14%, 96%);
-  --muted-foreground: hsl(220, 9%, 46%);
+  --muted: hsl(30, 15%, 95%);
+  --muted-foreground: hsl(25, 8%, 44%);
   /* 강조 색상 */
-  --accent: hsl(220, 14%, 96%);
-  --accent-foreground: hsl(220, 9%, 46%);
+  --accent: hsl(30, 15%, 95%);
+  --accent-foreground: hsl(25, 8%, 44%);
   /* 파괴적 액션 */
   --destructive: hsl(0, 84.2%, 60.2%);
   /* 테두리 및 입력 */
-  --border: hsl(220, 13%, 91%);
-  --input: hsl(220, 13%, 91%);
+  --border: hsl(30, 12%, 90%);
+  --input: hsl(30, 12%, 90%);
   --ring: hsl(15, 90%, 55%);
   /* 차트 색상 */
   --chart-1: hsl(15, 90%, 55%);
@@ -172,4 +172,30 @@ body {
 /* 프리미엄 그림자 유틸리티 */
 .shadow-premium {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 카드 그림자 계층 */
+.shadow-card {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-card-hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Shimmer 로딩 애니메이션 */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(30, 15%, 95%) 0%,
+    hsl(30, 15%, 90%) 40%,
+    hsl(30, 15%, 95%) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
 }

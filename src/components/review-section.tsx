@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ReviewModal } from "@/components/review-modal";
 import { AuthModal } from "@/components/auth-modal";
 import { cn } from "@/lib/utils";
+import { ReviewListSkeleton } from "@/components/ui/skeleton";
 
 interface Review {
   id: number;
@@ -171,9 +172,7 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
 
           {/* 리뷰 목록 */}
           {isLoading ? (
-            <div className="py-8 text-center text-muted-foreground">
-              리뷰를 불러오는 중...
-            </div>
+            <ReviewListSkeleton count={3} />
           ) : reviews.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
               아직 리뷰가 없습니다. 첫 리뷰를 작성해보세요!
