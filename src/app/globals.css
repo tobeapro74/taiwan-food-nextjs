@@ -199,3 +199,16 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.8s ease-in-out infinite;
 }
+
+/* Fluid Typography (뷰포트 반응형 폰트 크기) */
+.text-fluid-xl {
+  font-size: clamp(1.25rem, 4vw, 1.5rem);  /* 20px ~ 24px */
+}
+
+.text-fluid-lg {
+  font-size: clamp(1.125rem, 3.5vw, 1.25rem);  /* 18px ~ 20px */
+}
+
+.text-fluid-base {
+  font-size: clamp(1rem, 3vw, 1.125rem);  /* 16px ~ 18px */
+}

@@ -774,7 +774,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🏙️</span>
-            <h2 className="text-lg font-bold text-foreground">타이베이에 대하여</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">타이베이에 대하여</h2>
           </div>
           <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
             <p>
@@ -806,7 +806,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">📍</span>
-            <h2 className="text-lg font-bold text-foreground">타이베이시 12개 구</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">타이베이시 12개 구</h2>
           </div>
           <div className="grid gap-2">
             {[
@@ -841,7 +841,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">✨</span>
-            <h2 className="text-lg font-bold text-foreground">타이베이시 주요 명소</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">타이베이시 주요 명소</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
@@ -869,7 +869,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🌿</span>
-            <h2 className="text-lg font-bold text-foreground">신베이시 주요 명소</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">신베이시 주요 명소</h2>
           </div>
           <div className="grid gap-3">
             {[
@@ -905,7 +905,7 @@ export default function Home() {
         <section className="bg-gradient-to-r from-sky-500 to-cyan-500 rounded-2xl p-5 shadow-lg text-white">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">⚡</span>
-            <h2 className="text-lg font-bold">MZ를 위한 핵심 요약</h2>
+            <h2 className="text-fluid-lg font-bold">MZ를 위한 핵심 요약</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white/20 backdrop-blur rounded-xl p-3">
@@ -932,7 +932,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🌤️</span>
-            <h2 className="text-lg font-bold text-foreground">계절별 날씨</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">계절별 날씨</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-gradient-to-br from-pink-50 to-rose-100 dark:from-pink-950/30 dark:to-rose-950/30 rounded-xl p-3 border border-pink-200 dark:border-pink-900/30">
@@ -974,7 +974,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">📅</span>
-            <h2 className="text-lg font-bold text-foreground">월별 상세 비교</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">월별 상세 비교</h2>
             <span className="text-xs text-muted-foreground">(vs 서울)</span>
           </div>
           <div className="space-y-2">
@@ -1012,7 +1012,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🎒</span>
-            <h2 className="text-lg font-bold text-foreground">계절별 준비물</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">계절별 준비물</h2>
           </div>
           <div className="space-y-3">
             <div className="flex items-start gap-3 p-4 bg-sky-50 dark:bg-sky-950/30 rounded-xl border border-sky-100 dark:border-sky-900/30">
@@ -1071,7 +1071,7 @@ export default function Home() {
         <section className="bg-gradient-to-r from-yellow-100 to-amber-100 dark:from-yellow-950/50 dark:to-amber-950/50 rounded-2xl p-5 shadow-md border border-yellow-200 dark:border-yellow-900/30">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">💡</span>
-            <h2 className="text-lg font-bold text-foreground">알아두면 좋은 팁</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">알아두면 좋은 팁</h2>
           </div>
           <div className="space-y-3 text-sm text-muted-foreground">
             <div className="flex items-start gap-2">
@@ -1102,7 +1102,7 @@ export default function Home() {
         <section className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl p-5 shadow-lg text-white">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">⚡</span>
-            <h2 className="text-lg font-bold">MZ를 위한 핵심 요약</h2>
+            <h2 className="text-fluid-lg font-bold">MZ를 위한 핵심 요약</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white/20 backdrop-blur rounded-xl p-3">
@@ -1129,7 +1129,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🚇</span>
-            <h2 className="text-lg font-bold text-foreground">교통 시스템 개요</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">교통 시스템 개요</h2>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
             타이베이는 <span className="font-semibold text-foreground">MRT(지하철)</span>를 중심으로
@@ -1151,7 +1151,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🚆</span>
-            <h2 className="text-lg font-bold text-foreground">교통수단 종류</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">교통수단 종류</h2>
           </div>
           <div className="space-y-3">
             {[
@@ -1220,7 +1220,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">💳</span>
-            <h2 className="text-lg font-bold text-foreground">EasyCard (이지카드)</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">EasyCard (이지카드)</h2>
           </div>
           <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 rounded-xl p-4 border border-orange-100 dark:border-orange-900/30 mb-4">
             <p className="text-sm text-foreground font-medium mb-2">
@@ -1291,7 +1291,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">💰</span>
-            <h2 className="text-lg font-bold text-foreground">비용 가이드</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">비용 가이드</h2>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 rounded-xl border border-blue-100 dark:border-blue-900/30">
@@ -1356,7 +1356,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🔄</span>
-            <h2 className="text-lg font-bold text-foreground">환승 시스템</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">환승 시스템</h2>
           </div>
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl p-4 border border-indigo-100 dark:border-indigo-900/30 mb-4">
             <p className="text-sm text-foreground mb-2">
@@ -1401,7 +1401,7 @@ export default function Home() {
         <section className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-5 shadow-lg text-white">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">⚡</span>
-            <h2 className="text-lg font-bold">MZ를 위한 핵심 요약</h2>
+            <h2 className="text-fluid-lg font-bold">MZ를 위한 핵심 요약</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white/20 backdrop-blur rounded-xl p-3">
@@ -1428,7 +1428,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🏨</span>
-            <h2 className="text-lg font-bold text-foreground">타이베이 숙박 분위기</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">타이베이 숙박 분위기</h2>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
             타이베이는 <span className="font-semibold text-foreground">가성비 좋은 호스텔</span>부터
@@ -1449,7 +1449,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">📍</span>
-            <h2 className="text-lg font-bold text-foreground">지역별 추천</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">지역별 추천</h2>
           </div>
           <div className="space-y-3">
             {[
@@ -1536,7 +1536,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">💰</span>
-            <h2 className="text-lg font-bold text-foreground">숙소 유형 & 예산</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">숙소 유형 & 예산</h2>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl border border-green-100 dark:border-green-900/30">
@@ -1603,7 +1603,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">✨</span>
-            <h2 className="text-lg font-bold text-foreground">숙소 고르는 팁</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">숙소 고르는 팁</h2>
           </div>
           <div className="space-y-3">
             <div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-xl">
@@ -1793,7 +1793,7 @@ export default function Home() {
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-2">
                 <span className="text-2xl drop-shadow-lg">🍜</span>
-                <h1 className="text-xl font-bold text-white drop-shadow-md tracking-wide">
+                <h1 className="text-fluid-xl font-bold text-white drop-shadow-md tracking-wide">
                   대만맛집
                 </h1>
                 <span className="text-2xl drop-shadow-lg">🏯</span>
@@ -1995,7 +1995,7 @@ export default function Home() {
 
           {/* 퀵 카테고리 */}
           <section className="bg-card rounded-xl p-4 shadow-sm">
-            <h2 className="text-base font-semibold mb-3 text-foreground">카테고리</h2>
+            <h2 className="text-fluid-base font-semibold mb-3 text-foreground">카테고리</h2>
             <ScrollArea className="w-full">
               <div className="flex gap-2 pb-2">
                 {categories.map((category) => (
@@ -2016,7 +2016,7 @@ export default function Home() {
 
           {/* 인기 맛집 */}
           <section className="bg-card rounded-xl p-4 shadow-sm">
-            <h2 className="text-base font-semibold mb-3 text-foreground">🔥 인기 맛집</h2>
+            <h2 className="text-fluid-base font-semibold mb-3 text-foreground">🔥 인기 맛집</h2>
             <ScrollArea className="w-full">
               <div className="flex gap-3 pb-2">
                 {popularRestaurants.map((restaurant, index) => (
@@ -2037,7 +2037,7 @@ export default function Home() {
           {districtRanking.length > 0 && (
             <section className="bg-card rounded-xl p-4 shadow-sm">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-semibold text-foreground">📍 지역별 맛집 랭킹</h2>
+                <h2 className="text-fluid-base font-semibold text-foreground">📍 지역별 맛집 랭킹</h2>
                 <button
                   onClick={() => {
                     setCurrentView("district-ranking");
@@ -2083,7 +2083,7 @@ export default function Home() {
 
           {/* 야시장별 맛집 */}
           <section className="bg-card rounded-xl p-4 shadow-sm">
-            <h2 className="text-base font-semibold mb-3 text-foreground">🌙 야시장별 맛집</h2>
+            <h2 className="text-fluid-base font-semibold mb-3 text-foreground">🌙 야시장별 맛집</h2>
             <ScrollArea className="w-full mb-3">
               <div className="flex gap-2 pb-2">
                 {markets.map((market) => (

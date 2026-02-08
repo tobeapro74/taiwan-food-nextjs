@@ -53,19 +53,29 @@ export function BottomNav({ activeTab, onTabChange, user }: BottomNavProps) {
               key={item.id}
               onClick={() => onTabChange(item.id)}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[52px] px-2 py-1.5 rounded-lg transition-all active:scale-[0.95] active:bg-muted/50",
+                "flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[52px] px-2 py-1.5 rounded-lg transition-all duration-200 active:scale-[0.95]",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon
-                className={cn(
-                  "h-5 w-5 transition-transform",
-                  isActive && "fill-primary/20"
-                )}
-              />
-              <span className="text-xs font-medium">
+              <div className={cn(
+                "flex items-center justify-center w-12 h-7 rounded-full transition-all duration-200",
+                isActive
+                  ? "bg-primary/12"
+                  : "bg-transparent"
+              )}>
+                <Icon
+                  className={cn(
+                    "h-5 w-5 transition-all duration-200",
+                    isActive && "fill-primary/25 scale-105"
+                  )}
+                />
+              </div>
+              <span className={cn(
+                "text-xs transition-all duration-200",
+                isActive ? "font-semibold" : "font-medium"
+              )}>
                 {item.label}
               </span>
             </button>
