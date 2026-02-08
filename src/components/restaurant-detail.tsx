@@ -171,7 +171,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
     const fetchImage = async () => {
       try {
         const query = `${restaurant.이름} ${restaurant.위치 || ""}`.trim();
-        const res = await fetch(`/api/place-photo?query=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/place-photo?query=${encodeURIComponent(query)}&name=${encodeURIComponent(restaurant.이름)}`);
         const data = await res.json();
 
         if (data.photoUrl) {

@@ -39,8 +39,9 @@ interface RestaurantCardProps {
 
 export function RestaurantCard({ restaurant, onClick, variant = "vertical", category }: RestaurantCardProps) {
   const fallbackUrl = getUnsplashImage(restaurant.이름);
-  const [imageUrl, setImageUrl] = useState<string>(fallbackUrl);
-  const [isLoading, setIsLoading] = useState(true);
+  const cachedUrl = imageCache[restaurant.이름];
+  const [imageUrl, setImageUrl] = useState<string>(cachedUrl || "");
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   // 구글 평점 상태 (캐시에서 초기값 가져오기)
   const cacheKey = restaurant.이름;
@@ -48,10 +49,9 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
   const [googleReviewsCount, setGoogleReviewsCount] = useState<number | null>(ratingCache[cacheKey]?.reviewsCount ?? null);
 
   useEffect(() => {
-    // 캐시에 있으면 바로 사용
+    // 캐시에 있으면 바로 사용 (이미지 onLoad에서 opacity 전환)
     if (imageCache[cacheKey]) {
       setImageUrl(imageCache[cacheKey]);
-      setIsLoading(false);
       return;
     }
 
@@ -59,19 +59,20 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
     const fetchImage = async () => {
       try {
         const query = `${restaurant.이름} ${restaurant.위치 || ""}`.trim();
-        const res = await fetch(`/api/place-photo?query=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/place-photo?query=${encodeURIComponent(query)}&name=${encodeURIComponent(restaurant.이름)}`);
         const data = await res.json();
 
         if (data.photoUrl) {
           imageCache[cacheKey] = data.photoUrl;
+          setImageLoaded(false);
           setImageUrl(data.photoUrl);
         } else {
           imageCache[cacheKey] = fallbackUrl;
+          setImageUrl(fallbackUrl);
         }
       } catch {
         imageCache[cacheKey] = fallbackUrl;
-      } finally {
-        setIsLoading(false);
+        setImageUrl(fallbackUrl);
       }
     };
 
@@ -118,17 +119,20 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
         onClick={onClick}
       >
         <div className="h-32 relative overflow-hidden bg-muted">
-          {isLoading && (
+          {!imageLoaded && (
             <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted/50 to-muted" />
           )}
-          <Image
-            src={imageUrl}
-            alt={restaurant.이름}
-            fill
-            className={`object-cover transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}
-            sizes="176px"
-            unoptimized
-          />
+          {imageUrl && (
+            <Image
+              src={imageUrl}
+              alt={restaurant.이름}
+              fill
+              className={`object-cover transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+              sizes="176px"
+              unoptimized
+              onLoad={() => setImageLoaded(true)}
+            />
+          )}
           {category && (
             <Badge className="absolute top-2 left-2 text-xs bg-black/60 text-white border-0">
               {categoryIcons[category]} {category}
@@ -169,17 +173,20 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
       <CardContent className="p-0">
         <div className="flex">
           <div className="w-28 h-28 relative overflow-hidden flex-shrink-0 bg-muted rounded-l-2xl">
-            {isLoading && (
+            {!imageLoaded && (
               <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted/50 to-muted" />
             )}
-            <Image
-              src={imageUrl}
-              alt={restaurant.이름}
-              fill
-              className={`object-cover transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}
-              sizes="96px"
-              unoptimized
-            />
+            {imageUrl && (
+              <Image
+                src={imageUrl}
+                alt={restaurant.이름}
+                fill
+                className={`object-cover transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+                sizes="96px"
+                unoptimized
+                onLoad={() => setImageLoaded(true)}
+              />
+            )}
           </div>
           <div className="flex-1 p-3 min-w-0">
             <div className="flex items-center justify-between gap-2">

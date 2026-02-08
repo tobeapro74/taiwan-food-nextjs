@@ -394,8 +394,8 @@ export function getGoogleMapsLink(name: string, location: string, coordinates?: 
     query += " " + location;
   }
   if (coordinates) {
-    // 좌표가 있으면 해당 좌표 근처에서 검색 (한국이 아닌 대만에서 검색됨)
-    return `https://www.google.com/maps/search/${encodeURIComponent(query.trim())}/@${coordinates.lat},${coordinates.lng},17z`;
+    // 좌표로 직접 검색 → 해당 위치의 실제 POI(가게)가 표시됨
+    return `https://www.google.com/maps/search/?api=1&query=${coordinates.lat},${coordinates.lng}`;
   }
   query += " Taipei Taiwan";
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query.trim())}`;
