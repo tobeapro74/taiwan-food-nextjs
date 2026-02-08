@@ -236,7 +236,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
   const googleMapsUrl = isCustomRestaurant
     ? restaurant.google_map_url ||
       `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address || restaurant.이름)}`
-    : getGoogleMapsLink(restaurant.이름, restaurant.위치);
+    : getGoogleMapsLink(restaurant.이름, restaurant.위치, restaurant.coordinates);
 
   return (
     <div className="min-h-screen pb-20">

@@ -387,11 +387,15 @@ export function getUnsplashImage(name: string): string {
   return `https://picsum.photos/seed/${seed}/400/300`;
 }
 
-// 구글 맵 링크 생성
-export function getGoogleMapsLink(name: string, location: string): string {
+// 구글 맵 링크 생성 (좌표가 있으면 좌표 중심으로 검색하여 정확한 위치 표시)
+export function getGoogleMapsLink(name: string, location: string, coordinates?: { lat: number; lng: number }): string {
   let query = name || "";
   if (location && !location.includes("야시장")) {
     query += " " + location;
+  }
+  if (coordinates) {
+    // 좌표가 있으면 해당 좌표 근처에서 검색 (한국이 아닌 대만에서 검색됨)
+    return `https://www.google.com/maps/search/${encodeURIComponent(query.trim())}/@${coordinates.lat},${coordinates.lng},17z`;
   }
   query += " Taipei Taiwan";
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query.trim())}`;
