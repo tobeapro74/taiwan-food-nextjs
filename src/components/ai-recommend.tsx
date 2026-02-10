@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, Sparkles, Send } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Sparkles, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RestaurantCard } from "@/components/restaurant-card";
 import { Restaurant } from "@/data/taiwan-food";
@@ -31,21 +31,49 @@ const presets = [
   { label: "면 요리 🍝", query: "맛있는 면 요리 전문점" },
 ];
 
+// 프리셋 쿼리 Set (프리셋 여부 판별용)
+const PRESET_QUERY_SET = new Set(presets.map(p => p.query));
+
+// AI 검색 중 모달 메시지 (순환)
+const SEARCH_MESSAGES = [
+  "AI가 맛집을 분석하고 있습니다...",
+  "대만 현지 맛집을 탐색 중...",
+  "최적의 맛집을 선별하고 있습니다...",
+  "거의 다 됐습니다...",
+];
+
 export function AIRecommend({ onBack, onSelectRestaurant, timeSlot }: AIRecommendProps) {
   const { impact } = useHaptic();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false); // OpenAI 검색 중 모달
   const [results, setResults] = useState<RecommendationResult[]>([]);
   const [tip, setTip] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchMsgIndex, setSearchMsgIndex] = useState(0);
 
-  const handleRecommend = async (q: string) => {
+  // 검색 중 메시지 순환
+  useEffect(() => {
+    if (!showAIModal) return;
+    setSearchMsgIndex(0);
+    const interval = setInterval(() => {
+      setSearchMsgIndex(prev => (prev + 1) % SEARCH_MESSAGES.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [showAIModal]);
+
+  const handleRecommend = async (q: string, isPreset: boolean = false) => {
     if (!q.trim()) return;
     impact();
     setLoading(true);
     setHasSearched(true);
     setResults([]);
     setTip("");
+
+    // 자유 입력(OpenAI 호출)일 때만 풀스크린 모달 표시
+    if (!isPreset) {
+      setShowAIModal(true);
+    }
 
     try {
       const res = await fetch("/api/ai-recommend", {
@@ -68,11 +96,46 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot }: AIRecommen
       toast.error("네트워크 오류가 발생했습니다.");
     } finally {
       setLoading(false);
+      setShowAIModal(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      {/* OpenAI 검색 중 풀스크린 모달 */}
+      {showAIModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 animate-fade-in">
+          <div className="bg-card rounded-2xl p-8 mx-6 text-center shadow-premium animate-scale-in max-w-sm w-full">
+            <div className="relative w-16 h-16 mx-auto mb-5">
+              <Loader2 className="w-16 h-16 text-primary animate-spin" />
+              <Sparkles className="w-6 h-6 text-accent absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+            </div>
+            <h3 className="font-bold text-lg mb-2">AI 맛집 검색 중</h3>
+            <p className="text-sm text-muted-foreground transition-opacity duration-300">
+              {SEARCH_MESSAGES[searchMsgIndex]}
+            </p>
+            <div className="flex justify-center gap-1 mt-4">
+              {[0, 1, 2].map(i => (
+                <div
+                  key={i}
+                  className="w-2 h-2 rounded-full bg-primary"
+                  style={{
+                    animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
+                    opacity: 0.3,
+                  }}
+                />
+              ))}
+            </div>
+            <style jsx>{`
+              @keyframes pulse {
+                0%, 100% { opacity: 0.3; transform: scale(1); }
+                50% { opacity: 1; transform: scale(1.3); }
+              }
+            `}</style>
+          </div>
+        </div>
+      )}
+
       {/* 헤더 */}
       <div className="sticky top-0 z-[80] bg-primary text-white safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
@@ -96,7 +159,7 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot }: AIRecommen
                 key={preset.label}
                 onClick={() => {
                   setQuery(preset.query);
-                  handleRecommend(preset.query);
+                  handleRecommend(preset.query, true);
                 }}
                 disabled={loading}
                 className="px-3 py-1.5 rounded-full text-sm bg-muted hover:bg-muted/80 transition-all active:scale-[0.97] disabled:opacity-50"
@@ -113,14 +176,22 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot }: AIRecommen
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleRecommend(query); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                const isPreset = PRESET_QUERY_SET.has(query);
+                handleRecommend(query, isPreset);
+              }
+            }}
             placeholder="원하는 음식이나 분위기를 입력하세요..."
             className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             disabled={loading}
           />
           <Button
             size="icon"
-            onClick={() => handleRecommend(query)}
+            onClick={() => {
+              const isPreset = PRESET_QUERY_SET.has(query);
+              handleRecommend(query, isPreset);
+            }}
             disabled={loading || !query.trim()}
             className="rounded-xl w-10 h-10 bg-primary"
           >
@@ -128,8 +199,8 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot }: AIRecommen
           </Button>
         </div>
 
-        {/* 로딩 */}
-        {loading && (
+        {/* 프리셋 로딩 (인라인 스켈레톤) */}
+        {loading && !showAIModal && (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="bg-card rounded-2xl p-4 animate-pulse">
@@ -145,7 +216,7 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot }: AIRecommen
             ))}
             <p className="text-center text-sm text-muted-foreground">
               <Sparkles className="w-4 h-4 inline-block mr-1 animate-spin" />
-              AI가 맛집을 분석하고 있습니다...
+              맛집을 불러오고 있습니다...
             </p>
           </div>
         )}

@@ -5,6 +5,7 @@ import { connectToDatabase } from "@/lib/mongodb";
 interface AIRecommendRequest {
   query: string;
   timeSlot?: string;
+  preset?: boolean; // 프리셋 쿼리 여부
 }
 
 interface AIRecommendation {
@@ -12,6 +13,18 @@ interface AIRecommendation {
   reason: string;
   matchScore: number;
 }
+
+// 프리셋 쿼리 목록 (프론트엔드와 동일)
+const PRESET_QUERIES = new Set([
+  "매운 음식이 먹고 싶어요",
+  "가격 대비 양이 많은 가성비 좋은 맛집",
+  "분위기 좋은 데이트 맛집",
+  "혼자서 편하게 먹을 수 있는 맛집",
+  "야시장에서 꼭 먹어봐야 할 음식",
+  "달콤한 디저트와 음료",
+  "관광객보다 현지인이 더 많이 가는 로컬 맛집",
+  "맛있는 면 요리 전문점",
+]);
 
 // MongoDB 맛집을 AI 요약 형식으로 변환
 function formatCustomRestaurantForAI(r: Record<string, unknown>): string {
@@ -51,6 +64,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "추천 요청을 입력해주세요." });
     }
 
+    // ============================================
+    // 1. 프리셋 쿼리 → MongoDB 캐시에서 즉시 반환
+    // ============================================
+    const isPreset = PRESET_QUERIES.has(query);
+    if (isPreset) {
+      try {
+        const db = await connectToDatabase();
+        const cached = await db.collection("ai_preset_cache").findOne({ query });
+        if (cached && cached.recommendations?.length > 0) {
+          return NextResponse.json({
+            success: true,
+            recommendations: cached.recommendations,
+            tip: cached.tip || "",
+            cached: true,
+          });
+        }
+      } catch {
+        // 캐시 조회 실패 시 OpenAI로 fallback
+      }
+    }
+
+    // ============================================
+    // 2. 자유 입력 (또는 캐시 미스) → OpenAI 호출
+    // ============================================
     const openaiApiKey = process.env.OPENAI_API_KEY;
     if (!openaiApiKey) {
       return NextResponse.json({ success: false, error: "AI 서비스가 설정되지 않았습니다." });
@@ -77,7 +114,6 @@ export async function POST(request: NextRequest) {
       }
     } catch (dbError) {
       console.error("MongoDB query error (non-fatal):", dbError);
-      // DB 실패해도 정적 데이터만으로 계속 진행
     }
 
     const fullSummary = customSummary
@@ -152,16 +188,13 @@ ${fullSummary}
     }
 
     // 실제 맛집 데이터와 매칭 (hallucination 방지)
-    // 정적 + MongoDB 양쪽에서 검색
     const staticRestaurants = getAllRestaurants();
     const matchedRecommendations = parsed.recommendations
       .map((rec) => {
-        // 1) 정적 데이터에서 검색
         const fromStatic = staticRestaurants.find(r => r.이름 === rec.name);
         if (fromStatic) {
           return { restaurant: fromStatic, reason: rec.reason, matchScore: rec.matchScore };
         }
-        // 2) MongoDB 데이터에서 검색
         const fromDB = customRestaurants.find(r => r.name === rec.name);
         if (fromDB) {
           return { restaurant: toRestaurant(fromDB), reason: rec.reason, matchScore: rec.matchScore };
