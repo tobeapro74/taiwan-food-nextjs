@@ -110,16 +110,15 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
     setError(null);
     setLocationError(null);
 
-    try {
-      let latitude: number;
-      let longitude: number;
+    let latitude: number;
+    let longitude: number;
 
-      // 개발 환경에서는 기본 위치 사용
-      if (process.env.NODE_ENV === "development") {
-        latitude = DEFAULT_TAIWAN_LOCATION.lat;
-        longitude = DEFAULT_TAIWAN_LOCATION.lng;
-      } else {
-        // 프로덕션에서는 실제 위치 사용
+    // 1단계: 위치 확보 (GPS 실패 시 시먼딩 기본 위치로 폴백)
+    if (process.env.NODE_ENV === "development") {
+      latitude = DEFAULT_TAIWAN_LOCATION.lat;
+      longitude = DEFAULT_TAIWAN_LOCATION.lng;
+    } else {
+      try {
         const position = await getGeolocation();
         latitude = position.coords.latitude;
         longitude = position.coords.longitude;
@@ -132,10 +131,18 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
           setIsSampleMode(true);
           setShowOutsideTaiwanNotice(true);
         }
+      } catch {
+        // GPS 실패 (권한 거부, 타임아웃, WKWebView 콜백 누락 등) → 시먼딩 폴백
+        latitude = DEFAULT_TAIWAN_LOCATION.lat;
+        longitude = DEFAULT_TAIWAN_LOCATION.lng;
+        setIsSampleMode(true);
+        setShowOutsideTaiwanNotice(true);
       }
-      setUserLocation({ lat: latitude, lng: longitude });
+    }
+    setUserLocation({ lat: latitude, lng: longitude });
 
-      // API 호출 (타입에 따라 다른 엔드포인트)
+    // 2단계: API 호출 (위치 확보 실패와 관계없이 항상 진행)
+    try {
       const endpoint = type === "7eleven"
         ? `/api/seven-eleven-toilet?lat=${latitude}&lng=${longitude}&limit=5&maxDistance=2`
         : `/api/familymart-toilet?lat=${latitude}&lng=${longitude}&limit=5&maxDistance=2`;
@@ -156,26 +163,8 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
       } else {
         setError(data.error || "검색 중 오류가 발생했습니다.");
       }
-    } catch (err) {
-      if (err instanceof GeolocationPositionError) {
-        switch (err.code) {
-          case err.PERMISSION_DENIED:
-            setLocationError("위치 권한이 거부되었습니다. 설정 > 개인정보 보호 > 위치 서비스에서 '대만맛집' 앱의 위치 권한을 허용해주세요.");
-            break;
-          case err.POSITION_UNAVAILABLE:
-            setLocationError("위치 정보를 가져올 수 없습니다. 잠시 후 다시 시도해주세요.");
-            break;
-          case err.TIMEOUT:
-            setLocationError("위치 요청 시간이 초과되었습니다. 다시 시도해주세요.");
-            break;
-        }
-      } else if (err instanceof Error && err.message === "MANUAL_TIMEOUT") {
-        setLocationError("위치 요청 시간이 초과되었습니다. 위치 권한을 확인해주세요.");
-      } else if (err instanceof Error && err.message === "GEOLOCATION_NOT_SUPPORTED") {
-        setLocationError("이 기기에서는 위치 서비스를 지원하지 않습니다.");
-      } else {
-        setError("오류가 발생했습니다. 다시 시도해주세요.");
-      }
+    } catch {
+      setError("오류가 발생했습니다. 다시 시도해주세요.");
     } finally {
       setLoading(false);
     }

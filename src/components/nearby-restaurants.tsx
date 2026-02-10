@@ -37,6 +37,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
     isMockLocation,
     isSearching,
     searchResults,
+    gpsFailed,
     requestLocation,
     setMockLocation,
     searchAddress,
@@ -118,7 +119,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
     );
   }, [coordinates]);
 
-  // 대만 밖 위치 감지 시 자동으로 시먼딩으로 전환 + 알림 표시
+  // 대만 밖 위치 감지 또는 GPS 실패 시 자동으로 시먼딩으로 전환 + 알림 표시
   useEffect(() => {
     if (coordinates && !isInTaiwan && !isMockLocation) {
       const defaultLocation = MOCK_LOCATIONS["시먼딩"];
@@ -128,6 +129,13 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
       }
     }
   }, [coordinates, isInTaiwan, isMockLocation, setMockLocation]);
+
+  // GPS 실패로 기본 위치(시먼딩)로 폴백된 경우 안내 모달 표시
+  useEffect(() => {
+    if (gpsFailed) {
+      setShowOutsideTaiwanNotice(true);
+    }
+  }, [gpsFailed]);
 
   // 주변 맛집 필터링
   const nearbyRestaurants = useMemo(() => {
