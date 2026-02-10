@@ -885,7 +885,7 @@ export default function Home() {
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg">🏛️</span>
                   <span className="font-semibold text-foreground">타이베이시</span>
-                  <span className="bg-foreground dark:bg-muted-foreground text-white text-[10px] px-2 py-0.5 rounded-full">12개 구</span>
+                  <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full">12개 구</span>
                 </div>
                 <p className="text-xs">대만의 정치·경제·문화 중심지로, 관광 명소와 맛집이 집중되어 있습니다.</p>
               </div>
@@ -1001,30 +1001,30 @@ export default function Home() {
     const WeatherContent = () => (
       <div className="space-y-6">
         {/* MZ 핵심 요약 카드 */}
-        <section className="bg-foreground dark:bg-card rounded-2xl p-5 shadow-lg text-white">
+        <section className="bg-card rounded-2xl p-5 shadow-card border border-border">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">⚡</span>
             <h2 className="text-fluid-lg font-bold">MZ를 위한 핵심 요약</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">연평균 기온</div>
+            <div className="bg-muted/50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">연평균 기온</div>
               <div className="font-bold">서울보다 따뜻</div>
             </div>
-            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">겨울 체감</div>
+            <div className="bg-muted/50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">겨울 체감</div>
               <div className="font-bold">서울 봄 날씨</div>
             </div>
-            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">필수 준비물</div>
+            <div className="bg-muted/50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">필수 준비물</div>
               <div className="font-bold">휴대용 우산</div>
             </div>
-            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">여름 특징</div>
+            <div className="bg-muted/50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">여름 특징</div>
               <div className="font-bold">스콜 + 태풍</div>
             </div>
           </div>
-          <p className="text-xs mt-3 opacity-90">1년 내내 패딩 필요 없어요! 대신 우산은 챙기세요</p>
+          <p className="text-xs mt-3 text-muted-foreground">1년 내내 패딩 필요 없어요! 대신 우산은 챙기세요</p>
         </section>
 
         {/* 계절별 요약 카드 */}
@@ -1198,30 +1198,30 @@ export default function Home() {
     const TransportContent = () => (
       <div className="space-y-6">
         {/* MZ 핵심 요약 카드 */}
-        <section className="bg-foreground dark:bg-card rounded-2xl p-5 shadow-lg text-white">
+        <section className="bg-card rounded-2xl p-5 shadow-card border border-border">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">⚡</span>
             <h2 className="text-fluid-lg font-bold">MZ를 위한 핵심 요약</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">필수 준비물</div>
+            <div className="bg-muted/50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">필수 준비물</div>
               <div className="font-bold">EasyCard 하나면 끝</div>
             </div>
-            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">가장 편한 이동</div>
+            <div className="bg-muted/50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">가장 편한 이동</div>
               <div className="font-bold">MRT 중심 이동</div>
             </div>
-            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">비용</div>
+            <div className="bg-muted/50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">비용</div>
               <div className="font-bold">한국보다 저렴</div>
             </div>
-            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">초보자 난이도</div>
+            <div className="bg-muted/50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">초보자 난이도</div>
               <div className="font-bold">매우 쉬움</div>
             </div>
           </div>
-          <p className="text-xs mt-3 opacity-90">서울 지하철보다 단순하고, 영어 안내도 충분해요!</p>
+          <p className="text-xs mt-3 text-muted-foreground">서울 지하철보다 단순하고, 영어 안내도 충분해요!</p>
         </section>
 
         {/* 교통 시스템 개요 */}
@@ -1497,30 +1497,30 @@ export default function Home() {
     const AccommodationContent = () => (
       <div className="space-y-6">
         {/* MZ 핵심 요약 카드 */}
-        <section className="bg-foreground dark:bg-card rounded-2xl p-5 shadow-lg text-white">
+        <section className="bg-card rounded-2xl p-5 shadow-card border border-border">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">⚡</span>
             <h2 className="text-fluid-lg font-bold">MZ를 위한 핵심 요약</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">최적 지역</div>
+            <div className="bg-muted/50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">최적 지역</div>
               <div className="font-bold text-sm">시먼딩·중정구</div>
             </div>
-            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">예산</div>
+            <div className="bg-muted/50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">예산</div>
               <div className="font-bold text-sm">호스텔 2~4만원</div>
             </div>
-            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">핵심 팁</div>
+            <div className="bg-muted/50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">핵심 팁</div>
               <div className="font-bold text-sm">MRT 5분 거리</div>
             </div>
-            <div className="bg-white/20 backdrop-blur rounded-xl p-3">
-              <div className="text-xs opacity-80 mb-1">분위기</div>
+            <div className="bg-muted/50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground mb-1">분위기</div>
               <div className="font-bold text-sm">안전·가성비 좋음</div>
             </div>
           </div>
-          <p className="text-xs mt-3 opacity-90">주말·연휴는 미리 예약! 현지인도 많이 여행해요</p>
+          <p className="text-xs mt-3 text-muted-foreground">주말·연휴는 미리 예약! 현지인도 많이 여행해요</p>
         </section>
 
         {/* 숙박 분위기 */}
@@ -1706,7 +1706,7 @@ export default function Home() {
           </div>
           <div className="space-y-3">
             <div className="flex items-start gap-3 p-3 bg-muted/50 dark:bg-muted rounded-xl">
-              <div className="w-8 h-8 bg-foreground dark:bg-muted-foreground rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-sm font-bold">1</span>
               </div>
               <div>
@@ -1717,7 +1717,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 bg-muted/50 dark:bg-muted rounded-xl">
-              <div className="w-8 h-8 bg-foreground dark:bg-muted-foreground rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-sm font-bold">2</span>
               </div>
               <div>
@@ -1728,7 +1728,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 bg-muted/50 dark:bg-muted rounded-xl">
-              <div className="w-8 h-8 bg-foreground dark:bg-muted-foreground rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-sm font-bold">3</span>
               </div>
               <div>
@@ -1739,7 +1739,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 bg-muted/50 dark:bg-muted rounded-xl">
-              <div className="w-8 h-8 bg-foreground dark:bg-muted-foreground rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-sm font-bold">4</span>
               </div>
               <div>
@@ -1765,31 +1765,31 @@ export default function Home() {
       <>
         <div className="min-h-screen pb-20 bg-background">
           {/* 헤더 */}
-          <div className="sticky top-0 z-10 bg-foreground dark:bg-card shadow-lg safe-area-top">
+          <div className="sticky top-0 z-10 bg-card shadow-sm border-b border-border safe-area-top">
             <div className="flex items-center gap-3 p-4">
               <Button
                 variant="ghost"
                 onClick={handleBack}
-                className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-white/20 hover:bg-white/30 text-white"
+                className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-secondary hover:bg-muted text-foreground"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1 className="font-bold text-white text-lg">📖 타이베이 여행 가이드</h1>
-                <p className="text-white/80 text-xs">대만 타이베이 완벽 정리</p>
+                <h1 className="font-bold text-foreground text-lg">📖 타이베이 여행 가이드</h1>
+                <p className="text-muted-foreground text-xs">대만 타이베이 완벽 정리</p>
               </div>
             </div>
 
             {/* 탭 네비게이션 */}
-            <div className="flex bg-white/10 mx-4 mb-4 rounded-xl p-1">
+            <div className="flex bg-muted mx-4 mb-4 rounded-xl p-1">
               {guideTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setGuideTab(tab.id)}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-medium transition-all ${
                     guideTab === tab.id
-                      ? "bg-white text-primary shadow-md"
-                      : "text-white/90 hover:bg-white/10"
+                      ? "bg-card text-primary shadow-sm"
+                      : "text-muted-foreground hover:bg-muted/80"
                   }`}
                 >
                   <span>{tab.emoji}</span>
@@ -1903,32 +1903,26 @@ export default function Home() {
 
         {/* 헤더 */}
         <header
-          className="bg-foreground dark:bg-card safe-area-top relative z-20 transition-transform"
+          className="bg-card safe-area-top relative z-20 transition-transform border-b border-border"
           style={pullDistance > 0 ? { transform: `translateY(${pullDistance}px)` } : undefined}
         >
-          {/* 배경 장식 */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-4 -left-4 w-24 h-24 bg-white/10 rounded-full blur-xl" />
-            <div className="absolute top-2 right-10 w-16 h-16 bg-white/10 rounded-full blur-lg" />
-            <div className="absolute -bottom-2 right-1/4 w-20 h-20 bg-white/5 rounded-full blur-xl" />
-          </div>
-          <div className="px-4 py-4 flex items-center justify-between relative z-10">
+          <div className="px-4 py-4 flex items-center justify-between">
             <button
               onClick={toggleTheme}
-              className="w-10 h-10 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/35 transition-all shadow-lg border border-white/20"
+              className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground hover:bg-muted transition-all"
               title={theme === "dark" ? "라이트 모드" : "다크 모드"}
             >
               {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-2">
-                <span className="text-2xl drop-shadow-lg">🍜</span>
-                <h1 className="text-fluid-xl font-bold text-white drop-shadow-md tracking-wide">
+                <span className="text-2xl">🍜</span>
+                <h1 className="text-fluid-xl font-bold text-foreground tracking-wide">
                   대만맛집
                 </h1>
-                <span className="text-2xl drop-shadow-lg">🏯</span>
+                <span className="text-2xl">🏯</span>
               </div>
-              <span className="text-xs text-white/80 font-medium tracking-widest mt-0.5">
+              <span className="text-xs text-muted-foreground font-medium tracking-widest mt-0.5">
                 TAIPEI FOOD GUIDE
               </span>
             </div>
@@ -1937,7 +1931,7 @@ export default function Home() {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="w-10 h-10 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/35 transition-all shadow-lg border border-white/20"
+                  className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground hover:bg-muted transition-all"
                   title={`${user.name}님`}
                 >
                   <User className="w-5 h-5" />
@@ -1995,7 +1989,7 @@ export default function Home() {
             ) : (
               <button
                 onClick={() => setAuthModalOpen(true)}
-                className="w-10 h-10 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/35 transition-all shadow-lg border border-white/20"
+                className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground hover:bg-muted transition-all"
                 title="로그인"
               >
                 <User className="w-5 h-5" />
@@ -2079,13 +2073,9 @@ export default function Home() {
 
           {/* 시간대별 맛집 추천 */}
           {timeRecommendation.restaurants.length > 0 && (
-            <section className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${timeRecommendation.gradient} p-4 shadow-card`}>
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/10 rounded-full blur-xl" />
-                <div className="absolute bottom-2 left-4 w-12 h-12 bg-white/5 rounded-full blur-lg" />
-              </div>
-              <div className="relative z-10">
-                <h2 className="text-white font-semibold text-base flex items-center gap-2 mb-3">
+            <section className="rounded-2xl bg-card p-4 shadow-card border border-border">
+              <div>
+                <h2 className="text-foreground font-semibold text-base flex items-center gap-2 mb-3">
                   <span className="text-xl">{timeRecommendation.emoji}</span>
                   {timeRecommendation.greeting}
                 </h2>

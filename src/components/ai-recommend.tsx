@@ -137,12 +137,12 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot }: AIRecommen
       )}
 
       {/* 헤더 */}
-      <div className="sticky top-0 z-[80] bg-foreground dark:bg-card text-white safe-area-top">
+      <div className="sticky top-0 z-[80] bg-card border-b border-border safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={onBack} className="p-1 -ml-1">
+          <button onClick={onBack} className="p-1 -ml-1 text-foreground">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-foreground">
             <Sparkles className="w-5 h-5" />
             <h1 className="font-bold text-lg">AI 맛집 추천</h1>
           </div>

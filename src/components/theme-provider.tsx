@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // iOS 상태바 색상 동적 업데이트
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      meta.setAttribute("content", newTheme === "dark" ? "#1C1512" : "#1E1614");
+      meta.setAttribute("content", newTheme === "dark" ? "#1C1512" : "#FFFFFF");
     }
   };
 

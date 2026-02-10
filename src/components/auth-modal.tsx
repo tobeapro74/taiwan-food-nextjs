@@ -228,13 +228,13 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
     <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-[calc(env(safe-area-inset-bottom)+80px)]">
       <div className="bg-background w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in max-h-[calc(100vh-160px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] overflow-y-auto flex flex-col">
         {/* 헤더 */}
-        <div className="bg-foreground dark:bg-card px-4 py-4 flex items-center justify-between sticky top-0">
-          <h2 className="text-lg font-semibold text-primary-foreground">
+        <div className="bg-card px-4 py-4 flex items-center justify-between sticky top-0 border-b border-border">
+          <h2 className="text-lg font-semibold text-foreground">
             {mode === "login" ? "로그인" : "회원가입"}
           </h2>
           <button
             onClick={handleClose}
-            className="p-1 rounded-full hover:bg-white/20 text-primary-foreground"
+            className="p-1 rounded-full hover:bg-muted text-foreground"
           >
             <X className="w-5 h-5" />
           </button>
