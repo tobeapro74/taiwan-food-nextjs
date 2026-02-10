@@ -2106,14 +2106,15 @@ export default function Home() {
                 setActiveTab("market");
                 setMarketSheetOpen(true);
               }}
-              className="row-span-2 relative overflow-hidden rounded-2xl bg-primary p-4 text-left active:scale-[0.98] transition-transform"
+              className="row-span-2 relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/75 to-accent/60 p-4 text-left active:scale-[0.98] transition-transform"
             >
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-3 right-3 text-3xl opacity-30">🌙</div>
-                <div className="absolute bottom-6 left-2 text-2xl opacity-25">🏮</div>
+                <div className="absolute -top-2 -right-2 text-7xl opacity-20">🌃</div>
+                <div className="absolute top-16 right-6 text-3xl opacity-25">🌙</div>
+                <div className="absolute bottom-8 left-1 text-2xl opacity-20">🏮</div>
               </div>
               <div className="relative z-10 h-full flex flex-col">
-                <span className="text-3xl mb-2">🌃</span>
+                <span className="text-4xl mb-2">🌃</span>
                 <h3 className="text-white font-bold text-lg">야시장</h3>
                 <p className="text-white/80 text-xs mt-1">타이베이 인기 야시장</p>
                 <div className="mt-auto pt-3 flex gap-1 flex-wrap">
@@ -2159,7 +2160,7 @@ export default function Home() {
                 setCurrentView("ai-recommend");
                 window.scrollTo(0, 0);
               }}
-              className="col-span-2 relative overflow-hidden rounded-2xl bg-primary/90 p-4 text-left active:scale-[0.98] transition-transform"
+              className="col-span-2 relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/85 via-primary/70 to-accent/50 p-4 text-left active:scale-[0.98] transition-transform"
             >
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-2 right-4 text-2xl opacity-20">✨</div>
