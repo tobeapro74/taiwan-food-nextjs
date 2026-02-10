@@ -81,7 +81,7 @@ export function CategoryEditModal({
     <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+16px)] pb-[calc(env(safe-area-inset-bottom)+80px)]">
       <div className="bg-background w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in max-h-[calc(100vh-160px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex flex-col">
         {/* 헤더 */}
-        <div className="bg-primary px-4 py-4 flex items-center justify-between">
+        <div className="bg-foreground dark:bg-card px-4 py-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-primary-foreground">
             카테고리 수정
           </h2>

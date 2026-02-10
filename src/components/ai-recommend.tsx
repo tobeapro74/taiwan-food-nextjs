@@ -137,7 +137,7 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot }: AIRecommen
       )}
 
       {/* 헤더 */}
-      <div className="sticky top-0 z-[80] bg-primary text-white safe-area-top">
+      <div className="sticky top-0 z-[80] bg-foreground dark:bg-card text-white safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
           <button onClick={onBack} className="p-1 -ml-1">
             <ArrowLeft className="w-5 h-5" />
@@ -225,8 +225,8 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot }: AIRecommen
         {!loading && results.length > 0 && (
           <div className="space-y-3">
             {tip && (
-              <div className="bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 rounded-xl p-3">
-                <p className="text-sm text-primary">
+              <div className="bg-muted/50 dark:bg-muted border border-border rounded-xl p-3">
+                <p className="text-sm text-foreground">
                   <Sparkles className="w-3.5 h-3.5 inline-block mr-1" />
                   {tip}
                 </p>

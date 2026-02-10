@@ -183,7 +183,7 @@ export function RestaurantCard({ restaurant, onClick, onViewDetail, variant = "v
             <span className="truncate">{restaurant.위치?.substring(0, 12)}</span>
           </p>
           {restaurant.빌딩 && (
-            <p className="text-xs text-primary flex items-center gap-1 mt-1">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
               <Building2 className="h-3 w-3 flex-shrink-0" />
               <span className="truncate">{restaurant.빌딩}</span>
             </p>
@@ -252,7 +252,7 @@ export function RestaurantCard({ restaurant, onClick, onViewDetail, variant = "v
                 </Badge>
               )}
               {restaurant.빌딩 && (
-                <Badge variant="outline" className="text-xs text-primary border-primary/20 bg-primary/5 dark:text-primary dark:border-primary/30 dark:bg-primary/10">
+                <Badge variant="outline" className="text-xs text-muted-foreground border-border bg-muted/50">
                   <Building2 className="h-3 w-3 mr-1" />
                   {restaurant.빌딩}
                 </Badge>

@@ -881,15 +881,15 @@ export default function Home() {
               <span className="font-semibold text-foreground">신베이시(New Taipei City)</span>로 나뉩니다.
             </p>
             <div className="grid gap-3">
-              <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 border border-primary/10 dark:border-primary/20">
+              <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg">🏛️</span>
                   <span className="font-semibold text-foreground">타이베이시</span>
-                  <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full">12개 구</span>
+                  <span className="bg-foreground dark:bg-muted-foreground text-white text-[10px] px-2 py-0.5 rounded-full">12개 구</span>
                 </div>
                 <p className="text-xs">대만의 정치·경제·문화 중심지로, 관광 명소와 맛집이 집중되어 있습니다.</p>
               </div>
-              <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 border border-primary/10 dark:border-primary/20">
+              <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg">🌿</span>
                   <span className="font-semibold text-foreground">신베이시</span>
@@ -954,7 +954,7 @@ export default function Home() {
             ].map((spot) => (
               <div
                 key={spot.name}
-                className="bg-primary/5 dark:bg-primary/10 rounded-xl p-3 border border-primary/10 dark:border-primary/20"
+                className="bg-muted/50 dark:bg-muted rounded-xl p-3 border border-border"
               >
                 <div className="text-2xl mb-1">{spot.emoji}</div>
                 <div className="font-semibold text-foreground text-sm">{spot.name}</div>
@@ -983,7 +983,7 @@ export default function Home() {
             ].map((spot) => (
               <div
                 key={spot.name}
-                className="flex items-start gap-3 p-3 rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20"
+                className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 dark:bg-muted border border-border"
               >
                 <span className="text-2xl">{spot.emoji}</span>
                 <div className="flex-1 min-w-0">
@@ -1001,7 +1001,7 @@ export default function Home() {
     const WeatherContent = () => (
       <div className="space-y-6">
         {/* MZ 핵심 요약 카드 */}
-        <section className="bg-primary rounded-2xl p-5 shadow-lg text-white">
+        <section className="bg-foreground dark:bg-card rounded-2xl p-5 shadow-lg text-white">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">⚡</span>
             <h2 className="text-fluid-lg font-bold">MZ를 위한 핵심 요약</h2>
@@ -1034,7 +1034,7 @@ export default function Home() {
             <h2 className="text-fluid-lg font-bold text-foreground">계절별 날씨</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-3 border border-primary/10 dark:border-primary/20">
+            <div className="bg-muted/50 dark:bg-muted rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">🌸</span>
                 <span className="font-semibold text-foreground text-sm">봄 (3~5월)</span>
@@ -1042,7 +1042,7 @@ export default function Home() {
               <p className="text-xs text-muted-foreground">서울 초여름 느낌</p>
               <p className="text-xs text-foreground font-medium mt-1">16~29°C</p>
             </div>
-            <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-3 border border-primary/10 dark:border-primary/20">
+            <div className="bg-muted/50 dark:bg-muted rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">☀️</span>
                 <span className="font-semibold text-foreground text-sm">여름 (6~9월)</span>
@@ -1050,7 +1050,7 @@ export default function Home() {
               <p className="text-xs text-muted-foreground">서울 한여름과 동일</p>
               <p className="text-xs text-foreground font-medium mt-1">24~34°C</p>
             </div>
-            <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-3 border border-primary/10 dark:border-primary/20">
+            <div className="bg-muted/50 dark:bg-muted rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">🍂</span>
                 <span className="font-semibold text-foreground text-sm">가을 (10~11월)</span>
@@ -1058,7 +1058,7 @@ export default function Home() {
               <p className="text-xs text-muted-foreground">서울 늦봄~초여름</p>
               <p className="text-xs text-foreground font-medium mt-1">19~28°C</p>
             </div>
-            <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-3 border border-primary/10 dark:border-primary/20">
+            <div className="bg-muted/50 dark:bg-muted rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">❄️</span>
                 <span className="font-semibold text-foreground text-sm">겨울 (12~2월)</span>
@@ -1078,18 +1078,18 @@ export default function Home() {
           </div>
           <div className="space-y-2">
             {[
-              { month: "1월", temp: "13~19°C", seoul: "4월", desc: "서울보다 훨씬 따뜻, 봄 같은 겨울", color: "bg-primary/10 dark:bg-primary/15" },
-              { month: "2월", temp: "14~20°C", seoul: "4~5월", desc: "초봄~늦봄 날씨, 비 자주 옴", color: "bg-primary/10 dark:bg-primary/15" },
-              { month: "3월", temp: "16~22°C", seoul: "5월", desc: "서울의 늦봄과 유사", color: "bg-primary/10 dark:bg-primary/15" },
-              { month: "4월", temp: "19~26°C", seoul: "6월", desc: "서울 초여름 느낌", color: "bg-primary/10 dark:bg-primary/15" },
-              { month: "5월", temp: "22~29°C", seoul: "7월", desc: "본격 여름 시작, 장마철 비슷", color: "bg-primary/10 dark:bg-primary/15" },
-              { month: "6월", temp: "24~32°C", seoul: "7~8월", desc: "서울 한여름과 동일, 습도↑", color: "bg-primary/10 dark:bg-primary/15" },
-              { month: "7월", temp: "26~34°C", seoul: "8월", desc: "서울 가장 더운 시기와 같음", color: "bg-primary/10 dark:bg-primary/15" },
-              { month: "8월", temp: "26~33°C", seoul: "8월", desc: "서울 늦여름과 동일, 태풍 시즌", color: "bg-primary/10 dark:bg-primary/15" },
-              { month: "9월", temp: "24~31°C", seoul: "7월", desc: "서울보다 늦게까지 여름 지속", color: "bg-primary/10 dark:bg-primary/15" },
-              { month: "10월", temp: "22~28°C", seoul: "6월", desc: "서울 초여름 같은 가을", color: "bg-primary/10 dark:bg-primary/15" },
-              { month: "11월", temp: "19~23°C", seoul: "5월", desc: "서울 늦봄 같은 가을", color: "bg-primary/10 dark:bg-primary/15" },
-              { month: "12월", temp: "15~20°C", seoul: "4월", desc: "서울 봄 같은 겨울", color: "bg-primary/10 dark:bg-primary/15" },
+              { month: "1월", temp: "13~19°C", seoul: "4월", desc: "서울보다 훨씬 따뜻, 봄 같은 겨울", color: "bg-muted/50 dark:bg-muted/70" },
+              { month: "2월", temp: "14~20°C", seoul: "4~5월", desc: "초봄~늦봄 날씨, 비 자주 옴", color: "bg-muted/50 dark:bg-muted/70" },
+              { month: "3월", temp: "16~22°C", seoul: "5월", desc: "서울의 늦봄과 유사", color: "bg-muted/50 dark:bg-muted/70" },
+              { month: "4월", temp: "19~26°C", seoul: "6월", desc: "서울 초여름 느낌", color: "bg-muted/50 dark:bg-muted/70" },
+              { month: "5월", temp: "22~29°C", seoul: "7월", desc: "본격 여름 시작, 장마철 비슷", color: "bg-muted/50 dark:bg-muted/70" },
+              { month: "6월", temp: "24~32°C", seoul: "7~8월", desc: "서울 한여름과 동일, 습도↑", color: "bg-muted/50 dark:bg-muted/70" },
+              { month: "7월", temp: "26~34°C", seoul: "8월", desc: "서울 가장 더운 시기와 같음", color: "bg-muted/50 dark:bg-muted/70" },
+              { month: "8월", temp: "26~33°C", seoul: "8월", desc: "서울 늦여름과 동일, 태풍 시즌", color: "bg-muted/50 dark:bg-muted/70" },
+              { month: "9월", temp: "24~31°C", seoul: "7월", desc: "서울보다 늦게까지 여름 지속", color: "bg-muted/50 dark:bg-muted/70" },
+              { month: "10월", temp: "22~28°C", seoul: "6월", desc: "서울 초여름 같은 가을", color: "bg-muted/50 dark:bg-muted/70" },
+              { month: "11월", temp: "19~23°C", seoul: "5월", desc: "서울 늦봄 같은 가을", color: "bg-muted/50 dark:bg-muted/70" },
+              { month: "12월", temp: "15~20°C", seoul: "4월", desc: "서울 봄 같은 겨울", color: "bg-muted/50 dark:bg-muted/70" },
             ].map((item) => (
               <div key={item.month} className={`flex items-center gap-3 p-3 rounded-xl ${item.color}`}>
                 <div className="w-12 text-center">
@@ -1114,7 +1114,7 @@ export default function Home() {
             <h2 className="text-fluid-lg font-bold text-foreground">계절별 준비물</h2>
           </div>
           <div className="space-y-3">
-            <div className="flex items-start gap-3 p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 dark:border-primary/20">
+            <div className="flex items-start gap-3 p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <span className="text-2xl">❄️</span>
               <div className="flex-1">
                 <div className="font-medium text-foreground text-sm mb-2">겨울 (12~2월)</div>
@@ -1126,7 +1126,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 dark:border-primary/20">
+            <div className="flex items-start gap-3 p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <span className="text-2xl">🌸</span>
               <div className="flex-1">
                 <div className="font-medium text-foreground text-sm mb-2">봄 (3~5월)</div>
@@ -1138,7 +1138,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 dark:border-primary/20">
+            <div className="flex items-start gap-3 p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <span className="text-2xl">☀️</span>
               <div className="flex-1">
                 <div className="font-medium text-foreground text-sm mb-2">여름 (6~9월)</div>
@@ -1151,7 +1151,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 dark:border-primary/20">
+            <div className="flex items-start gap-3 p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <span className="text-2xl">🍂</span>
               <div className="flex-1">
                 <div className="font-medium text-foreground text-sm mb-2">가을 (10~11월)</div>
@@ -1198,7 +1198,7 @@ export default function Home() {
     const TransportContent = () => (
       <div className="space-y-6">
         {/* MZ 핵심 요약 카드 */}
-        <section className="bg-primary rounded-2xl p-5 shadow-lg text-white">
+        <section className="bg-foreground dark:bg-card rounded-2xl p-5 shadow-lg text-white">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">⚡</span>
             <h2 className="text-fluid-lg font-bold">MZ를 위한 핵심 요약</h2>
@@ -1235,7 +1235,7 @@ export default function Home() {
             버스·택시·공유자전거·공항철도가 촘촘하게 연결된 구조예요.
             대부분의 관광지는 MRT만으로도 이동 가능합니다.
           </p>
-          <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 border border-primary/10 dark:border-primary/20">
+          <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border">
             <div className="flex items-center gap-2 text-primary mb-2">
               <span>💡</span>
               <span className="font-semibold text-sm">알아두면 좋은 점</span>
@@ -1258,7 +1258,7 @@ export default function Home() {
                 emoji: "🚇",
                 name: "MRT (Taipei Metro)",
                 tag: "추천",
-                tagColor: "bg-primary/80",
+                tagColor: "bg-muted-foreground",
                 desc: "가장 빠르고 편한 이동 수단. 주요 관광지 대부분 연결",
                 detail: "운영시간: 06:00~00:00 · 중국어/영어 안내"
               },
@@ -1266,7 +1266,7 @@ export default function Home() {
                 emoji: "🚌",
                 name: "버스",
                 tag: "보조",
-                tagColor: "bg-primary/80",
+                tagColor: "bg-muted-foreground",
                 desc: "MRT가 닿지 않는 지역까지 이동 가능",
                 detail: "EasyCard로 환승 자동 처리"
               },
@@ -1274,7 +1274,7 @@ export default function Home() {
                 emoji: "✈️",
                 name: "공항 MRT",
                 tag: "공항↔시내",
-                tagColor: "bg-primary/80",
+                tagColor: "bg-muted-foreground",
                 desc: "타오위안 공항에서 시내까지 약 35~40분",
                 detail: "일반/급행 열차 선택 가능"
               },
@@ -1282,7 +1282,7 @@ export default function Home() {
                 emoji: "🚕",
                 name: "택시",
                 tag: "편리",
-                tagColor: "bg-primary/80",
+                tagColor: "bg-muted-foreground",
                 desc: "한국보다 저렴한 편, 야간 이동에 유용",
                 detail: "대부분 카드·EasyCard 결제 가능"
               },
@@ -1290,7 +1290,7 @@ export default function Home() {
                 emoji: "🚲",
                 name: "YouBike (공유자전거)",
                 tag: "단거리",
-                tagColor: "bg-primary/80",
+                tagColor: "bg-muted-foreground",
                 desc: "MRT역 주변에 거의 항상 있음",
                 detail: "짧은 거리 이동에 최고, 첫 30분 약 5 TWD"
               },
@@ -1321,7 +1321,7 @@ export default function Home() {
             <span className="text-2xl">💳</span>
             <h2 className="text-fluid-lg font-bold text-foreground">EasyCard (이지카드)</h2>
           </div>
-          <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 border border-primary/10 dark:border-primary/20 mb-4">
+          <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border mb-4">
             <p className="text-sm text-foreground font-medium mb-2">
               타이베이 교통의 핵심!
             </p>
@@ -1393,7 +1393,7 @@ export default function Home() {
             <h2 className="text-fluid-lg font-bold text-foreground">비용 가이드</h2>
           </div>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 dark:border-primary/20">
+            <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">🚇</span>
                 <div>
@@ -1406,7 +1406,7 @@ export default function Home() {
                 <div className="text-xs text-muted-foreground">약 800~2,600원</div>
               </div>
             </div>
-            <div className="flex items-center justify-between p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 dark:border-primary/20">
+            <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">🚌</span>
                 <div>
@@ -1419,7 +1419,7 @@ export default function Home() {
                 <div className="text-xs text-muted-foreground">약 600원~</div>
               </div>
             </div>
-            <div className="flex items-center justify-between p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 dark:border-primary/20">
+            <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">✈️</span>
                 <div>
@@ -1432,7 +1432,7 @@ export default function Home() {
                 <div className="text-xs text-muted-foreground">약 6,000~6,400원</div>
               </div>
             </div>
-            <div className="flex items-center justify-between p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 dark:border-primary/20">
+            <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">🚲</span>
                 <div>
@@ -1457,7 +1457,7 @@ export default function Home() {
             <span className="text-2xl">🔄</span>
             <h2 className="text-fluid-lg font-bold text-foreground">환승 시스템</h2>
           </div>
-          <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 border border-primary/10 dark:border-primary/20 mb-4">
+          <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border mb-4">
             <p className="text-sm text-foreground mb-2">
               EasyCard로 결제하면 <span className="font-bold">환승 할인 자동 적용!</span>
             </p>
@@ -1467,7 +1467,7 @@ export default function Home() {
           {/* 환승 플로우 */}
           <div className="flex items-center justify-center gap-2 py-4">
             <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mb-1">
+              <div className="w-12 h-12 bg-muted dark:bg-muted rounded-full flex items-center justify-center mb-1">
                 <span className="text-xl">🚇</span>
               </div>
               <span className="text-xs text-muted-foreground">MRT</span>
@@ -1477,7 +1477,7 @@ export default function Home() {
               <span className="text-muted-foreground">↔️</span>
             </div>
             <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mb-1">
+              <div className="w-12 h-12 bg-muted dark:bg-muted rounded-full flex items-center justify-center mb-1">
                 <span className="text-xl">🚌</span>
               </div>
               <span className="text-xs text-muted-foreground">버스</span>
@@ -1497,7 +1497,7 @@ export default function Home() {
     const AccommodationContent = () => (
       <div className="space-y-6">
         {/* MZ 핵심 요약 카드 */}
-        <section className="bg-primary rounded-2xl p-5 shadow-lg text-white">
+        <section className="bg-foreground dark:bg-card rounded-2xl p-5 shadow-lg text-white">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">⚡</span>
             <h2 className="text-fluid-lg font-bold">MZ를 위한 핵심 요약</h2>
@@ -1533,7 +1533,7 @@ export default function Home() {
             타이베이는 <span className="font-semibold text-foreground">가성비 좋은 호스텔</span>부터
             감성 호텔, 온천 리조트까지 선택 폭이 넓은 도시예요.
           </p>
-          <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 border border-primary/10 dark:border-primary/20">
+          <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border">
             <div className="flex items-center gap-2 text-primary mb-2">
               <span>💡</span>
               <span className="font-semibold text-sm">알아두세요</span>
@@ -1556,7 +1556,7 @@ export default function Home() {
                 emoji: "🛍️",
                 name: "시먼딩 (Ximending)",
                 tag: "재미",
-                tagColor: "bg-primary/80",
+                tagColor: "bg-muted-foreground",
                 vibe: "타이베이의 '홍대' 느낌",
                 pros: "쇼핑·야식·야경 최고",
                 cons: "조용한 분위기 X",
@@ -1566,7 +1566,7 @@ export default function Home() {
                 emoji: "🚇",
                 name: "중정구 (Zhongzheng)",
                 tag: "교통",
-                tagColor: "bg-primary/80",
+                tagColor: "bg-muted-foreground",
                 vibe: "타이베이 메인역 중심",
                 pros: "공항MRT·고속철·지하철 연결",
                 cons: "관광지 감성 약함",
@@ -1576,7 +1576,7 @@ export default function Home() {
                 emoji: "🏙️",
                 name: "신이 (Xinyi)",
                 tag: "세련",
-                tagColor: "bg-primary/80",
+                tagColor: "bg-muted-foreground",
                 vibe: "타이베이 101 주변",
                 pros: "깔끔·안전·고급 쇼핑몰",
                 cons: "가격대 높은 편",
@@ -1586,7 +1586,7 @@ export default function Home() {
                 emoji: "☕",
                 name: "중산 (Zhongshan)",
                 tag: "감성",
-                tagColor: "bg-primary/80",
+                tagColor: "bg-muted-foreground",
                 vibe: "카페·바 밀집 지역",
                 pros: "힙한 분위기, 조용+편리",
                 cons: "관광지 접근성 중간",
@@ -1596,7 +1596,7 @@ export default function Home() {
                 emoji: "♨️",
                 name: "베이터우 (Beitou)",
                 tag: "힐링",
-                tagColor: "bg-primary/80",
+                tagColor: "bg-muted-foreground",
                 vibe: "온천 호텔·리조트 밀집",
                 pros: "조용하고 자연친화적",
                 cons: "시내 관광에는 비효율적",
@@ -1638,7 +1638,7 @@ export default function Home() {
             <h2 className="text-fluid-lg font-bold text-foreground">숙소 유형 & 예산</h2>
           </div>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 dark:border-primary/20">
+            <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">🎒</span>
                 <div>
@@ -1651,7 +1651,7 @@ export default function Home() {
                 <div className="text-xs text-muted-foreground">약 2~5만원</div>
               </div>
             </div>
-            <div className="flex items-center justify-between p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 dark:border-primary/20">
+            <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">📸</span>
                 <div>
@@ -1664,7 +1664,7 @@ export default function Home() {
                 <div className="text-xs text-muted-foreground">약 8~16만원</div>
               </div>
             </div>
-            <div className="flex items-center justify-between p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 dark:border-primary/20">
+            <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">🏢</span>
                 <div>
@@ -1677,7 +1677,7 @@ export default function Home() {
                 <div className="text-xs text-muted-foreground">약 10~20만원</div>
               </div>
             </div>
-            <div className="flex items-center justify-between p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 dark:border-primary/20">
+            <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">♨️</span>
                 <div>
@@ -1691,7 +1691,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-3 mt-4 border border-primary/10 dark:border-primary/20">
+          <div className="bg-muted/50 dark:bg-muted rounded-xl p-3 mt-4 border border-border">
             <p className="text-xs text-muted-foreground text-center">
               💡 타이베이는 호스텔 퀄리티가 특히 좋아서 가성비 숙소도 만족도 높아요!
             </p>
@@ -1705,8 +1705,8 @@ export default function Home() {
             <h2 className="text-fluid-lg font-bold text-foreground">숙소 고르는 팁</h2>
           </div>
           <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 bg-primary/5 dark:bg-primary/10 rounded-xl">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="flex items-start gap-3 p-3 bg-muted/50 dark:bg-muted rounded-xl">
+              <div className="w-8 h-8 bg-foreground dark:bg-muted-foreground rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-sm font-bold">1</span>
               </div>
               <div>
@@ -1716,8 +1716,8 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 bg-primary/5 dark:bg-primary/10 rounded-xl">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="flex items-start gap-3 p-3 bg-muted/50 dark:bg-muted rounded-xl">
+              <div className="w-8 h-8 bg-foreground dark:bg-muted-foreground rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-sm font-bold">2</span>
               </div>
               <div>
@@ -1727,8 +1727,8 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 bg-primary/5 dark:bg-primary/10 rounded-xl">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="flex items-start gap-3 p-3 bg-muted/50 dark:bg-muted rounded-xl">
+              <div className="w-8 h-8 bg-foreground dark:bg-muted-foreground rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-sm font-bold">3</span>
               </div>
               <div>
@@ -1738,8 +1738,8 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 bg-primary/5 dark:bg-primary/10 rounded-xl">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="flex items-start gap-3 p-3 bg-muted/50 dark:bg-muted rounded-xl">
+              <div className="w-8 h-8 bg-foreground dark:bg-muted-foreground rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-sm font-bold">4</span>
               </div>
               <div>
@@ -1763,9 +1763,9 @@ export default function Home() {
 
     return (
       <>
-        <div className="min-h-screen pb-20 bg-gradient-to-b from-primary/5 to-background dark:from-background dark:to-background">
+        <div className="min-h-screen pb-20 bg-background">
           {/* 헤더 */}
-          <div className="sticky top-0 z-10 bg-primary shadow-lg safe-area-top">
+          <div className="sticky top-0 z-10 bg-foreground dark:bg-card shadow-lg safe-area-top">
             <div className="flex items-center gap-3 p-4">
               <Button
                 variant="ghost"
@@ -1903,7 +1903,7 @@ export default function Home() {
 
         {/* 헤더 */}
         <header
-          className="bg-primary safe-area-top relative z-20 transition-transform"
+          className="bg-foreground dark:bg-card safe-area-top relative z-20 transition-transform"
           style={pullDistance > 0 ? { transform: `translateY(${pullDistance}px)` } : undefined}
         >
           {/* 배경 장식 */}
@@ -2048,8 +2048,8 @@ export default function Home() {
                     onClick={() => handleSuggestionSelect(item)}
                     className="w-full px-4 py-3 flex items-center gap-3 hover:bg-muted/50 transition-colors text-left border-b border-border/50 last:border-b-0"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <MapPin className="w-5 h-5 text-primary" />
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <MapPin className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-foreground truncate">{item.이름}</div>
@@ -2116,7 +2116,7 @@ export default function Home() {
                 setActiveTab("market");
                 setMarketSheetOpen(true);
               }}
-              className="row-span-2 relative overflow-hidden rounded-2xl bg-foreground p-4 text-left active:scale-[0.98] transition-transform"
+              className="row-span-2 relative overflow-hidden rounded-2xl bg-foreground dark:bg-card p-4 text-left active:scale-[0.98] transition-transform"
             >
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-3 right-3 text-3xl opacity-30">🌙</div>
@@ -2141,11 +2141,11 @@ export default function Home() {
                 setCurrentView("guide");
                 window.scrollTo(0, 0);
               }}
-              className="rounded-2xl bg-primary p-4 text-left active:scale-[0.98] transition-transform"
+              className="rounded-2xl bg-card border border-border shadow-card p-4 text-left active:scale-[0.98] transition-transform"
             >
               <span className="text-2xl">📖</span>
-              <h3 className="text-white font-bold text-sm mt-2">여행 가이드</h3>
-              <p className="text-white/80 text-[10px] mt-0.5">12구 완벽 정리</p>
+              <h3 className="text-foreground font-bold text-sm mt-2">여행 가이드</h3>
+              <p className="text-muted-foreground text-[10px] mt-0.5">12구 완벽 정리</p>
             </button>
 
             {/* 화장실 찾기 */}
@@ -2155,11 +2155,11 @@ export default function Home() {
                 setCurrentView("toilet");
                 window.scrollTo(0, 0);
               }}
-              className="rounded-2xl bg-primary/85 p-4 text-left active:scale-[0.98] transition-transform"
+              className="rounded-2xl bg-card border border-border shadow-card p-4 text-left active:scale-[0.98] transition-transform"
             >
               <span className="text-2xl">🚽</span>
-              <h3 className="text-white font-bold text-sm mt-2">화장실 찾기</h3>
-              <p className="text-white/80 text-[10px] mt-0.5">7-ELEVEN 안내</p>
+              <h3 className="text-foreground font-bold text-sm mt-2">화장실 찾기</h3>
+              <p className="text-muted-foreground text-[10px] mt-0.5">7-ELEVEN 안내</p>
             </button>
 
             {/* AI 맛집 추천 */}
@@ -2169,7 +2169,7 @@ export default function Home() {
                 setCurrentView("ai-recommend");
                 window.scrollTo(0, 0);
               }}
-              className="col-span-2 relative overflow-hidden rounded-2xl bg-foreground p-4 text-left active:scale-[0.98] transition-transform"
+              className="col-span-2 relative overflow-hidden rounded-2xl bg-foreground dark:bg-card p-4 text-left active:scale-[0.98] transition-transform"
             >
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-2 right-4 text-2xl opacity-20">✨</div>

@@ -349,7 +349,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
             {/* 빌딩 배지 (카테고리/야시장은 히어로에 표시) */}
             {(restaurant.빌딩 || buildingName) && (
               <div className="flex flex-wrap gap-2 items-center">
-                <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5 dark:text-primary dark:border-primary/30 dark:bg-primary/10">
+                <Badge variant="outline" className="text-muted-foreground border-border bg-muted/50">
                   <Building2 className="h-3 w-3 mr-1" />
                   {restaurant.빌딩 || buildingName}
                 </Badge>
