@@ -1030,6 +1030,7 @@ fields=place_id,name,formatted_address,geometry,rating,user_ratings_total,
 | `image_cache` | 식당 이미지 URL 캐시 | 무제한 |
 | `google_reviews_cache` | 구글 리뷰 캐시 | 24시간 |
 | `restaurant_buildings` | 건물 정보 | 무제한 |
+| `ai_preset_cache` | AI 프리셋 추천 결과 캐시 | 무제한 |
 
 ### 비용 절감 예상
 
@@ -1086,6 +1087,31 @@ AI 기반 맛집 추천 (GPT-4o-mini)
 - 시스템 프롬프트에 전체 맛집 DB 요약 포함
 - 반환된 맛집명을 실제 데이터와 매칭 (hallucination 방지)
 - 매칭 실패 시 해당 추천 필터링
+- **프리셋 캐시**: 8개 프리셋 칩 결과를 MongoDB `ai_preset_cache`에 캐시하여 즉시 반환
+
+---
+
+### GET /api/ai-recommend/seed
+프리셋 캐시 사전 생성 (관리자용)
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| key | O | 관리자 인증 키 |
+
+**Response**
+```json
+{
+  "success": true,
+  "message": "프리셋 캐시 생성 완료",
+  "results": [
+    { "preset": "매운음식 🌶️", "status": "cached", "count": 5 },
+    { "preset": "가성비 👍", "status": "cached", "count": 5 }
+  ]
+}
+```
+
+**프리셋 목록**: 매운음식 🌶️, 가성비 👍, 데이트 💕, 혼밥 🍜, 야시장 🌃, 디저트 🍧, 현지로컬 🏠, 면요리 🍝
 
 ---
 
@@ -1229,7 +1255,10 @@ AI 여행 일정 생성 (Claude API)
     "popularRestaurants": [...],
     "districtRankings": [...],
     "customRestaurants": [...],
-    "deletedStaticIds": [...]
+    "deletedStaticIds": [...],
+    "popularRatings": { "맛집명": { "rating": 4.5, "userRatingsTotal": 150 } },
+    "marketRatings": { "맛집명": { "rating": 4.3, "userRatingsTotal": 80 } },
+    "imageUrls": { "맛집명": "https://res.cloudinary.com/..." }
   }
 }
 ```

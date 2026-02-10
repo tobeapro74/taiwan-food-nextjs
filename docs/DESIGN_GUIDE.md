@@ -8,34 +8,40 @@
 
 ## 1. 컬러 시스템
 
-### 라이트 테마
+### TDS 3색 체계
+
+컬러 시스템은 **Primary + Accent + Destructive** 3색으로 단순화되어 있습니다. 무지개 색상 하드코딩을 제거하고 이모지·텍스트로 항목을 구분합니다.
+
+### 라이트 테마 (Clean Neutral Tone)
 
 | 용도 | 변수명 | 값 | 설명 |
 |------|--------|-----|------|
-| **배경** | `--background` | `hsl(220, 14%, 96%)` | 연한 회색, 카드와 구분 |
-| **전경** | `--foreground` | `hsl(224, 71%, 4%)` | 거의 검정 |
+| **배경** | `--background` | `hsl(15, 8%, 98%)` | 깨끗한 뉴트럴 톤 |
+| **전경** | `--foreground` | `hsl(15, 12%, 12%)` | 따뜻한 검정 |
 | **카드** | `--card` | `hsl(0, 0%, 100%)` | 순수 흰색 |
 | **Primary** | `--primary` | `hsl(15, 90%, 55%)` | 대만 느낌의 따뜻한 주황-빨강 |
 | **Primary 전경** | `--primary-foreground` | `hsl(0, 0%, 100%)` | 흰색 텍스트 |
-| **Secondary** | `--secondary` | `hsl(220, 14%, 96%)` | 밝은 회색 |
-| **Muted** | `--muted` | `hsl(220, 14%, 96%)` | 비활성 배경 |
-| **Muted 텍스트** | `--muted-foreground` | `hsl(220, 9%, 46%)` | 보조 텍스트 |
-| **Border** | `--border` | `hsl(220, 13%, 91%)` | 테두리 |
+| **Secondary** | `--secondary` | `hsl(15, 6%, 95%)` | 중립 회색 |
+| **Muted** | `--muted` | `hsl(15, 5%, 94%)` | 비활성 배경 |
+| **Muted 텍스트** | `--muted-foreground` | `hsl(15, 4%, 46%)` | 보조 텍스트 |
+| **Accent** | `--accent` | `hsl(36, 78%, 55%)` | 골든 앰버 (별점 등) |
+| **Border** | `--border` | `hsl(15, 5%, 90%)` | 테두리 |
 | **Destructive** | `--destructive` | `hsl(0, 84.2%, 60.2%)` | 삭제/경고 빨강 |
 | **Ring** | `--ring` | `hsl(15, 90%, 55%)` | 포커스 링 (Primary와 동일) |
 
-### 다크 테마
+### 다크 테마 (Deep Warm Dark)
 
 | 용도 | 변수명 | 값 |
 |------|--------|-----|
-| **배경** | `--background` | `hsl(224, 15%, 10%)` |
-| **전경** | `--foreground` | `hsl(0, 0%, 95%)` |
-| **카드** | `--card` | `hsl(224, 15%, 14%)` |
-| **Primary** | `--primary` | `hsl(15, 90%, 55%)` (동일) |
-| **Muted** | `--muted` | `hsl(220, 14%, 20%)` |
-| **Border** | `--border` | `hsl(220, 13%, 20%)` |
+| **배경** | `--background` | `hsl(15, 15%, 7%)` |
+| **전경** | `--foreground` | `hsl(15, 5%, 92%)` |
+| **카드** | `--card` | `hsl(15, 10%, 11%)` |
+| **Primary** | `--primary` | `hsl(15, 85%, 58%)` |
+| **Accent** | `--accent` | `hsl(36, 60%, 50%)` |
+| **Muted** | `--muted` | `hsl(15, 6%, 14%)` |
+| **Border** | `--border` | `hsl(15, 6%, 20%)` |
 
-다크모드는 `ThemeProvider` (`src/components/theme-provider.tsx`)가 관리하며, localStorage에 `theme` 키로 저장합니다. 홈 헤더의 태양/달 아이콘 토글로 전환합니다.
+다크모드는 `ThemeProvider` (`src/components/theme-provider.tsx`)가 관리하며, localStorage에 `theme` 키로 저장합니다. 홈 헤더의 태양/달 아이콘 토글로 전환합니다. iOS 상태바 theme-color도 동적 업데이트 (#FFFFFF ↔ #1C1512).
 
 ### 차트 색상
 
@@ -47,12 +53,14 @@
 | **차트 4** | `--chart-4` | `hsl(217, 91%, 60%)` | 파랑 |
 | **차트 5** | `--chart-5` | `hsl(280, 65%, 60%)` | 보라 |
 
-### 브랜드 컬러 활용
+### 브랜드 컬러 활용 (TDS 3색)
 
-- **Primary (주황-빨강)**: 주요 버튼, 활성 네비게이션, CTA 요소
-- **별점 색상**: `amber-400` (노란색 별 아이콘)
-- **건물 뱃지**: `blue-600` 텍스트, `blue-200` 테두리, `blue-50` 배경
-- **그래디언트**: 벤토 그리드 타일, 시간대별 추천, 온보딩에 다채로운 그래디언트 사용
+- **Primary (주황-빨강)**: 주요 버튼, 활성 네비, CTA, 체크마크, 스텝 아이콘
+- **Accent (골든 앰버)**: 별점, 팁/주의 박스, 성별 구분(보조)
+- **Destructive (레드)**: 삭제 버튼, 에러 텍스트, 영업종료
+- **bg-muted/50**: 정보 박스, 리스트 항목 배경 (통일)
+- **bg-card**: 헤더, 모달, 시간대 추천 섹션
+- **예외**: Google 로고 SVG(4색), bg-black/50(오버레이), bg-white/*(글래스)
 
 ---
 
@@ -241,7 +249,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 <Badge variant="secondary" className="bg-accent/20 text-accent-foreground">야시장명</Badge>
 
 // Outline (건물) — 다크모드 호환
-<Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:bg-blue-950/30">
+<Badge variant="outline" className="text-muted-foreground border-border bg-muted/50">
   <Building2 className="h-3 w-3 mr-1" />빌딩명
 </Badge>
 
@@ -263,33 +271,30 @@ import { EmptyState } from "@/components/ui/empty-state";
 
 ## 7. 벤토 그리드 (Bento Grid)
 
-홈 화면의 핵심 네비게이션 UI. 2열 그리드에 다양한 크기의 타일 배치:
+홈 화면의 핵심 네비게이션 UI. 2열 그리드에 3개 타일 배치:
 
 ```tsx
 <div className="grid grid-cols-2 gap-3">
-  {/* 야시장 (2행) */}
-  <button className="row-span-2 rounded-2xl bg-gradient-to-b from-indigo-900 via-purple-900 to-indigo-950 p-4">
-    🌃 야시장
-  </button>
-
-  {/* 여행 가이드 (1행) */}
-  <button className="rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 p-4">
+  {/* 여행 가이드 */}
+  <button className="rounded-2xl bg-card border border-border shadow-card p-4 text-left">
     📖 여행 가이드
   </button>
 
-  {/* 화장실 찾기 (1행) */}
-  <button className="rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 p-4">
+  {/* 화장실 찾기 */}
+  <button className="rounded-2xl bg-card border border-border shadow-card p-4 text-left">
     🚽 화장실 찾기
   </button>
 
   {/* AI 추천 (전체 너비) */}
-  <button className="col-span-2 rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 p-4">
+  <button className="col-span-2 rounded-2xl bg-gradient-to-r from-primary/85 via-primary/70 to-accent/50 p-4">
     🤖 AI 맛집 추천
   </button>
 </div>
 ```
 
-각 타일은 그래디언트 배경 + 이모지 아이콘 + 텍스트 구성.
+- 여행 가이드, 화장실: 밝은 카드 스타일 (`bg-card border`)
+- AI 추천: primary→accent 그라데이션 (전체 너비)
+- 야시장은 하단 네비 '야시장별 맛집'과 중복되어 제거됨
 
 ---
 
@@ -297,15 +302,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 
 대만 시간(UTC+8) 기준 5개 시간대에 맞는 맛집 추천:
 
-| 시간대 | 시간 | 이모지 | 그래디언트 |
-|--------|------|--------|-----------|
-| 아침 | 6-11 | 🌅 | `from-amber-400 via-orange-400 to-yellow-300` |
-| 점심 | 11-14 | 🍽️ | `from-red-500 via-orange-500 to-amber-400` |
-| 오후 | 14-17 | ☕ | `from-pink-400 via-rose-400 to-orange-300` |
-| 저녁 | 17-21 | 🌙 | `from-indigo-600 via-purple-600 to-pink-500` |
-| 야식 | 21-6 | 🌃 | `from-gray-800 via-indigo-900 to-purple-900` |
+| 시간대 | 시간 | 이모지 | 설명 |
+|--------|------|--------|------|
+| 아침 | 6-11 | 🌅 | 든든한 아침 맛집 |
+| 점심 | 11-14 | 🍽️ | 인기 맛집 추천 |
+| 오후 | 14-17 | ☕ | 디저트 & 카페 |
+| 저녁 | 17-21 | 🌙 | 저녁 맛집 |
+| 야식 | 21-6 | 🌃 | 야시장 맛집 |
 
-수평 스크롤 카드 리스트로 표시, 그래디언트 배경 카드 안에 인사말 텍스트.
+밝은 카드 스타일(`bg-card border border-border`)로 표시. 수평 스크롤 카드 레이아웃.
 
 ---
 
@@ -315,10 +320,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 
 | 단계 | 이모지 | 그래디언트 | 제목 |
 |------|--------|-----------|------|
-| 1 | 🍜 | `from-orange-500 via-red-500 to-rose-600` | 환영 |
-| 2 | 🗺️ | `from-amber-500 via-orange-500 to-red-500` | 맛집 탐색 |
-| 3 | 📅 | `from-violet-500 via-purple-500 to-indigo-600` | AI 일정 |
-| 4 | 🚀 | `from-emerald-500 via-teal-500 to-cyan-600` | 시작하기 |
+| 1 | 🍜 | `from-primary to-primary/80` | 환영 |
+| 2 | 🗺️ | `from-primary/90 to-primary` | 맛집 탐색 |
+| 3 | 📅 | `from-primary/80 to-primary/90` | AI 일정 |
+| 4 | 🚀 | `from-primary to-primary/90` | 시작하기 |
 
 - 하단 "다음" 버튼 + 좌우 스와이프 제스처 지원
 - Skip 버튼 (우상단)

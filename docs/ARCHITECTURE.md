@@ -70,7 +70,8 @@ src/
 │   │   ├── seven-eleven-toilet/route.ts # GET: 7-ELEVEN 화장실 검색
 │   │   ├── familymart-toilet/route.ts # GET: FamilyMart 매장 검색
 │   │   ├── ai-recommend/
-│   │   │   └── route.ts              # POST: AI 맛집 추천 (GPT-4o-mini)
+│   │   │   ├── route.ts              # POST: AI 맛집 추천 (GPT-4o-mini)
+│   │   │   └── seed/route.ts         # GET: 프리셋 캐시 사전 생성
 │   │   ├── schedule-generate/
 │   │   │   └── route.ts              # POST: AI 여행 일정 생성 (Claude API)
 │   │   ├── schedules/
@@ -137,6 +138,7 @@ src/
 │
 └── lib/
     ├── mongodb.ts                 # MongoDB 연결
+    ├── cache.ts                   # 서버 사이드 LRU 캐시 (평점, 리뷰, 이미지, 맛집)
     ├── geo-utils.ts               # 위치/거리 계산 유틸리티
     ├── district-utils.ts          # 지역(구) 유틸리티
     │   ├── DISTRICT_INFO          # 타이베이 12개 구 + 신베이시 정보
@@ -514,6 +516,7 @@ GitHub Repository
 - MongoDB 연결 풀링
 - Cloudinary CDN 활용
 - API Route 응답 캐싱
+- **LRU 캐시** (`src/lib/cache.ts`): 평점·리뷰·이미지·맛집 데이터를 메모리에 캐시하여 외부 API 호출 최소화
 
 ### 번들 최적화
 - 컴포넌트 동적 임포트 (필요시)
@@ -554,6 +557,11 @@ ThemeProvider (layout.tsx)
                               │ (실제 데이터 매칭)│
                               └─────────────────┘
 ```
+
+### 프리셋 캐시
+- 8개 프리셋 칩(매운음식, 가성비, 데이트 등)의 결과를 MongoDB `ai_preset_cache` 컬렉션에 캐시
+- 프리셋 요청 시 캐시 히트하면 OpenAI 호출 없이 즉시 반환
+- `/api/ai-recommend/seed` 엔드포인트로 캐시 사전 생성 가능
 
 ### Hallucination 방지
 - GPT가 반환한 맛집명을 실제 `taiwan-food.ts` + DB 데이터와 매칭

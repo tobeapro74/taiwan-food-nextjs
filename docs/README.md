@@ -43,7 +43,7 @@ src/
 │   │   ├── restaurant-history/ # 등록 히스토리 API
 │   │   ├── seven-eleven-toilet/ # 7-ELEVEN 화장실 검색
 │   │   ├── familymart-toilet/ # FamilyMart 매장 검색
-│   │   ├── ai-recommend/      # AI 맛집 추천 (GPT-4o-mini)
+│   │   ├── ai-recommend/      # AI 맛집 추천 (GPT-4o-mini + 프리셋 캐시)
 │   │   ├── schedule-generate/ # AI 여행 일정 생성 (Claude API)
 │   │   ├── schedules/         # 일정 저장/조회 API
 │   │   ├── hotel-search/      # 호텔 검색 API
@@ -91,6 +91,7 @@ src/
 └── lib/
     ├── mongodb.ts             # MongoDB 연결
     ├── geo-utils.ts           # 위치/거리 계산 유틸리티
+    ├── cache.ts               # 서버 사이드 LRU 캐시 (평점, 리뷰, 이미지, 맛집)
     ├── types.ts               # TypeScript 타입 정의
     └── utils.ts               # 유틸리티 함수
 ```
@@ -206,6 +207,8 @@ git push
   - 일정 저장 및 관리
 - **AI 맛집 추천** (GPT-4o-mini 기반)
   - 8개 프리셋 칩 + 자유 텍스트 입력
+  - 프리셋 결과 MongoDB 캐시 (즉시 반환)
+  - 자유 입력 시 AI 검색 중 풀스크린 스핀 모달
   - 시간대 컨텍스트 자동 반영
   - Hallucination 방지 (실제 DB 매칭)
 
@@ -216,7 +219,8 @@ git push
 - **카드 롱프레스 미리보기** (Peek Preview)
 - **햅틱 피드백** (Web API + iOS 네이티브 브리지)
 - **Pull-to-Refresh** (홈 화면 당겨서 새로고침)
-- **Bento Grid** 퀵 액세스 레이아웃
+- **Bento Grid** 퀵 액세스 (가이드, 화장실, AI추천)
+- **TDS 3색 체계** (Primary + Accent + Destructive)
 - **Shimmer 로딩** 스켈레톤
 - **Glass Morphism** 시트 디자인
 
