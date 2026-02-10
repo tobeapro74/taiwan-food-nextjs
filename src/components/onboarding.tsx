@@ -1,0 +1,162 @@
+"use client";
+
+import { useState, useRef, useCallback } from "react";
+import { useTheme } from "@/components/theme-provider";
+import { ChevronRight } from "lucide-react";
+
+interface OnboardingProps {
+  onComplete: () => void;
+}
+
+const steps = [
+  {
+    emoji: "🍜",
+    title: "대만맛집에 오신 것을\n환영합니다!",
+    description: "타이베이 최고의 맛집, 야시장, 관광지 정보를\n한눈에 확인하세요",
+    gradient: "from-primary to-primary/80",
+  },
+  {
+    emoji: "🗺️",
+    title: "맛집 탐색",
+    description: "카테고리별 맛집, 야시장 추천,\n근처 맛집 찾기까지 한 번에!",
+    gradient: "from-primary/90 to-primary",
+  },
+  {
+    emoji: "📅",
+    title: "AI 여행 일정",
+    description: "AI가 나만의 대만 여행 일정을\n자동으로 만들어 드려요",
+    gradient: "from-primary/80 to-primary/90",
+  },
+  {
+    emoji: "🚀",
+    title: "지금 바로 시작하세요!",
+    description: "맛있는 대만 여행이\n기다리고 있어요",
+    gradient: "from-primary to-primary/90",
+  },
+];
+
+export function Onboarding({ onComplete }: OnboardingProps) {
+  const [currentStep, setCurrentStep] = useState(0);
+  const { theme } = useTheme();
+  const isLastStep = currentStep === steps.length - 1;
+  const step = steps[currentStep];
+
+  const handleNext = () => {
+    if (isLastStep) {
+      onComplete();
+    } else {
+      setCurrentStep((prev) => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentStep > 0) setCurrentStep((prev) => prev - 1);
+  };
+
+  const handleSkip = () => {
+    onComplete();
+  };
+
+  // 스와이프 제스처
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const swiping = useRef(false);
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+    swiping.current = false;
+  }, []);
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStart.current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStart.current.x;
+    const dy = Math.abs(t.clientY - touchStart.current.y);
+    touchStart.current = null;
+
+    // 수평 스와이프만 (수직 이동이 수평보다 크면 무시)
+    if (dy > Math.abs(dx)) return;
+    const threshold = 50;
+
+    if (dx < -threshold) {
+      // 왼쪽 스와이프 → 다음
+      if (isLastStep) onComplete();
+      else setCurrentStep((prev) => prev + 1);
+    } else if (dx > threshold) {
+      // 오른쪽 스와이프 → 이전
+      if (currentStep > 0) setCurrentStep((prev) => prev - 1);
+    }
+  }, [currentStep, isLastStep, onComplete]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex flex-col"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* 배경 그래디언트 */}
+      <div className={`absolute inset-0 bg-gradient-to-b ${step.gradient} transition-all duration-500`} />
+
+      {/* 장식 원 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-20 -right-20 w-60 h-60 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-40 -left-20 w-48 h-48 bg-white/5 rounded-full blur-2xl" />
+        <div className="absolute top-1/3 right-10 w-24 h-24 bg-white/10 rounded-full blur-xl" />
+      </div>
+
+      {/* Skip 버튼 */}
+      {!isLastStep && (
+        <button
+          onClick={handleSkip}
+          className="absolute top-12 right-4 z-10 text-white/70 text-sm font-medium px-3 py-1 rounded-full hover:text-white hover:bg-white/10 transition-all"
+        >
+          건너뛰기
+        </button>
+      )}
+
+      {/* 메인 콘텐츠 */}
+      <div className="flex-1 flex flex-col items-center justify-center px-8 relative z-10">
+        <div
+          key={currentStep}
+          className="flex flex-col items-center text-center animate-fade-in"
+        >
+          <span className="text-7xl mb-8 drop-shadow-2xl">{step.emoji}</span>
+          <h1 className="text-2xl font-bold text-white whitespace-pre-line leading-tight mb-4 drop-shadow-md">
+            {step.title}
+          </h1>
+          <p className="text-white/80 text-base whitespace-pre-line leading-relaxed">
+            {step.description}
+          </p>
+        </div>
+      </div>
+
+      {/* 하단 영역 */}
+      <div className="relative z-10 px-8 pb-12 safe-area-bottom">
+        {/* 인디케이터 */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          {steps.map((_, index) => (
+            <div
+              key={index}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                index === currentStep
+                  ? "w-8 bg-white"
+                  : index < currentStep
+                    ? "w-2 bg-white/60"
+                    : "w-2 bg-white/30"
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* 버튼 */}
+        <button
+          onClick={handleNext}
+          className="w-full py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-white text-gray-900 shadow-xl hover:shadow-2xl"
+        >
+          {isLastStep ? "시작하기" : "다음"}
+          {!isLastStep && <ChevronRight className="w-5 h-5" />}
+        </button>
+      </div>
+    </div>
+  );
+}

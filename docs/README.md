@@ -16,6 +16,8 @@
 | **인증** | JWT + bcryptjs |
 | **이메일** | Resend API |
 | **지도 API** | Google Places API |
+| **AI (일정 생성)** | Claude API (Anthropic) |
+| **AI (맛집 추천)** | OpenAI GPT-4o-mini |
 | **배포** | Vercel (Cron Jobs 포함) |
 
 ## 프로젝트 구조
@@ -41,6 +43,7 @@ src/
 │   │   ├── restaurant-history/ # 등록 히스토리 API
 │   │   ├── seven-eleven-toilet/ # 7-ELEVEN 화장실 검색
 │   │   ├── familymart-toilet/ # FamilyMart 매장 검색
+│   │   ├── ai-recommend/      # AI 맛집 추천 (GPT-4o-mini)
 │   │   ├── schedule-generate/ # AI 여행 일정 생성 (Claude API)
 │   │   ├── schedules/         # 일정 저장/조회 API
 │   │   ├── hotel-search/      # 호텔 검색 API
@@ -58,12 +61,12 @@ src/
 │   ├── layout.tsx
 │   └── page.tsx               # 메인 페이지
 ├── components/
-│   ├── ui/                    # 공통 UI 컴포넌트
+│   ├── ui/                    # 공통 UI 컴포넌트 (EmptyState 포함)
 │   ├── auth-modal.tsx         # 로그인/회원가입 모달
-│   ├── bottom-nav.tsx         # 하단 네비게이션
+│   ├── bottom-nav.tsx         # 하단 네비게이션 (pill indicator)
 │   ├── category-sheet.tsx     # 카테고리 선택 시트
 │   ├── category-edit-modal.tsx # 카테고리 수정 모달
-│   ├── restaurant-card.tsx    # 맛집 카드
+│   ├── restaurant-card.tsx    # 맛집 카드 (롱프레스 미리보기)
 │   ├── restaurant-detail.tsx  # 맛집 상세 페이지
 │   ├── restaurant-list.tsx    # 맛집 목록
 │   ├── restaurant-history.tsx # 등록 히스토리 목록
@@ -72,10 +75,17 @@ src/
 │   ├── toilet-finder.tsx      # 화장실 찾기 (7-ELEVEN/FamilyMart)
 │   ├── google-reviews.tsx     # Google 리뷰 섹션
 │   ├── review-modal.tsx       # 리뷰 작성 모달
-│   └── review-section.tsx     # 리뷰 목록 섹션
+│   ├── review-section.tsx     # 리뷰 목록 섹션
+│   ├── theme-provider.tsx     # 다크모드 테마 프로바이더
+│   ├── onboarding.tsx         # 온보딩 캐러셀 (스와이프)
+│   ├── ai-recommend.tsx       # AI 맛집 추천
+│   └── peek-preview.tsx       # 롱프레스 미리보기
 ├── hooks/
 │   ├── useSwipeBack.ts        # iOS 스타일 스와이프 뒤로가기
-│   └── useUserLocation.ts     # 사용자 위치 관리
+│   ├── useUserLocation.ts     # 사용자 위치 관리
+│   ├── useHaptic.ts           # 햅틱 피드백
+│   ├── useLongPress.ts        # 롱프레스 제스처
+│   └── usePullToRefresh.ts    # Pull-to-Refresh
 ├── data/
 │   └── taiwan-food.ts         # 맛집 정적 데이터
 └── lib/
@@ -117,6 +127,9 @@ ADMIN_SECRET_KEY=your_admin_secret
 
 # Claude API (AI 일정 생성)
 ANTHROPIC_API_KEY=your_anthropic_api_key
+
+# OpenAI API (AI 맛집 추천)
+OPENAI_API_KEY=your_openai_api_key
 ```
 
 ## 실행 방법
@@ -187,10 +200,25 @@ git push
 - PWA 지원 (홈 화면 추가)
 - **App Store 아이콘 적용** (PWA 바로가기 아이콘)
 
-### AI 여행 일정 생성
-- Claude API 기반 맞춤형 일정 생성
-- 여행 일수, 인원, 취향 선택
-- 일정 저장 및 관리
+### AI 기능
+- **AI 여행 일정 생성** (Claude API 기반)
+  - 여행 일수, 인원, 취향 선택
+  - 일정 저장 및 관리
+- **AI 맛집 추천** (GPT-4o-mini 기반)
+  - 8개 프리셋 칩 + 자유 텍스트 입력
+  - 시간대 컨텍스트 자동 반영
+  - Hallucination 방지 (실제 DB 매칭)
+
+### UI/UX 고급 기능
+- **다크모드** (라이트/다크/시스템)
+- **시간대별 맛집 추천** (대만 시간 기준 5개 슬롯)
+- **온보딩 캐러셀** (첫 방문 시 4스텝, 스와이프 지원)
+- **카드 롱프레스 미리보기** (Peek Preview)
+- **햅틱 피드백** (Web API + iOS 네이티브 브리지)
+- **Pull-to-Refresh** (홈 화면 당겨서 새로고침)
+- **Bento Grid** 퀵 액세스 레이아웃
+- **Shimmer 로딩** 스켈레톤
+- **Glass Morphism** 시트 디자인
 
 ### 정책 페이지
 - **개인정보 처리방침** (/privacy)

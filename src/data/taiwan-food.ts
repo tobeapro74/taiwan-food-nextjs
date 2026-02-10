@@ -380,7 +380,147 @@ export function getPopularRestaurants(): PopularRestaurant[] {
   return topByCategory;
 }
 
+// 시간대별 맛집 추천 (대만 시간 UTC+8 기준)
+export interface TimeBasedRecommendation {
+  timeSlot: string;
+  emoji: string;
+  greeting: string;
+  gradient: string;
+  restaurants: PopularRestaurant[];
+}
+
+const timeSlotConfig = [
+  {
+    name: "아침",
+    range: [6, 11] as const,
+    emoji: "🌅",
+    greeting: "좋은 아침! 든든한 아침 맛집",
+    gradient: "from-primary to-primary/80",
+    categories: ["밥류"] as string[],
+    keywords: ["또우장", "퐌투안", "브런치", "아침", "주먹밥", "브런치"],
+  },
+  {
+    name: "점심",
+    range: [11, 14] as const,
+    emoji: "🍽️",
+    greeting: "점심시간! 인기 맛집 추천",
+    gradient: "from-primary to-primary/85",
+    categories: ["면류", "밥류", "만두", "탕류"] as string[],
+    keywords: [],
+  },
+  {
+    name: "오후",
+    range: [14, 17] as const,
+    emoji: "☕",
+    greeting: "오후 티타임! 디저트 & 카페",
+    gradient: "from-primary/90 to-primary",
+    categories: ["디저트", "카페"] as string[],
+    keywords: ["디저트", "빙수", "카페", "밀크티", "버블티"],
+  },
+  {
+    name: "저녁",
+    range: [17, 21] as const,
+    emoji: "🌙",
+    greeting: "저녁 맛집 추천",
+    gradient: "from-primary/85 to-primary",
+    categories: ["탕류", "밥류", "면류", "만두"] as string[],
+    keywords: ["훠궈", "마라", "갈비"],
+  },
+  {
+    name: "야식",
+    range: [21, 6] as const,
+    emoji: "🌃",
+    greeting: "야식 타임! 야시장 맛집",
+    gradient: "from-foreground to-foreground/90",
+    categories: ["길거리음식"] as string[],
+    keywords: ["24시간", "야시장"],
+    nightMarket: true,
+  },
+];
+
+export function getTimeBasedRecommendations(hour: number): TimeBasedRecommendation {
+  // 현재 시간대 찾기
+  const config = timeSlotConfig.find(slot => {
+    const [start, end] = slot.range;
+    if (start < end) return hour >= start && hour < end;
+    return hour >= start || hour < end; // 야식: 21~6
+  }) || timeSlotConfig[1]; // 기본값: 점심
+
+  const candidates: PopularRestaurant[] = [];
+  const seenNames = new Set<string>();
+
+  const cats = ["면류", "만두", "밥류", "탕류", "디저트", "길거리음식", "카페", "까르푸"] as const;
+
+  for (const cat of cats) {
+    const items = taiwanFoodMap[cat] || [];
+    for (const item of items) {
+      if (seenNames.has(item.이름)) continue;
+
+      let matched = false;
+
+      // 키워드 매칭
+      if (config.keywords.length > 0) {
+        const feature = (item.특징 || "").toLowerCase();
+        const name = (item.이름 || "").toLowerCase();
+        if (config.keywords.some(kw => feature.includes(kw) || name.includes(kw))) {
+          matched = true;
+        }
+      }
+
+      // 야시장 매칭
+      if ("nightMarket" in config && config.nightMarket && item.야시장) {
+        matched = true;
+      }
+
+      // 카테고리 매칭
+      if (config.categories.includes(cat)) {
+        matched = true;
+      }
+
+      if (matched && item.평점) {
+        seenNames.add(item.이름);
+        candidates.push({
+          ...item,
+          카테고리: cat,
+          place_id: generateStaticPlaceId(item.이름, cat),
+          category: cat,
+        });
+      }
+    }
+  }
+
+  // 평점 순 정렬 후 상위 8개
+  candidates.sort((a, b) => (b.평점 || 0) - (a.평점 || 0));
+
+  return {
+    timeSlot: config.name,
+    emoji: config.emoji,
+    greeting: config.greeting,
+    gradient: config.gradient,
+    restaurants: candidates.slice(0, 8),
+  };
+}
+
 // 이미지 URL 생성 (Lorem Picsum 사용)
+// AI 추천용 맛집 요약 생성 (프롬프트에 포함할 컴팩트 리스트)
+export function getRestaurantSummaryForAI(): string {
+  const all = getAllRestaurants();
+  return all
+    .filter(r => r.평점 && r.평점 >= 3.5)
+    .sort((a, b) => (b.평점 || 0) - (a.평점 || 0))
+    .map(r => {
+      const parts = [r.이름];
+      if (r.category) parts.push(`[${r.category}]`);
+      if (r.위치) parts.push(r.위치);
+      if (r.평점) parts.push(`⭐${r.평점}`);
+      if (r.특징) parts.push(r.특징.substring(0, 40));
+      if (r.야시장) parts.push(`(${r.야시장})`);
+      if (r.가격대) parts.push(r.가격대);
+      return parts.join(" | ");
+    })
+    .join("\n");
+}
+
 export function getUnsplashImage(name: string): string {
   // 이름 해시로 고유 시드 생성 (같은 이름은 항상 같은 이미지)
   const seed = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0);

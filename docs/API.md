@@ -1048,6 +1048,47 @@ fields=place_id,name,formatted_address,geometry,rating,user_ratings_total,
 
 ---
 
+## AI 맛집 추천 API
+
+### POST /api/ai-recommend
+AI 기반 맛집 추천 (GPT-4o-mini)
+
+**Request Body**
+```json
+{
+  "query": "매운 음식 추천해줘",
+  "timeSlot": "저녁"
+}
+```
+
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| query | O | 추천 요청 텍스트 (프리셋 칩 또는 자유 입력) |
+| timeSlot | X | 현재 시간대 컨텍스트 (아침/점심/오후/저녁/야식) |
+
+**Response**
+```json
+{
+  "success": true,
+  "recommendations": [
+    {
+      "restaurant": { /* Restaurant 객체 */ },
+      "reason": "매운맛의 정수, 마라탕과 훠궈 전문점",
+      "matchScore": 95
+    }
+  ],
+  "tip": "대만의 마라탕은 한국보다 덜 매운 편이에요. 辣度(매운 정도)를 선택할 수 있습니다."
+}
+```
+
+**특징**
+- GPT-4o-mini 사용 (비용 효율)
+- 시스템 프롬프트에 전체 맛집 DB 요약 포함
+- 반환된 맛집명을 실제 데이터와 매칭 (hallucination 방지)
+- 매칭 실패 시 해당 추천 필터링
+
+---
+
 ## AI 여행 일정 API
 
 ### POST /api/schedule-generate

@@ -171,7 +171,7 @@ export function RestaurantCard({ restaurant, onClick, onViewDetail, variant = "v
           <h3 className="font-semibold text-sm truncate">{restaurant.이름}</h3>
           {displayRating && (
             <p className="text-xs flex items-center gap-1 mt-1">
-              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              <Star className="h-3 w-3 fill-accent text-accent" />
               <span className="font-medium">{displayRating}</span>
               {displayReviewsCount && (
                 <span className="text-muted-foreground">({formatReviewCount(displayReviewsCount)})</span>
@@ -183,7 +183,7 @@ export function RestaurantCard({ restaurant, onClick, onViewDetail, variant = "v
             <span className="truncate">{restaurant.위치?.substring(0, 12)}</span>
           </p>
           {restaurant.빌딩 && (
-            <p className="text-xs text-blue-600 flex items-center gap-1 mt-1">
+            <p className="text-xs text-primary flex items-center gap-1 mt-1">
               <Building2 className="h-3 w-3 flex-shrink-0" />
               <span className="truncate">{restaurant.빌딩}</span>
             </p>
@@ -231,7 +231,7 @@ export function RestaurantCard({ restaurant, onClick, onViewDetail, variant = "v
               <h3 className="font-semibold truncate">{restaurant.이름}</h3>
               {displayRating && (
                 <span className="text-xs flex items-center gap-0.5 flex-shrink-0">
-                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                  <Star className="h-3 w-3 fill-accent text-accent" />
                   <span className="font-medium">{displayRating}</span>
                 </span>
               )}
@@ -252,7 +252,7 @@ export function RestaurantCard({ restaurant, onClick, onViewDetail, variant = "v
                 </Badge>
               )}
               {restaurant.빌딩 && (
-                <Badge variant="outline" className="text-xs text-blue-600 border-blue-200 bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:bg-blue-950/30">
+                <Badge variant="outline" className="text-xs text-primary border-primary/20 bg-primary/5 dark:text-primary dark:border-primary/30 dark:bg-primary/10">
                   <Building2 className="h-3 w-3 mr-1" />
                   {restaurant.빌딩}
                 </Badge>

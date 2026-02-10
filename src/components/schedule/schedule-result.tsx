@@ -98,9 +98,9 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
   };
 
   return (
-    <div className="min-h-screen pb-20 bg-gradient-to-b from-indigo-50 to-purple-50 dark:from-background dark:to-background">
+    <div className="min-h-screen pb-20 bg-gradient-to-b from-primary/5 to-background dark:from-background dark:to-background">
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg safe-area-top">
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-primary to-primary/85 shadow-lg safe-area-top">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
             <Button
@@ -155,14 +155,14 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
 
         {/* 여행 팁 */}
         {schedule.tips && schedule.tips.length > 0 && (
-          <section className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 rounded-2xl p-5 shadow-md border border-yellow-200 dark:border-yellow-900/30">
+          <section className="bg-accent/5 dark:bg-accent/10 rounded-2xl p-5 shadow-md border border-accent/10 dark:border-accent/20">
             <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
               <span>💡</span> 여행 팁
             </h3>
             <ul className="space-y-2">
               {schedule.tips.map((tip, idx) => (
                 <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                  <span className="text-yellow-500">•</span>
+                  <span className="text-accent">•</span>
                   {tip}
                 </li>
               ))}
@@ -187,8 +187,8 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
             disabled={isSaving || isSaved}
             className={`w-full py-4 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 ${
               isSaved
-                ? "bg-green-500 text-white"
-                : "bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 active:scale-[0.98]"
+                ? "bg-primary text-white"
+                : "bg-primary text-white hover:bg-primary/90 active:scale-[0.98]"
             } disabled:opacity-70`}
           >
             {isSaving ? (
@@ -247,10 +247,10 @@ function DayCard({
     <section className="bg-white dark:bg-card rounded-2xl shadow-md overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full p-4 flex items-center justify-between bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-950/50 dark:to-purple-950/50"
+        className="w-full p-4 flex items-center justify-between bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/15 dark:to-primary/10"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold">
+          <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold">
             {daySchedule.day}
           </div>
           <div className="text-left">
@@ -282,10 +282,10 @@ function ActivityItem({ activity, onPhotoClick }: { activity: ScheduleActivity; 
   const hasPhotos = activity.photos && activity.photos.length > 0;
 
   const bgColor = {
-    restaurant: "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/30",
-    cafe: "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/30",
-    attraction: "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/30",
-    shopping: "bg-pink-50 dark:bg-pink-950/30 border-pink-200 dark:border-pink-900/30",
+    restaurant: "bg-muted/50 border-border/40",
+    cafe: "bg-muted/50 border-border/40",
+    attraction: "bg-muted/50 border-border/40",
+    shopping: "bg-muted/50 border-border/40",
   }[activity.type] || "bg-muted";
 
   const handleClick = () => {
@@ -305,12 +305,12 @@ function ActivityItem({ activity, onPhotoClick }: { activity: ScheduleActivity; 
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs text-muted-foreground">{activity.timeSlotKo}</span>
             {activity.rating && (
-              <span className="text-xs text-amber-500 flex items-center gap-0.5">
+              <span className="text-xs text-accent flex items-center gap-0.5">
                 ⭐ {activity.rating}
               </span>
             )}
             {hasPhotos && (
-              <span className="text-xs text-indigo-500 flex items-center gap-0.5">
+              <span className="text-xs text-primary flex items-center gap-0.5">
                 <Camera className="w-3 h-3" />
                 {activity.photos!.length}
               </span>
@@ -322,7 +322,7 @@ function ActivityItem({ activity, onPhotoClick }: { activity: ScheduleActivity; 
           )}
           <div className="text-sm text-muted-foreground mt-2">{activity.reason}</div>
           {activity.tip && (
-            <div className="text-xs text-indigo-600 dark:text-indigo-400 mt-2 flex items-start gap-1">
+            <div className="text-xs text-primary mt-2 flex items-start gap-1">
               <span>💡</span>
               <span>{activity.tip}</span>
             </div>

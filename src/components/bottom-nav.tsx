@@ -2,6 +2,7 @@
 
 import { Home, Grid3X3, Store, Navigation, PlusCircle, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useHaptic } from "@/hooks/useHaptic";
 
 type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add" | "schedule";
 
@@ -33,6 +34,7 @@ const canAddRestaurant = (user?: User | null): boolean => {
 };
 
 export function BottomNav({ activeTab, onTabChange, user }: BottomNavProps) {
+  const { selection } = useHaptic();
   // 권한에 따라 보여줄 메뉴 필터링
   const visibleItems = navItems.filter((item) => {
     if (item.adminOnly) {
@@ -51,7 +53,7 @@ export function BottomNav({ activeTab, onTabChange, user }: BottomNavProps) {
           return (
             <button
               key={item.id}
-              onClick={() => onTabChange(item.id)}
+              onClick={() => { selection(); onTabChange(item.id); }}
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[52px] px-2 py-1.5 rounded-lg transition-all duration-200 active:scale-[0.95]",
                 isActive

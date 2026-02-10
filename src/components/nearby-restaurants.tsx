@@ -155,7 +155,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
             </p>
             <button
               onClick={() => setShowOutsideTaiwanNotice(false)}
-              className="w-full py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+              className="w-full py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
             >
               확인
             </button>
@@ -185,19 +185,19 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
       <div className="bg-card p-4 border-b border-border">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-red-500" />
+            <MapPin className="w-5 h-5 text-primary" />
             <span className="font-medium">
               {locationName || "위치를 선택하세요"}
             </span>
             {isMockLocation && (
-              <span className="text-xs bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-0.5 rounded">
+              <span className="text-xs bg-accent/10 dark:bg-accent/20 text-accent-foreground px-2 py-0.5 rounded">
                 테스트
               </span>
             )}
           </div>
           <button
             onClick={() => setShowLocationPicker(!showLocationPicker)}
-            className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-600"
+            className="flex items-center gap-1 text-sm text-primary hover:text-primary/80"
           >
             위치 변경
             <ChevronDown className={`w-4 h-4 transition-transform ${showLocationPicker ? "rotate-180" : ""}`} />
@@ -215,7 +215,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                   setShowLocationPicker(false);
                 }}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
               >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -243,7 +243,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                       }
                     }}
                     placeholder="예: 시먼딩, 타이베이역, 西門町..."
-                    className="w-full px-3 py-2 pr-8 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 pr-8 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   {addressInput && (
                     <button
@@ -260,7 +260,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                 <button
                   onClick={() => searchAddress(addressInput)}
                   disabled={isSearching || !addressInput.trim()}
-                  className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 transition-colors"
+                  className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
                 >
                   {isSearching ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -286,10 +286,10 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                         setAddressInput("");
                         setShowLocationPicker(false);
                       }}
-                      className="w-full text-left px-3 py-2 text-sm bg-card border border-border rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                      className="w-full text-left px-3 py-2 text-sm bg-card border border-border rounded-lg hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors"
                     >
                       <div className="flex items-start gap-2">
-                        <MapPin className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                        <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                         <span className="line-clamp-2">{result.displayName}</span>
                       </div>
                     </button>
@@ -302,7 +302,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
             <div className="mb-3">
               <button
                 onClick={() => setShowManualInput(!showManualInput)}
-                className="text-xs text-muted-foreground mb-2 flex items-center gap-1 hover:text-blue-500"
+                className="text-xs text-muted-foreground mb-2 flex items-center gap-1 hover:text-primary"
               >
                 <ChevronDown className={`w-3 h-3 transition-transform ${showManualInput ? "rotate-180" : ""}`} />
                 직접 좌표 입력 (GPS 좌표)
@@ -318,7 +318,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                         value={manualName}
                         onChange={(e) => setManualName(e.target.value)}
                         placeholder="예: 내 호텔, 현재 위치"
-                        className="w-full px-3 py-1.5 text-sm border border-border rounded bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-1.5 text-sm border border-border rounded bg-card focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -329,7 +329,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                           value={manualLat}
                           onChange={(e) => setManualLat(e.target.value)}
                           placeholder="25.0421"
-                          className="w-full px-3 py-1.5 text-sm border border-border rounded bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-1.5 text-sm border border-border rounded bg-card focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
                       <div>
@@ -339,7 +339,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                           value={manualLng}
                           onChange={(e) => setManualLng(e.target.value)}
                           placeholder="121.5074"
-                          className="w-full px-3 py-1.5 text-sm border border-border rounded bg-card focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-1.5 text-sm border border-border rounded bg-card focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                       </div>
                     </div>
@@ -357,7 +357,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                         }
                       }}
                       disabled={!manualLat || !manualLng || isNaN(parseFloat(manualLat)) || isNaN(parseFloat(manualLng))}
-                      className="w-full px-3 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 transition-colors"
+                      className="w-full px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
                     >
                       이 좌표로 설정
                     </button>
@@ -382,7 +382,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                   }}
                   className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
                     locationName === location.name
-                      ? "bg-blue-100 dark:bg-blue-900 border-blue-500 text-blue-700 dark:text-blue-300"
+                      ? "bg-primary/10 dark:bg-primary/20 border-primary text-primary"
                       : "bg-card border-border hover:bg-muted"
                   }`}
                 >
@@ -395,7 +395,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
 
         {/* 에러 메시지 */}
         {error && (
-          <div className="mt-2 text-sm text-red-500 bg-red-50 dark:bg-red-900/30 p-2 rounded">
+          <div className="mt-2 text-sm text-destructive bg-destructive/10 dark:bg-destructive/20 p-2 rounded">
             {error}
           </div>
         )}
@@ -411,7 +411,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
                   onClick={() => setSelectedRadius(option.value)}
                   className={`px-3 py-1.5 text-sm rounded-full transition-colors ${
                     selectedRadius === option.value
-                      ? "bg-blue-500 text-white"
+                      ? "bg-primary text-white"
                       : "bg-muted text-foreground/70 hover:bg-muted/80"
                   }`}
                 >
@@ -511,7 +511,7 @@ function NearbyRestaurantCard({ restaurant, distance, onSelect }: NearbyRestaura
             </Badge>
           )}
         </div>
-        <span className="text-sm font-medium text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded flex-shrink-0 ml-2">
+        <span className="text-sm font-medium text-primary bg-primary/5 dark:bg-primary/10 px-2 py-0.5 rounded flex-shrink-0 ml-2">
           {distance}
         </span>
       </div>
@@ -527,7 +527,7 @@ function NearbyRestaurantCard({ restaurant, distance, onSelect }: NearbyRestaura
         </span>
         {restaurant.평점 && (
           <span className="flex items-center gap-1">
-            <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+            <Star className="w-3 h-3 text-accent fill-accent" />
             {restaurant.평점.toFixed(1)}
             {restaurant.리뷰수 && (
               <span className="text-muted-foreground/70">({restaurant.리뷰수.toLocaleString()})</span>

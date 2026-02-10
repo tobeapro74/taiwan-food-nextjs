@@ -363,8 +363,8 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
   // 로그인 필요 화면
   if (!user) {
     return (
-      <div className="min-h-screen pb-20 bg-gradient-to-b from-indigo-50 to-purple-50 dark:from-background dark:to-background">
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg safe-area-top">
+      <div className="min-h-screen pb-20 bg-gradient-to-b from-primary/5 to-background dark:from-background dark:to-background">
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-primary to-primary/85 shadow-lg safe-area-top">
           <div className="flex items-center gap-3 p-4">
             <Button
               variant="ghost"
@@ -380,7 +380,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
           </div>
         </div>
         <div className="flex flex-col items-center justify-center min-h-[60vh] p-8">
-          <div className="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-6">
+          <div className="w-20 h-20 bg-gradient-to-r from-primary to-primary/85 rounded-full flex items-center justify-center mb-6">
             <LogIn className="w-10 h-10 text-white" />
           </div>
           <h2 className="text-xl font-bold text-foreground mb-2">로그인이 필요합니다</h2>
@@ -390,7 +390,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
           </p>
           <Button
             onClick={onLoginClick}
-            className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-8 py-3 rounded-xl"
+            className="bg-gradient-to-r from-primary to-primary/85 text-white px-8 py-3 rounded-xl"
           >
             <LogIn className="w-4 h-4 mr-2" />
             로그인 / 회원가입
@@ -403,9 +403,9 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
   // 초기화 중 로딩 화면
   if (isInitializing) {
     return (
-      <div className="min-h-screen pb-20 bg-gradient-to-b from-indigo-50 to-purple-50 dark:from-background dark:to-background">
+      <div className="min-h-screen pb-20 bg-gradient-to-b from-primary/5 to-background dark:from-background dark:to-background">
         <div className="flex flex-col items-center justify-center min-h-[60vh] p-8">
-          <Loader2 className="w-10 h-10 animate-spin text-indigo-500 mb-4" />
+          <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
           <p className="text-sm text-muted-foreground">일정을 불러오는 중...</p>
         </div>
       </div>
@@ -425,8 +425,8 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
   // 저장된 일정 목록 화면
   if (viewMode === "list") {
     return (
-      <div className="min-h-screen pb-20 bg-gradient-to-b from-indigo-50 to-purple-50 dark:from-background dark:to-background">
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg safe-area-top">
+      <div className="min-h-screen pb-20 bg-gradient-to-b from-primary/5 to-background dark:from-background dark:to-background">
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-primary to-primary/85 shadow-lg safe-area-top">
           <div className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
               <Button
@@ -455,7 +455,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
         <div className="p-4 space-y-3">
           {loadingSaved ? (
             <div className="flex justify-center py-10">
-              <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : savedSchedules.length === 0 ? (
             <div className="text-center py-10">
@@ -463,7 +463,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
               <p className="text-muted-foreground">저장된 일정이 없습니다</p>
               <Button
                 onClick={() => setViewMode("create")}
-                className="mt-4 bg-indigo-500 text-white"
+                className="mt-4 bg-primary text-white"
               >
                 새 일정 만들기
               </Button>
@@ -492,7 +492,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                     variant="ghost"
                     size="sm"
                     onClick={() => deleteSavedSchedule(item._id)}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                    className="text-destructive hover:text-destructive/80 hover:bg-destructive/5"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -513,14 +513,14 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
   // 로딩 화면
   if (isLoading) {
     return (
-      <div className="min-h-screen pb-20 bg-gradient-to-b from-indigo-50 to-purple-50 dark:from-background dark:to-background">
+      <div className="min-h-screen pb-20 bg-gradient-to-b from-primary/5 to-background dark:from-background dark:to-background">
         <div className="flex flex-col items-center justify-center min-h-[60vh] p-8">
-          <div className="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mb-6 animate-pulse">
+          <div className="w-20 h-20 bg-gradient-to-r from-primary to-primary/85 rounded-full flex items-center justify-center mb-6 animate-pulse">
             <Sparkles className="w-10 h-10 text-white" />
           </div>
           <h2 className="text-xl font-bold text-foreground mb-2">여행 일정을 만들고 있어요</h2>
           <p className="text-sm text-muted-foreground mb-6">{loadingStep}</p>
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       </div>
     );
@@ -528,9 +528,9 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
 
   // 입력 화면
   return (
-    <div className="min-h-screen pb-20 bg-gradient-to-b from-indigo-50 to-purple-50 dark:from-background dark:to-background">
+    <div className="min-h-screen pb-20 bg-gradient-to-b from-primary/5 to-background dark:from-background dark:to-background">
       {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg safe-area-top">
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-primary to-primary/85 shadow-lg safe-area-top">
         <div className="flex items-center gap-3 p-4">
           <Button
             variant="ghost"
@@ -549,7 +549,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
       <div className="p-4 space-y-5">
         {/* 에러 메시지 */}
         {error && (
-          <div className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 p-4 rounded-xl text-sm">
+          <div className="bg-destructive/10 dark:bg-destructive/20 text-destructive p-4 rounded-xl text-sm">
             {error}
           </div>
         )}
@@ -567,7 +567,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
               <Minus className="w-5 h-5" />
             </button>
             <div className="text-center">
-              <span className="text-4xl font-bold text-indigo-600">{days}</span>
+              <span className="text-4xl font-bold text-primary">{days}</span>
               <span className="text-lg text-muted-foreground ml-1">일</span>
             </div>
             <button
@@ -595,7 +595,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                   onClick={() => setArrivalTime(opt.id)}
                   className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                     arrivalTime === opt.id
-                      ? "bg-indigo-500 text-white shadow-md"
+                      ? "bg-primary text-white shadow-md"
                       : "bg-muted text-foreground hover:bg-muted/80"
                   }`}
                 >
@@ -616,7 +616,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                   onClick={() => setDepartureTime(opt.id)}
                   className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                     departureTime === opt.id
-                      ? "bg-purple-500 text-white shadow-md"
+                      ? "bg-primary text-white shadow-md"
                       : "bg-muted text-foreground hover:bg-muted/80"
                   }`}
                 >
@@ -654,12 +654,12 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                   }
                 }}
                 placeholder="예: Check Inn, 시저파크, W Hotel 등"
-                className="flex-1 px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="flex-1 px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <button
                 onClick={searchHotel}
                 disabled={isSearchingHotel || accommodationName.trim().length < 2}
-                className="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               >
                 {isSearchingHotel ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -686,7 +686,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                     >
                       <div className="font-medium text-sm text-foreground">{hotel.name}</div>
                       <div className="text-xs text-muted-foreground mt-0.5">{hotel.address}</div>
-                      <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+                      <div className="text-xs text-primary mt-1 flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
                         {hotel.districtLabel} 지역
                       </div>
@@ -699,9 +699,9 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
 
           {/* 선택된 숙소 정보 표시 */}
           {selectedHotelAddress && (
-            <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
+            <div className="mb-4 p-3 bg-primary/5 dark:bg-primary/10 rounded-lg border border-primary/20 dark:border-primary/30">
               <div className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0" />
+                <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="text-sm font-medium text-foreground">{accommodationName}</div>
                   <div className="text-xs text-muted-foreground mt-0.5">{selectedHotelAddress}</div>
@@ -727,7 +727,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                   }}
                   className={`p-2 rounded-lg text-xs font-medium transition-all text-left ${
                     accommodationDistrict === district.id
-                      ? "bg-emerald-500 text-white shadow-md"
+                      ? "bg-primary text-white shadow-md"
                       : "bg-muted text-foreground hover:bg-muted/80"
                   }`}
                 >
@@ -740,8 +740,8 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
 
           {/* 선택된 지역 인근 명소 표시 */}
           {accommodationDistrict && accommodationDistrict !== "other" && (
-            <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg">
-              <p className="text-xs text-emerald-700 dark:text-emerald-300">
+            <div className="mt-3 p-3 bg-primary/5 dark:bg-primary/10 rounded-lg">
+              <p className="text-xs text-primary">
                 📍 인근 명소: {TAIPEI_DISTRICT_OPTIONS.find(d => d.id === accommodationDistrict)?.nearbyAttractions.join(", ")}
               </p>
             </div>
@@ -775,7 +775,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                   <div className="flex items-center justify-center gap-1">
                     <button
                       onClick={() => updateCount(opt.id, "male", -1)}
-                      className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm font-bold"
+                      className="w-7 h-7 rounded-full bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center text-sm font-bold"
                       disabled={count.male === 0}
                     >
                       -
@@ -783,7 +783,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                     <span className="w-6 text-center font-medium">{count.male}</span>
                     <button
                       onClick={() => updateCount(opt.id, "male", 1)}
-                      className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm font-bold"
+                      className="w-7 h-7 rounded-full bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center text-sm font-bold"
                     >
                       +
                     </button>
@@ -793,7 +793,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                   <div className="flex items-center justify-center gap-1">
                     <button
                       onClick={() => updateCount(opt.id, "female", -1)}
-                      className="w-7 h-7 rounded-full bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 flex items-center justify-center text-sm font-bold"
+                      className="w-7 h-7 rounded-full bg-accent/10 dark:bg-accent/20 text-accent-foreground flex items-center justify-center text-sm font-bold"
                       disabled={count.female === 0}
                     >
                       -
@@ -801,7 +801,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                     <span className="w-6 text-center font-medium">{count.female}</span>
                     <button
                       onClick={() => updateCount(opt.id, "female", 1)}
-                      className="w-7 h-7 rounded-full bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 flex items-center justify-center text-sm font-bold"
+                      className="w-7 h-7 rounded-full bg-accent/10 dark:bg-accent/20 text-accent-foreground flex items-center justify-center text-sm font-bold"
                     >
                       +
                     </button>
@@ -815,9 +815,9 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
           <div className="mt-4 pt-3 border-t flex justify-between items-center">
             <span className="text-sm text-muted-foreground">총 인원</span>
             <div className="flex items-center gap-3">
-              <span className="text-blue-600 dark:text-blue-400 text-sm">👨 {totalMale}명</span>
-              <span className="text-pink-600 dark:text-pink-400 text-sm">👩 {totalFemale}명</span>
-              <span className="font-bold text-lg text-indigo-600">{totalTravelers}명</span>
+              <span className="text-primary text-sm">👨 {totalMale}명</span>
+              <span className="text-accent-foreground text-sm">👩 {totalFemale}명</span>
+              <span className="font-bold text-lg text-primary">{totalTravelers}명</span>
             </div>
           </div>
         </section>
@@ -834,7 +834,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                 onClick={() => togglePreference(opt.id)}
                 className={`py-3 px-2 rounded-xl font-medium transition-all flex flex-col items-center gap-1 ${
                   preferences.includes(opt.id)
-                    ? "bg-indigo-500 text-white shadow-md"
+                    ? "bg-primary text-white shadow-md"
                     : "bg-muted text-foreground hover:bg-muted/80"
                 }`}
               >
@@ -857,7 +857,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                 onClick={() => setPurpose(opt.id)}
                 className={`py-3 px-3 rounded-xl font-medium transition-all flex items-center gap-2 ${
                   purpose === opt.id
-                    ? "bg-indigo-500 text-white shadow-md"
+                    ? "bg-primary text-white shadow-md"
                     : "bg-muted text-foreground hover:bg-muted/80"
                 }`}
               >
@@ -872,7 +872,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
         <button
           onClick={handleGenerate}
           disabled={totalTravelers === 0}
-          className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-2xl shadow-lg hover:from-indigo-600 hover:to-purple-600 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-4 bg-gradient-to-r from-primary to-primary/85 text-white font-bold rounded-2xl shadow-lg hover:from-primary/90 hover:to-primary/80 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Sparkles className="w-5 h-5" />
           AI 일정 생성하기
@@ -881,7 +881,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
         {/* 저장된 일정 보기 버튼 */}
         <button
           onClick={showSavedList}
-          className="w-full py-3 bg-white dark:bg-card border-2 border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 font-medium rounded-2xl hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-all flex items-center justify-center gap-2"
+          className="w-full py-3 bg-white dark:bg-card border-2 border-primary/20 dark:border-primary/30 text-primary font-medium rounded-2xl hover:bg-primary/5 dark:hover:bg-primary/10 transition-all flex items-center justify-center gap-2"
         >
           <List className="w-4 h-4" />
           저장된 일정 보기

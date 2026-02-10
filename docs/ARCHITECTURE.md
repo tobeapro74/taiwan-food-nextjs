@@ -31,9 +31,9 @@
         │             │             │             │
         ▼             ▼             ▼             ▼
 ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐
-│  MongoDB  │  │  MongoDB  │  │  MongoDB  │  │Cloudinary │  │  Google   │  │  Resend   │  │  Claude   │
-│  (Users)  │  │ (Reviews) │  │ (Stores)  │  │  (Image)  │  │  Places   │  │  (Email)  │  │   (AI)    │
-└───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘
+│  MongoDB  │  │  MongoDB  │  │  MongoDB  │  │Cloudinary │  │  Google   │  │  Resend   │  │  Claude   │  │  OpenAI   │
+│  (Users)  │  │ (Reviews) │  │ (Stores)  │  │  (Image)  │  │  Places   │  │  (Email)  │  │   (AI)    │  │(GPT-4o-m) │
+└───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘  └───────────┘
 ```
 
 ## 컴포넌트 구조
@@ -69,6 +69,8 @@ src/
 │   │   ├── restaurant-prices/[name]/route.ts # GET: 가격/전화번호 조회
 │   │   ├── seven-eleven-toilet/route.ts # GET: 7-ELEVEN 화장실 검색
 │   │   ├── familymart-toilet/route.ts # GET: FamilyMart 매장 검색
+│   │   ├── ai-recommend/
+│   │   │   └── route.ts              # POST: AI 맛집 추천 (GPT-4o-mini)
 │   │   ├── schedule-generate/
 │   │   │   └── route.ts              # POST: AI 여행 일정 생성 (Claude API)
 │   │   ├── schedules/
@@ -101,14 +103,15 @@ src/
 │   │   ├── dialog.tsx
 │   │   ├── sheet.tsx              # 바텀 시트 (모달)
 │   │   ├── scroll-area.tsx
+│   │   ├── empty-state.tsx        # 빈 화면 컴포넌트
 │   │   └── ...
 │   ├── auth-modal.tsx             # 로그인/회원가입 모달 (이메일 인증)
-│   ├── bottom-nav.tsx             # 하단 네비게이션 (5탭)
+│   ├── bottom-nav.tsx             # 하단 네비게이션 (5탭, pill indicator)
 │   ├── category-sheet.tsx         # 카테고리 선택 시트
 │   ├── category-edit-modal.tsx    # 카테고리 수정 모달
 │   ├── restaurant-edit-modal.tsx  # 맛집 정보 수정 모달 (주소/좌표 자동변환)
 │   ├── add-restaurant-modal.tsx   # 맛집 등록 모달
-│   ├── restaurant-card.tsx        # 맛집 카드
+│   ├── restaurant-card.tsx        # 맛집 카드 (롱프레스 미리보기)
 │   ├── restaurant-detail.tsx      # 맛집 상세
 │   ├── restaurant-list.tsx        # 맛집 목록 (실시간 평점)
 │   ├── nearby-restaurants.tsx     # 주변 맛집 찾기
@@ -116,14 +119,21 @@ src/
 │   ├── toilet-finder.tsx          # 화장실 찾기 (7-ELEVEN/FamilyMart)
 │   ├── google-reviews.tsx         # Google 리뷰 섹션
 │   ├── review-modal.tsx           # 리뷰 작성 모달
-│   └── review-section.tsx         # 리뷰 목록 섹션
+│   ├── review-section.tsx         # 리뷰 목록 섹션
+│   ├── theme-provider.tsx         # 다크모드 테마 프로바이더
+│   ├── onboarding.tsx             # 온보딩 캐러셀 (스와이프 지원)
+│   ├── ai-recommend.tsx           # AI 맛집 추천 (GPT-4o-mini)
+│   └── peek-preview.tsx           # 카드 롱프레스 미리보기
 │
 ├── hooks/
 │   ├── useSwipeBack.ts            # iOS 스타일 스와이프 뒤로가기
-│   └── useUserLocation.ts         # 사용자 위치 관리
+│   ├── useUserLocation.ts         # 사용자 위치 관리
+│   ├── useHaptic.ts               # 햅틱 피드백 (Web API + iOS 네이티브 브리지)
+│   ├── useLongPress.ts            # 롱프레스 제스처 감지
+│   └── usePullToRefresh.ts        # Pull-to-Refresh 제스처
 │
 ├── data/
-│   └── taiwan-food.ts             # 맛집 정적 데이터 + 헬퍼 함수 + place_id 생성
+│   └── taiwan-food.ts             # 맛집 정적 데이터 + 헬퍼 함수 + place_id 생성 + AI 요약 + 시간대별 추천
 │
 └── lib/
     ├── mongodb.ts                 # MongoDB 연결
@@ -278,7 +288,7 @@ staticRestaurants = staticRestaurants.filter(r => {
 
 ```typescript
 // 뷰 상태
-currentView: "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking" | "guide"
+currentView: "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking" | "guide" | "schedule" | "ai-recommend"
 viewHistory: View[]  // 네비게이션 스택 (뒤로가기 추적용)
 
 // 탭 상태
@@ -412,6 +422,7 @@ useEffect(() => {
 야시장 ───► 목록 ─► 상세
 도심투어 ─► 목록 ─► 상세
 맛집알리미 ─► 상세
+AI 추천 ──► 상세
 
 사용자메뉴 ─► 등록 히스토리 ─► 상세 ─► (뒤로가기) ─► 등록 히스토리
 
@@ -507,6 +518,47 @@ GitHub Repository
 ### 번들 최적화
 - 컴포넌트 동적 임포트 (필요시)
 - Tree shaking (Lucide Icons)
+
+## 다크모드 아키텍처
+
+### ThemeProvider
+```typescript
+// src/components/theme-provider.tsx
+// localStorage 기반 테마 관리 (light | dark | system)
+// CSS 변수 기반 테마 전환 (globals.css .dark 클래스)
+// useTheme() 훅으로 현재 테마 조회/변경
+```
+
+### 테마 적용 흐름
+```
+ThemeProvider (layout.tsx)
+    │
+    ├── localStorage에서 테마 읽기
+    ├── system 모드: prefers-color-scheme 미디어쿼리 감지
+    └── <html> 태그에 .dark 클래스 토글
+        └── CSS 변수 자동 전환 (globals.css)
+```
+
+## AI 맛집 추천 아키텍처
+
+### 데이터 흐름
+```
+┌──────────┐  프리셋/자유입력  ┌─────────────────┐  GPT-4o-mini  ┌──────────┐
+│ 클라이언트│ ──────────────► │ /api/ai-recommend│ ────────────► │  OpenAI  │
+│          │ ◄────────────── │                  │ ◄──────────── │  API     │
+└──────────┘  추천 결과       └────────┬─────────┘  JSON 응답    └──────────┘
+                                       │
+                                       ▼
+                              ┌─────────────────┐
+                              │ taiwan-food.ts   │
+                              │ (실제 데이터 매칭)│
+                              └─────────────────┘
+```
+
+### Hallucination 방지
+- GPT가 반환한 맛집명을 실제 `taiwan-food.ts` + DB 데이터와 매칭
+- 매칭 실패한 추천은 필터링
+- 시스템 프롬프트에 레스토랑 DB 요약 포함 (이름+카테고리+특징+평점)
 
 ---
 

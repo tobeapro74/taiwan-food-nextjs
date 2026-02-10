@@ -299,8 +299,8 @@ export function ReviewModal({
             className={cn(
               size === "lg" ? "w-10 h-10" : "w-7 h-7",
               star <= value
-                ? "fill-yellow-400 text-yellow-400"
-                : "text-gray-300"
+                ? "fill-accent text-accent"
+                : "text-muted-foreground/50"
             )}
           />
         </button>

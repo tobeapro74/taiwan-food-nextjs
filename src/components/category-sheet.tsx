@@ -7,6 +7,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { useHaptic } from "@/hooks/useHaptic";
 
 interface Option {
   id: string;
@@ -23,9 +24,10 @@ interface CategorySheetProps {
 }
 
 export function CategorySheet({ open, onOpenChange, title, options, onSelect }: CategorySheetProps) {
+  const { selection } = useHaptic();
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-2xl">
+      <SheetContent side="bottom" className="rounded-t-2xl glass-sheet">
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
         </SheetHeader>
@@ -34,8 +36,9 @@ export function CategorySheet({ open, onOpenChange, title, options, onSelect }: 
             <Button
               key={option.id}
               variant="secondary"
-              className="justify-start text-base h-14 transition-all hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
+              className="justify-start text-base h-14 transition-all hover:scale-[1.02] hover:shadow-md active:scale-[0.98] bg-white/50 dark:bg-white/10 backdrop-blur-sm"
               onClick={() => {
+                selection();
                 onSelect(option.id);
                 onOpenChange(false);
               }}

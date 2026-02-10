@@ -52,11 +52,11 @@ export function RestaurantHistoryList({ onBack, onSelectRestaurant }: Restaurant
   const getActionBadge = (action: string) => {
     switch (action) {
       case "register":
-        return <Badge className="bg-green-500 text-white text-xs">등록</Badge>;
+        return <Badge className="bg-primary text-primary-foreground text-xs">등록</Badge>;
       case "delete":
-        return <Badge className="bg-red-500 text-white text-xs">삭제</Badge>;
+        return <Badge className="bg-destructive text-white text-xs">삭제</Badge>;
       case "update":
-        return <Badge className="bg-blue-500 text-white text-xs">수정</Badge>;
+        return <Badge className="bg-muted-foreground text-white text-xs">수정</Badge>;
       default:
         return <Badge variant="secondary" className="text-xs">{action}</Badge>;
     }

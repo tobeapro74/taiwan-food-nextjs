@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -238,48 +238,47 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
       `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address || restaurant.이름)}`
     : getGoogleMapsLink(restaurant.이름, restaurant.위치, restaurant.coordinates);
 
+  // 히어로 이미지 스크롤 감지 (미니 헤더 표시)
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
+
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyHeader(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="min-h-screen pb-20">
-      {/* 헤더 */}
-      <div className="sticky top-0 z-10 bg-background border-b border-border shadow-sm safe-area-top">
-        <div className="flex items-center gap-2 p-3">
-          <Button
-            variant="ghost"
-            onClick={onBack}
-            className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="font-semibold truncate flex-1">{restaurant.이름}</h1>
-          {/* 수정/삭제 버튼 (사용자 등록 맛집 + 권한 있는 경우) */}
-          {canEdit && (
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setEditModalOpen(true)}
-                className="h-9 w-9 text-muted-foreground hover:text-primary"
-                title="맛집 정보 수정"
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="h-9 w-9 text-muted-foreground hover:text-destructive"
-                title="맛집 삭제"
-              >
-                <Trash2 className="h-5 w-5" />
-              </Button>
-            </div>
-          )}
+      {/* 스크롤 시 미니 스티키 헤더 */}
+      {showStickyHeader && (
+        <div className="fixed top-0 left-0 right-0 z-30 bg-background/95 border-b safe-area-top animate-fade-in" style={{ WebkitBackdropFilter: 'blur(12px)', backdropFilter: 'blur(12px)' }}>
+          <div className="flex items-center gap-2 p-3">
+            <Button variant="ghost" onClick={onBack} className="h-9 w-9 rounded-full">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <span className="font-semibold truncate flex-1">{restaurant.이름}</span>
+            {canEdit && (
+              <div className="flex gap-1">
+                <Button variant="ghost" size="icon" onClick={() => setEditModalOpen(true)} className="h-9 w-9 text-muted-foreground hover:text-primary">
+                  <Settings className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={handleDelete} disabled={isDeleting} className="h-9 w-9 text-muted-foreground hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* 이미지 영역 */}
-      <div className="h-56 relative overflow-hidden bg-muted">
+      {/* 히어로 이미지 */}
+      <div ref={heroRef} className="h-72 relative overflow-hidden bg-muted">
         {isLoading && (
           <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted/50 to-muted" />
         )}
@@ -291,37 +290,71 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
           sizes="100vw"
           unoptimized
         />
+        {/* 그래디언트 오버레이 */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+        {/* 플로팅 뒤로가기 + 액션 버튼 */}
+        <div className="absolute top-0 left-0 right-0 safe-area-top z-20">
+          <div className="flex items-center justify-between p-3">
+            <Button
+              variant="ghost"
+              onClick={onBack}
+              className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-black/30 hover:bg-black/50 text-white"
+              style={{ WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)' }}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            {canEdit && (
+              <div className="flex gap-1">
+                <Button variant="ghost" size="icon" onClick={() => setEditModalOpen(true)}
+                  className="h-9 w-9 text-white bg-black/30 hover:bg-black/50 rounded-full"
+                  style={{ WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)' }}
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={handleDelete} disabled={isDeleting}
+                  className="h-9 w-9 text-white bg-black/30 hover:bg-black/50 rounded-full"
+                  style={{ WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)' }}
+                >
+                  <Trash2 className="h-5 w-5" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 타이틀 + 뱃지 (이미지 하단 오버레이) */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+          <h1 className="text-2xl font-bold text-white drop-shadow-md">{restaurant.이름}</h1>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {isCustomRestaurant && currentCategory && (
+              <Badge className="bg-white/20 text-white border-white/30" style={{ WebkitBackdropFilter: 'blur(4px)', backdropFilter: 'blur(4px)' }}>
+                {getCategoryInfo(currentCategory).icon} {getCategoryInfo(currentCategory).name}
+              </Badge>
+            )}
+            {restaurant.야시장 && (
+              <Badge className="bg-white/20 text-white border-white/30" style={{ WebkitBackdropFilter: 'blur(4px)', backdropFilter: 'blur(4px)' }}>
+                {restaurant.야시장}
+              </Badge>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* 정보 카드 */}
-      <div className="p-4">
-        <Card className="border-0">
+      {/* 정보 카드 (히어로 겹침 효과) */}
+      <div className="relative -mt-4 z-10 px-4 pt-0 pb-4">
+        <Card className="border-0 shadow-premium rounded-2xl">
           <CardContent className="p-5 space-y-4">
-            <div className="flex items-start justify-between">
-              <h2 className="text-xl font-bold">{restaurant.이름}</h2>
-            </div>
 
-            {/* 배지 영역 */}
-            <div className="flex flex-wrap gap-2 items-center">
-              {/* 카테고리 배지 (사용자 등록 맛집인 경우) */}
-              {isCustomRestaurant && currentCategory && (
-                <Badge className="bg-primary/10 text-primary border-primary/20">
-                  <Tag className="h-3 w-3 mr-1" />
-                  {getCategoryInfo(currentCategory).icon} {getCategoryInfo(currentCategory).name}
-                </Badge>
-              )}
-              {restaurant.야시장 && (
-                <Badge className="bg-accent text-accent-foreground">
-                  {restaurant.야시장}
-                </Badge>
-              )}
-              {(restaurant.빌딩 || buildingName) && (
-                <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">
+            {/* 빌딩 배지 (카테고리/야시장은 히어로에 표시) */}
+            {(restaurant.빌딩 || buildingName) && (
+              <div className="flex flex-wrap gap-2 items-center">
+                <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5 dark:text-primary dark:border-primary/30 dark:bg-primary/10">
                   <Building2 className="h-3 w-3 mr-1" />
                   {restaurant.빌딩 || buildingName}
                 </Badge>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* 상세 정보 목록 */}
             <div className="space-y-3 bg-muted/30 rounded-xl p-4">
@@ -336,7 +369,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
               {/* Google 평점 (사용자 등록 맛집) */}
               {isCustomRestaurant && restaurant.google_rating && (
                 <div className="flex items-center gap-3">
-                  <Star className="h-5 w-5 text-yellow-500 flex-shrink-0 fill-yellow-500" />
+                  <Star className="h-5 w-5 text-accent flex-shrink-0 fill-accent" />
                   <span className="text-sm">
                     {restaurant.google_rating.toFixed(1)}
                     {restaurant.google_reviews_count && (
@@ -373,7 +406,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
                   <Clock className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                   <div className="text-sm space-y-0.5">
                     {restaurant.opening_hours.map((hour, index) => (
-                      <div key={index} className={hour.includes("휴무") ? "text-red-500" : ""}>
+                      <div key={index} className={hour.includes("휴무") ? "text-destructive" : ""}>
                         {hour}
                       </div>
                     ))}

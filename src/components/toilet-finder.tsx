@@ -224,7 +224,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-background">
+    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
       {/* 대만 외 지역 안내 모달 */}
       {showOutsideTaiwanNotice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -241,7 +241,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
             </p>
             <button
               onClick={() => setShowOutsideTaiwanNotice(false)}
-              className="w-full py-3 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors"
+              className="w-full py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
             >
               확인
             </button>
@@ -276,7 +276,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
             onClick={() => handleTabChange("7eleven")}
             className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all ${
               storeType === "7eleven"
-                ? "bg-green-500 text-white shadow-md"
+                ? "bg-primary text-white shadow-md"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
@@ -286,7 +286,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
             onClick={() => handleTabChange("familymart")}
             className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all ${
               storeType === "familymart"
-                ? "bg-blue-500 text-white shadow-md"
+                ? "bg-primary text-white shadow-md"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
@@ -319,7 +319,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
         {loading && (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className={`bg-card rounded-2xl p-4 border ${i === 0 ? 'border-2 border-green-500/30' : 'border-border/40'} shadow-card`}>
+              <div key={i} className={`bg-card rounded-2xl p-4 border ${i === 0 ? 'border-2 border-primary/30' : 'border-border/40'} shadow-card`}>
                 <div className="flex items-start justify-between">
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
@@ -341,15 +341,15 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
 
         {/* 위치 오류 */}
         {locationError && !loading && (
-          <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800">
+          <Card className="border-accent/20 bg-accent/5 dark:bg-accent/10 dark:border-accent/30">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <MapPin className="w-5 h-5 text-accent dark:text-accent flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-amber-800 dark:text-amber-200 font-medium">
+                  <p className="text-accent-foreground font-medium">
                     위치 권한 필요
                   </p>
-                  <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
+                  <p className="text-accent-foreground text-sm mt-1">
                     {locationError}
                   </p>
                   <Button
@@ -383,7 +383,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                 key={store._id}
                 className={`overflow-hidden transition-all duration-200 hover:shadow-card-hover cursor-pointer ${
                   index === 0
-                    ? "border-green-500 border-2"
+                    ? "border-primary border-2"
                     : "border-border/40"
                 }`}
                 onClick={() => openDirections(store)}
@@ -394,12 +394,12 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                       {/* 매장명 */}
                       <div className="flex items-center gap-2">
                         {index === 0 && (
-                          <span className="px-2 py-0.5 bg-green-500 text-white text-xs rounded-full font-medium shrink-0">
+                          <span className="px-2 py-0.5 bg-primary text-white text-xs rounded-full font-medium shrink-0">
                             가장 가까움
                           </span>
                         )}
                         {store.services?.some(s => s.includes('ATM')) && (
-                          <span className="px-2 py-0.5 bg-yellow-500 text-white text-xs rounded-full font-medium shrink-0">
+                          <span className="px-2 py-0.5 bg-accent text-white text-xs rounded-full font-medium shrink-0">
                             ATM
                           </span>
                         )}
@@ -435,13 +435,13 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                     {/* 거리 및 길찾기 */}
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       <div className="text-right">
-                        <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        <span className="text-2xl font-bold text-primary">
                           {store.distance_text}
                         </span>
                       </div>
                       <Button
                         size="sm"
-                        className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-1"
+                        className="bg-primary hover:bg-primary/90 text-white flex items-center gap-1"
                         onClick={(e) => {
                           e.stopPropagation();
                           openDirections(store);
@@ -466,7 +466,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                 key={store.place_id}
                 className={`overflow-hidden transition-all duration-200 hover:shadow-card-hover cursor-pointer ${
                   index === 0
-                    ? "border-blue-500 border-2"
+                    ? "border-primary border-2"
                     : "border-border/40"
                 }`}
                 onClick={() => openDirections(store)}
@@ -477,7 +477,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                       {/* 매장명 */}
                       <div className="flex items-center gap-2">
                         {index === 0 && (
-                          <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full font-medium shrink-0">
+                          <span className="px-2 py-0.5 bg-primary text-white text-xs rounded-full font-medium shrink-0">
                             가장 가까움
                           </span>
                         )}
@@ -496,7 +496,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                       {store.opening_hours && (
                         <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                           <Clock className="w-4 h-4 flex-shrink-0" />
-                          <span className={store.opening_hours.open_now ? "text-green-600" : "text-red-500"}>
+                          <span className={store.opening_hours.open_now ? "text-primary" : "text-destructive"}>
                             {store.opening_hours.open_now ? "영업 중" : "영업 종료"}
                           </span>
                         </p>
@@ -506,13 +506,13 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                     {/* 거리 및 길찾기 */}
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       <div className="text-right">
-                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        <span className="text-2xl font-bold text-primary">
                           {store.distance_text}
                         </span>
                       </div>
                       <Button
                         size="sm"
-                        className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1"
+                        className="bg-primary hover:bg-primary/90 text-white flex items-center gap-1"
                         onClick={(e) => {
                           e.stopPropagation();
                           openDirections(store);

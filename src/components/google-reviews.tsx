@@ -90,8 +90,8 @@ export function GoogleReviews({ restaurantName }: GoogleReviewsProps) {
             key={star}
             className={`w-4 h-4 ${
               star <= rating
-                ? "fill-amber-400 text-amber-400"
-                : "fill-gray-200 text-gray-200"
+                ? "fill-accent text-accent"
+                : "fill-muted text-muted"
             }`}
           />
         ))}
@@ -145,7 +145,7 @@ export function GoogleReviews({ restaurantName }: GoogleReviewsProps) {
         </div>
         {rating && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+            <Star className="w-4 h-4 fill-accent text-accent" />
             <span className="font-medium text-foreground">{rating.toFixed(1)}</span>
             {userRatingsTotal && (
               <span>({userRatingsTotal.toLocaleString()}개 리뷰)</span>
