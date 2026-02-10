@@ -2106,7 +2106,7 @@ export default function Home() {
                 setActiveTab("market");
                 setMarketSheetOpen(true);
               }}
-              className="row-span-2 relative overflow-hidden rounded-2xl bg-foreground dark:bg-card p-4 text-left active:scale-[0.98] transition-transform"
+              className="row-span-2 relative overflow-hidden rounded-2xl bg-primary p-4 text-left active:scale-[0.98] transition-transform"
             >
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-3 right-3 text-3xl opacity-30">🌙</div>
@@ -2115,10 +2115,10 @@ export default function Home() {
               <div className="relative z-10 h-full flex flex-col">
                 <span className="text-3xl mb-2">🌃</span>
                 <h3 className="text-white font-bold text-lg">야시장</h3>
-                <p className="text-white/60 text-xs mt-1">타이베이 인기 야시장</p>
+                <p className="text-white/80 text-xs mt-1">타이베이 인기 야시장</p>
                 <div className="mt-auto pt-3 flex gap-1 flex-wrap">
                   {markets.slice(1, 4).map(m => (
-                    <span key={m.id} className="text-[10px] bg-white/15 text-white/80 px-2 py-0.5 rounded-full">{m.name}</span>
+                    <span key={m.id} className="text-[10px] bg-white/25 text-white px-2 py-0.5 rounded-full">{m.name}</span>
                   ))}
                 </div>
               </div>
@@ -2159,7 +2159,7 @@ export default function Home() {
                 setCurrentView("ai-recommend");
                 window.scrollTo(0, 0);
               }}
-              className="col-span-2 relative overflow-hidden rounded-2xl bg-foreground dark:bg-card p-4 text-left active:scale-[0.98] transition-transform"
+              className="col-span-2 relative overflow-hidden rounded-2xl bg-primary/90 p-4 text-left active:scale-[0.98] transition-transform"
             >
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-2 right-4 text-2xl opacity-20">✨</div>
@@ -2169,7 +2169,7 @@ export default function Home() {
                 <span className="text-3xl">🤖</span>
                 <div>
                   <h3 className="text-white font-bold text-sm">AI 맛집 추천</h3>
-                  <p className="text-white/70 text-[10px] mt-0.5">취향에 맞는 맛집을 AI가 골라드려요</p>
+                  <p className="text-white/80 text-[10px] mt-0.5">취향에 맞는 맛집을 AI가 골라드려요</p>
                 </div>
               </div>
             </button>
