@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { User, LogOut, Search, X, MapPin, ChevronDown, Key, UserMinus, History, ArrowLeft } from "lucide-react";
+import { User, LogOut, Search, X, MapPin, ChevronDown, Key, UserMinus, History, ArrowLeft, Moon, Sun } from "lucide-react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { BottomNav } from "@/components/bottom-nav";
@@ -18,6 +19,8 @@ import { DeleteAccountModal } from "@/components/delete-account-modal";
 import { RestaurantHistoryList } from "@/components/restaurant-history";
 import { ToiletFinder } from "@/components/toilet-finder";
 import { ScheduleMain } from "@/components/schedule/schedule-main";
+import { Onboarding } from "@/components/onboarding";
+import { AIRecommend } from "@/components/ai-recommend";
 import {
   Restaurant,
   categories,
@@ -31,10 +34,12 @@ import {
   searchRestaurants,
   generateStaticPlaceId,
   getAllRestaurants,
+  getTimeBasedRecommendations,
 } from "@/data/taiwan-food";
 import { getRestaurantDistrict, isValidDistrict, DISTRICT_INFO } from "@/lib/district-utils";
+import { useTheme } from "@/components/theme-provider";
 
-type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking" | "guide" | "schedule";
+type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking" | "guide" | "schedule" | "ai-recommend";
 type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add" | "schedule";
 type GuideTabType = "overview" | "weather" | "transport" | "accommodation";
 
@@ -46,6 +51,7 @@ interface UserInfo {
 }
 
 export default function Home() {
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [currentView, setCurrentView] = useState<View>("home");
   const [viewHistory, setViewHistory] = useState<View[]>([]); // 네비게이션 스택
@@ -91,6 +97,18 @@ export default function Home() {
 
   // 삭제된 정적 데이터 ID 목록 (홈화면 필터링용)
   const [deletedStaticIds, setDeletedStaticIds] = useState<string[]>([]);
+
+  // DB 캐시된 이미지 URL (일괄 조회)
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+
+  // 온보딩 상태
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem("onboarding_completed")) {
+      setShowOnboarding(true);
+    }
+  }, []);
 
   // 로그인 상태 확인
   useEffect(() => {
@@ -188,6 +206,22 @@ export default function Home() {
     fetchLiveRatings();
   }, [basePopularRestaurants, baseMarketRestaurants]);
 
+  // DB 캐시된 이미지 URL 일괄 조회 (개별 place-photo 호출 제거)
+  useEffect(() => {
+    const fetchImageUrls = async () => {
+      try {
+        const res = await fetch("/api/home-data");
+        const data = await res.json();
+        if (data.data?.imageUrls) {
+          setImageUrls(data.data.imageUrls);
+        }
+      } catch (error) {
+        console.error("Failed to fetch image URLs:", error);
+      }
+    };
+    fetchImageUrls();
+  }, []);
+
   // 실시간 평점 적용된 인기 맛집 (평점 높은 순 정렬, 삭제된 정적 데이터 제외)
   const popularRestaurants = useMemo(() => {
     return basePopularRestaurants
@@ -268,6 +302,13 @@ export default function Home() {
 
     return ranking;
   }, [liveRatings, deletedStaticIds]);
+
+  // 시간대별 맛집 추천 (대만 시간 UTC+8 기준)
+  const timeRecommendation = useMemo(() => {
+    const taiwanTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Taipei" });
+    const taiwanHour = new Date(taiwanTime).getHours();
+    return getTimeBasedRecommendations(taiwanHour);
+  }, []);
 
   // 지역 클릭 핸들러
   const handleDistrictSelect = useCallback((district: string, restaurants: Restaurant[]) => {
@@ -512,6 +553,37 @@ export default function Home() {
     edgeWidth: 25,
   });
 
+  // Pull-to-Refresh (홈 화면에서만 활성화)
+  const handlePullToRefresh = useCallback(async () => {
+    const names = [
+      ...basePopularRestaurants.map(r => r.이름),
+      ...baseMarketRestaurants.map(r => r.이름)
+    ];
+    const uniqueNames = [...new Set(names)];
+
+    const [ratingsRes, customRes] = await Promise.all([
+      fetch("/api/ratings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ names: uniqueNames })
+      }),
+      fetch("/api/custom-restaurants")
+    ]);
+
+    const [ratingsData, customData] = await Promise.all([
+      ratingsRes.json(),
+      customRes.json()
+    ]);
+
+    if (ratingsData.ratings) setLiveRatings(ratingsData.ratings);
+    if (customData.deletedStaticIds) setDeletedStaticIds(customData.deletedStaticIds);
+  }, [basePopularRestaurants, baseMarketRestaurants]);
+
+  const { pullDistance, isRefreshing } = usePullToRefresh({
+    onRefresh: handlePullToRefresh,
+    enabled: currentView === "home",
+  });
+
   // 렌더링
   if (currentView === "detail" && selectedRestaurant) {
     return (
@@ -636,6 +708,33 @@ export default function Home() {
           onClose={() => setAddRestaurantModalOpen(false)}
           user={user}
           onSuccess={() => {}}
+        />
+      </>
+    );
+  }
+
+  if (currentView === "ai-recommend") {
+    return (
+      <>
+        <AIRecommend
+          onBack={handleBack}
+          onSelectRestaurant={handleRestaurantSelect}
+          timeSlot={timeRecommendation?.timeSlot}
+        />
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
+        <CategorySheet
+          open={categorySheetOpen}
+          onOpenChange={setCategorySheetOpen}
+          title="카테고리 선택"
+          options={categories}
+          onSelect={handleCategorySelect}
+        />
+        <CategorySheet
+          open={marketSheetOpen}
+          onOpenChange={setMarketSheetOpen}
+          title="야시장 선택"
+          options={markets}
+          onSelect={handleMarketSelect}
         />
       </>
     );
@@ -1779,9 +1878,34 @@ export default function Home() {
 
   return (
     <>
-      <div className="min-h-screen pb-20">
+      {/* 온보딩 */}
+      {showOnboarding && (
+        <Onboarding
+          onComplete={() => {
+            localStorage.setItem("onboarding_completed", "true");
+            setShowOnboarding(false);
+          }}
+        />
+      )}
+
+      <div className="min-h-screen pb-20 relative">
+        {/* Pull-to-Refresh 인디케이터 */}
+        {(pullDistance > 0 || isRefreshing) && (
+          <div
+            className="absolute left-0 right-0 flex items-center justify-center z-30 pointer-events-none"
+            style={{ top: 0, height: `${Math.max(pullDistance, isRefreshing ? 48 : 0)}px` }}
+          >
+            <span className={`text-2xl ${isRefreshing ? "animate-bounce" : pullDistance >= 80 ? "scale-110" : "opacity-60"} transition-all`}>
+              🍜
+            </span>
+          </div>
+        )}
+
         {/* 헤더 */}
-        <header className="bg-gradient-to-br from-orange-500 via-red-500 to-rose-600 safe-area-top relative z-20">
+        <header
+          className="bg-gradient-to-br from-orange-500 via-red-500 to-rose-600 safe-area-top relative z-20 transition-transform"
+          style={pullDistance > 0 ? { transform: `translateY(${pullDistance}px)` } : undefined}
+        >
           {/* 배경 장식 */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute -top-4 -left-4 w-24 h-24 bg-white/10 rounded-full blur-xl" />
@@ -1789,7 +1913,13 @@ export default function Home() {
             <div className="absolute -bottom-2 right-1/4 w-20 h-20 bg-white/5 rounded-full blur-xl" />
           </div>
           <div className="px-4 py-4 flex items-center justify-between relative z-10">
-            <div className="w-10" /> {/* 왼쪽 여백 */}
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/35 transition-all shadow-lg border border-white/20"
+              title={theme === "dark" ? "라이트 모드" : "다크 모드"}
+            >
+              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-2">
                 <span className="text-2xl drop-shadow-lg">🍜</span>
@@ -1875,7 +2005,7 @@ export default function Home() {
         </header>
 
         {/* 메인 콘텐츠 */}
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 transition-transform" style={pullDistance > 0 ? { transform: `translateY(${pullDistance}px)` } : undefined}>
           {/* 검색바 */}
           <div className="relative" ref={searchRef}>
             <div className={`flex items-center bg-card rounded-xl border-2 transition-colors ${showSuggestions && searchSuggestions.length > 0 ? 'border-primary rounded-b-none' : 'border-transparent focus-within:border-primary'}`}>
@@ -1947,71 +2077,141 @@ export default function Home() {
             )}
           </div>
 
-          {/* 대만 안내 페이지 버튼 */}
-          <button
-            onClick={() => {
-              setViewHistory(prev => [...prev, currentView]);
-              setCurrentView("guide");
-              window.scrollTo(0, 0);
-            }}
-            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 shadow-sm flex items-center justify-between hover:from-amber-600 hover:to-orange-600 transition-all active:scale-[0.98]"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-2xl">📖</span>
+          {/* 시간대별 맛집 추천 */}
+          {timeRecommendation.restaurants.length > 0 && (
+            <section className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${timeRecommendation.gradient} p-4 shadow-card`}>
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/10 rounded-full blur-xl" />
+                <div className="absolute bottom-2 left-4 w-12 h-12 bg-white/5 rounded-full blur-lg" />
               </div>
-              <div className="text-left">
-                <h3 className="text-white font-bold text-base">타이베이 여행 가이드</h3>
-                <p className="text-white/80 text-xs">12개 구 · 명소 · 신베이시 완벽 정리</p>
+              <div className="relative z-10">
+                <h2 className="text-white font-semibold text-base flex items-center gap-2 mb-3">
+                  <span className="text-xl">{timeRecommendation.emoji}</span>
+                  {timeRecommendation.greeting}
+                </h2>
+                <ScrollArea className="w-full">
+                  <div className="flex gap-3 pb-2">
+                    {timeRecommendation.restaurants.map((restaurant, index) => (
+                      <RestaurantCard
+                        key={`time-${restaurant.이름}-${index}`}
+                        restaurant={restaurant}
+                        variant="horizontal"
+                        category={restaurant.카테고리}
+                        imageUrl={imageUrls[restaurant.이름]}
+                        onClick={() => handleRestaurantSelect(restaurant)}
+                      />
+                    ))}
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
               </div>
-            </div>
-            <div className="text-white/80">
-              <ChevronDown className="w-6 h-6 -rotate-90" />
-            </div>
-          </button>
+            </section>
+          )}
 
-          {/* 화장실 찾기 버튼 */}
-          <button
-            onClick={() => {
-              setViewHistory(prev => [...prev, currentView]);
-              setCurrentView("toilet");
-              window.scrollTo(0, 0);
-            }}
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 shadow-sm flex items-center justify-between hover:from-green-600 hover:to-emerald-700 transition-all active:scale-[0.98]"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-2xl">🚽</span>
+          {/* Bento Grid: 야시장 배너 + 가이드 + 화장실 + AI 추천 */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* 야시장 배너 (2행 차지) */}
+            <button
+              onClick={() => {
+                setActiveTab("market");
+                setMarketSheetOpen(true);
+              }}
+              className="row-span-2 relative overflow-hidden rounded-2xl bg-gradient-to-b from-indigo-900 via-purple-900 to-indigo-950 p-4 text-left active:scale-[0.98] transition-transform"
+            >
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-3 right-3 text-3xl opacity-30">🌙</div>
+                <div className="absolute bottom-6 left-2 text-2xl opacity-25">🏮</div>
               </div>
-              <div className="text-left">
-                <h3 className="text-white font-bold text-base">가까운 화장실 찾기</h3>
-                <p className="text-white/80 text-xs">7-ELEVEN 화장실 위치 안내</p>
+              <div className="relative z-10 h-full flex flex-col">
+                <span className="text-3xl mb-2">🌃</span>
+                <h3 className="text-white font-bold text-lg">야시장</h3>
+                <p className="text-white/60 text-xs mt-1">타이베이 인기 야시장</p>
+                <div className="mt-auto pt-3 flex gap-1 flex-wrap">
+                  {markets.slice(1, 4).map(m => (
+                    <span key={m.id} className="text-[10px] bg-white/15 text-white/80 px-2 py-0.5 rounded-full">{m.name}</span>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="text-white/80">
-              <MapPin className="w-6 h-6" />
-            </div>
-          </button>
+            </button>
 
-          {/* 퀵 카테고리 */}
-          <section className="bg-card rounded-xl p-4 shadow-sm">
+            {/* 여행 가이드 */}
+            <button
+              onClick={() => {
+                setViewHistory(prev => [...prev, currentView]);
+                setCurrentView("guide");
+                window.scrollTo(0, 0);
+              }}
+              className="rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 p-4 text-left active:scale-[0.98] transition-transform"
+            >
+              <span className="text-2xl">📖</span>
+              <h3 className="text-white font-bold text-sm mt-2">여행 가이드</h3>
+              <p className="text-white/80 text-[10px] mt-0.5">12구 완벽 정리</p>
+            </button>
+
+            {/* 화장실 찾기 */}
+            <button
+              onClick={() => {
+                setViewHistory(prev => [...prev, currentView]);
+                setCurrentView("toilet");
+                window.scrollTo(0, 0);
+              }}
+              className="rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 p-4 text-left active:scale-[0.98] transition-transform"
+            >
+              <span className="text-2xl">🚽</span>
+              <h3 className="text-white font-bold text-sm mt-2">화장실 찾기</h3>
+              <p className="text-white/80 text-[10px] mt-0.5">7-ELEVEN 안내</p>
+            </button>
+
+            {/* AI 맛집 추천 */}
+            <button
+              onClick={() => {
+                setViewHistory(prev => [...prev, currentView]);
+                setCurrentView("ai-recommend");
+                window.scrollTo(0, 0);
+              }}
+              className="col-span-2 relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 p-4 text-left active:scale-[0.98] transition-transform"
+            >
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-2 right-4 text-2xl opacity-20">✨</div>
+                <div className="absolute bottom-2 right-12 text-xl opacity-15">🍜</div>
+              </div>
+              <div className="relative z-10 flex items-center gap-3">
+                <span className="text-3xl">🤖</span>
+                <div>
+                  <h3 className="text-white font-bold text-sm">AI 맛집 추천</h3>
+                  <p className="text-white/70 text-[10px] mt-0.5">취향에 맞는 맛집을 AI가 골라드려요</p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* 카테고리 그리드 */}
+          <section className="bg-card rounded-2xl p-4 shadow-card">
             <h2 className="text-fluid-base font-semibold mb-3 text-foreground">카테고리</h2>
-            <ScrollArea className="w-full">
-              <div className="flex gap-2 pb-2">
-                {categories.map((category) => (
-                  <Button
-                    key={category.id}
-                    variant="secondary"
-                    className="flex-col h-auto py-3 px-4 min-w-[70px] bg-muted hover:bg-muted/80 transition-all hover:scale-[1.05] active:scale-[0.98]"
-                    onClick={() => handleCategorySelect(category.id)}
-                  >
-                    <span className="text-xl mb-1">{category.icon}</span>
-                    <span className="text-xs">{category.name}</span>
-                  </Button>
-                ))}
-              </div>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+            <div className="grid grid-cols-3 gap-2">
+              {categories.slice(0, 6).map((category) => (
+                <Button
+                  key={category.id}
+                  variant="secondary"
+                  className="flex-col h-auto py-3 px-2 bg-muted hover:bg-muted/80 transition-all hover:scale-[1.03] active:scale-[0.98]"
+                  onClick={() => handleCategorySelect(category.id)}
+                >
+                  <span className="text-xl mb-1">{category.icon}</span>
+                  <span className="text-xs">{category.name}</span>
+                </Button>
+              ))}
+            </div>
+            {categories.length > 6 && (
+              <button
+                onClick={() => {
+                  setActiveTab("category");
+                  setCategorySheetOpen(true);
+                }}
+                className="w-full mt-3 text-xs text-primary font-medium hover:underline"
+              >
+                전체 카테고리 보기 →
+              </button>
+            )}
           </section>
 
           {/* 인기 맛집 */}
@@ -2025,6 +2225,7 @@ export default function Home() {
                     restaurant={restaurant}
                     variant="horizontal"
                     category={restaurant.카테고리}
+                    imageUrl={imageUrls[restaurant.이름]}
                     onClick={() => handleRestaurantSelect(restaurant)}
                   />
                 ))}
@@ -2106,6 +2307,7 @@ export default function Home() {
                   <RestaurantCard
                     key={`${restaurant.이름}-${index}`}
                     restaurant={restaurant}
+                    imageUrl={imageUrls[restaurant.이름]}
                     onClick={() => handleRestaurantSelect(restaurant)}
                   />
                 ))

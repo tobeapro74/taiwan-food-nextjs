@@ -61,7 +61,7 @@ export async function GET() {
     const allNames = [...POPULAR_RESTAURANTS, ...MARKET_RESTAURANTS];
 
     // 병렬로 데이터 조회
-    const [ratingsResult, customRestaurants] = await Promise.all([
+    const [ratingsResult, customRestaurants, imageUrls] = await Promise.all([
       // 1. 평점 조회
       (async () => {
         const uncachedNames: string[] = [];
@@ -124,6 +124,27 @@ export async function GET() {
 
         return results as unknown as CustomRestaurant[];
       })(),
+
+      // 3. 이미지 URL 조회 (image_cache 컬렉션에서 일괄 조회)
+      (async () => {
+        try {
+          const collection = db.collection("image_cache");
+          const results = await collection
+            .find({ photoUrl: { $ne: "" }, isClosed: { $ne: true } })
+            .project({ restaurantName: 1, photoUrl: 1 })
+            .toArray();
+
+          const urlMap: Record<string, string> = {};
+          for (const item of results) {
+            if (item.restaurantName && item.photoUrl) {
+              urlMap[item.restaurantName] = item.photoUrl;
+            }
+          }
+          return urlMap;
+        } catch {
+          return {} as Record<string, string>;
+        }
+      })(),
     ]);
 
     // 인기 맛집 평점 분리
@@ -146,6 +167,7 @@ export async function GET() {
       popularRatings,
       marketRatings,
       customRestaurants,
+      imageUrls,
       timestamp: new Date().toISOString(),
     };
 

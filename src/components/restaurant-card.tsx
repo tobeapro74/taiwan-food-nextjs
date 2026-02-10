@@ -5,6 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Star, Building2 } from "lucide-react";
 import { Restaurant, getUnsplashImage } from "@/data/taiwan-food";
+import { useHaptic } from "@/hooks/useHaptic";
+import { useLongPress } from "@/hooks/useLongPress";
+import { PeekPreview } from "@/components/peek-preview";
 import Image from "next/image";
 
 // 리뷰수 포맷 (1000 -> 1K, 10000 -> 10K)
@@ -33,13 +36,17 @@ const categoryIcons: Record<string, string> = {
 interface RestaurantCardProps {
   restaurant: Restaurant;
   onClick?: () => void;
+  onViewDetail?: () => void;
   variant?: "horizontal" | "vertical";
   category?: string;
+  imageUrl?: string; // DB 캐시된 이미지 URL (일괄 조회)
 }
 
-export function RestaurantCard({ restaurant, onClick, variant = "vertical", category }: RestaurantCardProps) {
+export function RestaurantCard({ restaurant, onClick, onViewDetail, variant = "vertical", category, imageUrl: propImageUrl }: RestaurantCardProps) {
+  const { impact } = useHaptic();
+  const [showPeek, setShowPeek] = useState(false);
   const fallbackUrl = getUnsplashImage(restaurant.이름);
-  const cachedUrl = imageCache[restaurant.이름];
+  const cachedUrl = imageCache[restaurant.이름] || propImageUrl;
   const [imageUrl, setImageUrl] = useState<string>(cachedUrl || "");
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -55,7 +62,14 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
       return;
     }
 
-    // Google Places API로 이미지 가져오기
+    // prop으로 DB 캐시 이미지를 받았으면 바로 사용 (개별 API 호출 불필요)
+    if (propImageUrl) {
+      imageCache[cacheKey] = propImageUrl;
+      setImageUrl(propImageUrl);
+      return;
+    }
+
+    // DB에 캐시가 없는 경우에만 개별 Google Places API로 이미지 가져오기
     const fetchImage = async () => {
       try {
         const query = `${restaurant.이름} ${restaurant.위치 || ""}`.trim();
@@ -77,7 +91,7 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
     };
 
     fetchImage();
-  }, [cacheKey, restaurant.이름, restaurant.위치, fallbackUrl]);
+  }, [cacheKey, restaurant.이름, restaurant.위치, fallbackUrl, propImageUrl]);
 
   // 구글 평점 가져오기
   useEffect(() => {
@@ -112,11 +126,25 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
   const displayRating = googleRating ?? restaurant.평점;
   const displayReviewsCount = googleReviewsCount ?? restaurant.리뷰수;
 
+  // 롱프레스 핸들러
+  const longPressHandlers = useLongPress({
+    onLongPress: () => {
+      impact();
+      setShowPeek(true);
+    },
+    onClick: () => {
+      impact();
+      onClick?.();
+    },
+  });
+
   if (variant === "horizontal") {
     return (
+      <>
       <Card
         className="flex-shrink-0 w-44 cursor-pointer transition-all duration-200 hover:scale-[1.03] hover:shadow-card-hover active:scale-[0.98] overflow-hidden"
-        onClick={onClick}
+        style={{ WebkitTouchCallout: "none" }}
+        {...longPressHandlers}
       >
         <div className="h-32 relative overflow-hidden bg-muted">
           {!imageLoaded && (
@@ -162,13 +190,23 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
           )}
         </CardContent>
       </Card>
+      {showPeek && (
+        <PeekPreview
+          restaurant={restaurant}
+          onClose={() => setShowPeek(false)}
+          onViewDetail={() => { setShowPeek(false); (onViewDetail || onClick)?.(); }}
+        />
+      )}
+      </>
     );
   }
 
   return (
+    <>
     <Card
       className="cursor-pointer transition-all duration-200 hover:scale-[1.01] hover:shadow-card-hover active:scale-[0.98] overflow-hidden"
-      onClick={onClick}
+      style={{ WebkitTouchCallout: "none" }}
+      {...longPressHandlers}
     >
       <CardContent className="p-0">
         <div className="flex">
@@ -214,7 +252,7 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
                 </Badge>
               )}
               {restaurant.빌딩 && (
-                <Badge variant="outline" className="text-xs text-blue-600 border-blue-200 bg-blue-50">
+                <Badge variant="outline" className="text-xs text-blue-600 border-blue-200 bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:bg-blue-950/30">
                   <Building2 className="h-3 w-3 mr-1" />
                   {restaurant.빌딩}
                 </Badge>
@@ -229,5 +267,13 @@ export function RestaurantCard({ restaurant, onClick, variant = "vertical", cate
         </div>
       </CardContent>
     </Card>
+    {showPeek && (
+      <PeekPreview
+        restaurant={restaurant}
+        onClose={() => setShowPeek(false)}
+        onViewDetail={() => { setShowPeek(false); (onViewDetail || onClick)?.(); }}
+      />
+    )}
+    </>
   );
 }
