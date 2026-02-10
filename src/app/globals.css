@@ -46,34 +46,34 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
-/* 밝은 테마 (Creamy Warm Tone) */
+/* 밝은 테마 (Clean Neutral Tone) */
 :root {
   --radius: 0.625rem;
-  /* 배경: 따뜻한 크리미 톤 */
-  --background: hsl(30, 20%, 97%);
-  --foreground: hsl(224, 71%, 4%);
-  /* 카드: 따뜻한 흰색 */
-  --card: hsl(35, 25%, 99.5%);
-  --card-foreground: hsl(224, 71%, 4%);
+  /* 배경: 깨끗한 뉴트럴 톤 */
+  --background: hsl(15, 8%, 98%);
+  --foreground: hsl(15, 12%, 12%);
+  /* 카드: 순수 흰색 */
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(15, 12%, 12%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(224, 71%, 4%);
+  --popover-foreground: hsl(15, 12%, 12%);
   /* 주요 색상: 대만 느낌의 따뜻한 주황-빨강 */
   --primary: hsl(15, 90%, 55%);
   --primary-foreground: hsl(0, 0%, 100%);
-  /* 보조 색상: 따뜻한 회색 */
-  --secondary: hsl(30, 15%, 95%);
-  --secondary-foreground: hsl(25, 8%, 44%);
+  /* 보조 색상: 중립 회색 */
+  --secondary: hsl(15, 6%, 95%);
+  --secondary-foreground: hsl(15, 5%, 46%);
   /* 음소거 색상 */
-  --muted: hsl(30, 15%, 95%);
-  --muted-foreground: hsl(25, 8%, 44%);
-  /* 강조 색상 */
-  --accent: hsl(30, 15%, 95%);
-  --accent-foreground: hsl(25, 8%, 44%);
+  --muted: hsl(15, 5%, 94%);
+  --muted-foreground: hsl(15, 4%, 46%);
+  /* 강조 색상: 골든 앰버 */
+  --accent: hsl(36, 78%, 55%);
+  --accent-foreground: hsl(36, 80%, 20%);
   /* 파괴적 액션 */
   --destructive: hsl(0, 84.2%, 60.2%);
   /* 테두리 및 입력 */
-  --border: hsl(30, 12%, 90%);
-  --input: hsl(30, 12%, 90%);
+  --border: hsl(15, 5%, 90%);
+  --input: hsl(15, 5%, 90%);
   --ring: hsl(15, 90%, 55%);
   /* 차트 색상 */
   --chart-1: hsl(15, 90%, 55%);
@@ -83,13 +83,48 @@
   --chart-5: hsl(280, 65%, 60%);
   /* 사이드바 */
   --sidebar: hsl(0, 0%, 100%);
-  --sidebar-foreground: hsl(224, 71%, 4%);
+  --sidebar-foreground: hsl(15, 12%, 12%);
   --sidebar-primary: hsl(15, 90%, 55%);
   --sidebar-primary-foreground: hsl(0, 0%, 100%);
-  --sidebar-accent: hsl(220, 14%, 96%);
-  --sidebar-accent-foreground: hsl(220, 9%, 46%);
-  --sidebar-border: hsl(220, 13%, 91%);
+  --sidebar-accent: hsl(15, 6%, 96%);
+  --sidebar-accent-foreground: hsl(15, 5%, 46%);
+  --sidebar-border: hsl(15, 5%, 91%);
   --sidebar-ring: hsl(15, 90%, 55%);
+}
+
+/* 다크 테마 (Deep Warm Dark) */
+.dark {
+  --background: hsl(15, 15%, 7%);
+  --foreground: hsl(15, 5%, 92%);
+  --card: hsl(15, 10%, 11%);
+  --card-foreground: hsl(15, 5%, 92%);
+  --popover: hsl(15, 10%, 13%);
+  --popover-foreground: hsl(15, 5%, 92%);
+  --primary: hsl(15, 85%, 58%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(15, 8%, 16%);
+  --secondary-foreground: hsl(15, 5%, 75%);
+  --muted: hsl(15, 6%, 14%);
+  --muted-foreground: hsl(15, 4%, 55%);
+  --accent: hsl(36, 60%, 50%);
+  --accent-foreground: hsl(36, 80%, 90%);
+  --destructive: hsl(0, 70%, 55%);
+  --border: hsl(15, 6%, 20%);
+  --input: hsl(15, 6%, 20%);
+  --ring: hsl(15, 85%, 58%);
+  --chart-1: hsl(15, 85%, 58%);
+  --chart-2: hsl(142, 60%, 45%);
+  --chart-3: hsl(38, 80%, 55%);
+  --chart-4: hsl(217, 80%, 65%);
+  --chart-5: hsl(280, 55%, 65%);
+  --sidebar: hsl(15, 12%, 9%);
+  --sidebar-foreground: hsl(15, 5%, 92%);
+  --sidebar-primary: hsl(15, 85%, 58%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(15, 8%, 18%);
+  --sidebar-accent-foreground: hsl(15, 5%, 75%);
+  --sidebar-border: hsl(15, 6%, 22%);
+  --sidebar-ring: hsl(15, 85%, 58%);
 }
 
 @layer base {
@@ -169,18 +204,59 @@ body {
   animation: scale-in 0.2s ease-out;
 }
 
-/* 프리미엄 그림자 유틸리티 */
+/* 플로팅 애니메이션 (CTA, 특수 요소) */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* 글로우 펄스 (프리미엄/주목 요소) */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(236, 88, 34, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(236, 88, 34, 0.5); }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* 프리미엄 그림자 유틸리티 (프라이머리 틴트) */
 .shadow-premium {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(236, 88, 34, 0.12);
+}
+.dark .shadow-premium {
+  box-shadow: 0 4px 20px rgba(236, 88, 34, 0.2);
 }
 
 /* 카드 그림자 계층 */
 .shadow-card {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+.dark .shadow-card {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
 
 .shadow-card-hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(236, 88, 34, 0.12);
+}
+.dark .shadow-card-hover {
+  box-shadow: 0 8px 24px rgba(236, 88, 34, 0.18);
+}
+
+/* Glass 효과 (바텀시트) */
+.glass-sheet {
+  background: rgba(255, 255, 255, 0.75);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+.dark .glass-sheet {
+  background: rgba(28, 18, 14, 0.85);
+  border-top-color: rgba(236, 88, 34, 0.08);
 }
 
 /* Shimmer 로딩 애니메이션 */
@@ -192,12 +268,21 @@ body {
 .animate-shimmer {
   background: linear-gradient(
     90deg,
-    hsl(30, 15%, 95%) 0%,
-    hsl(30, 15%, 90%) 40%,
-    hsl(30, 15%, 95%) 80%
+    hsl(15, 5%, 94%) 0%,
+    hsl(15, 5%, 89%) 40%,
+    hsl(15, 5%, 94%) 80%
   );
   background-size: 200% 100%;
   animation: shimmer 1.8s ease-in-out infinite;
+}
+.dark .animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(15, 6%, 14%) 0%,
+    hsl(15, 6%, 19%) 40%,
+    hsl(15, 6%, 14%) 80%
+  );
+  background-size: 200% 100%;
 }
 
 /* Fluid Typography (뷰포트 반응형 폰트 크기) */
