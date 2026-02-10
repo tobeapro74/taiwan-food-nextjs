@@ -2098,33 +2098,8 @@ export default function Home() {
             </section>
           )}
 
-          {/* Bento Grid: 야시장 배너 + 가이드 + 화장실 + AI 추천 */}
+          {/* Bento Grid: 가이드 + 화장실 + AI 추천 */}
           <div className="grid grid-cols-2 gap-3">
-            {/* 야시장 배너 (2행 차지) */}
-            <button
-              onClick={() => {
-                setActiveTab("market");
-                setMarketSheetOpen(true);
-              }}
-              className="row-span-2 relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/75 to-accent/60 p-4 text-left active:scale-[0.98] transition-transform"
-            >
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-2 -right-2 text-7xl opacity-20">🌃</div>
-                <div className="absolute top-16 right-6 text-3xl opacity-25">🌙</div>
-                <div className="absolute bottom-8 left-1 text-2xl opacity-20">🏮</div>
-              </div>
-              <div className="relative z-10 h-full flex flex-col">
-                <span className="text-4xl mb-2">🌃</span>
-                <h3 className="text-white font-bold text-lg">야시장</h3>
-                <p className="text-white/80 text-xs mt-1">타이베이 인기 야시장</p>
-                <div className="mt-auto pt-3 flex gap-1 flex-wrap">
-                  {markets.slice(1, 4).map(m => (
-                    <span key={m.id} className="text-[10px] bg-white/25 text-white px-2 py-0.5 rounded-full">{m.name}</span>
-                  ))}
-                </div>
-              </div>
-            </button>
-
             {/* 여행 가이드 */}
             <button
               onClick={() => {
