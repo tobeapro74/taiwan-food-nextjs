@@ -128,7 +128,7 @@ src/
 │
 ├── hooks/
 │   ├── useSwipeBack.ts            # iOS 스타일 스와이프 뒤로가기
-│   ├── useUserLocation.ts         # 사용자 위치 관리
+│   ├── useUserLocation.ts         # 사용자 위치 관리 (GPS 실패 시 시먼딩 폴백)
 │   ├── useHaptic.ts               # 햅틱 피드백 (Web API + iOS 네이티브 브리지)
 │   ├── useLongPress.ts            # 롱프레스 제스처 감지
 │   └── usePullToRefresh.ts        # Pull-to-Refresh 제스처
@@ -388,6 +388,7 @@ page.tsx (상태 관리)
 - `side="bottom"` 설정으로 하단에서 슬라이드 업
 - `max-h-[70vh]`로 높이 제한
 - 내부 콘텐츠 스크롤 가능
+- **z-index: `z-[95]`** (하단 네비게이션 `z-[90]`보다 높게 설정하여 가림 방지)
 
 ### 바텀시트 모달 (맛집수정, 리뷰)
 - 커스텀 구현 (CSS 애니메이션)

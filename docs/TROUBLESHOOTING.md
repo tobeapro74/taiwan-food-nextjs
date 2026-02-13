@@ -1705,3 +1705,119 @@ npm install swr @tanstack/react-virtual
 3. **Phase 3 (API)**: 기존 개별 API 사용
 4. **Phase 4 (SWR)**: `useApi.ts` 대신 기존 fetch 사용
 5. **Phase 5 (설정)**: `next.config.ts` 이전 버전으로 복원
+
+---
+
+## 16. 카테고리/야시장 바텀 시트가 네비게이션바에 가려지는 문제
+
+### 문제 상황
+카테고리, 야시장 선택 바텀 시트(Sheet) 모달에서 맨 아래 항목이 하단 네비게이션바에 가려져 선택할 수 없는 현상 발생.
+
+### 원인 분석
+- Sheet 컴포넌트(Radix UI Dialog 기반)의 Overlay와 Content가 `z-50`으로 설정
+- 하단 네비게이션바가 `z-[90]`으로 더 높은 z-index를 가짐
+- 결과적으로 Sheet가 네비게이션바 아래에 렌더링되어 하단 항목이 가려짐
+
+### z-index 스택 (수정 전)
+```
+z-[200] → 회원탈퇴, AI 추천 오버레이
+z-[110] → 일정 모달 이미지
+z-[100] → 인증 모달, 맛집 등록/수정
+z-[95]  → Peek Preview
+z-[90]  → 하단 네비게이션바 ← 네비바가 Sheet 위에!
+z-50    → Sheet Overlay/Content ← 네비바에 가려짐
+```
+
+### 해결 방안
+
+#### Sheet 컴포넌트 z-index 상향 (`z-50` → `z-[95]`)
+
+```tsx
+// src/components/ui/sheet.tsx
+
+// SheetOverlay
+<SheetPrimitive.Overlay
+  className={cn(
+    "... fixed inset-0 z-[95] bg-black/50",  // z-50 → z-[95]
+    className
+  )}
+/>
+
+// SheetContent
+<SheetPrimitive.Content
+  className={cn(
+    "... fixed z-[95] flex flex-col ...",  // z-50 → z-[95]
+    ...
+  )}
+>
+```
+
+### z-index 스택 (수정 후)
+```
+z-[200] → 회원탈퇴, AI 추천 오버레이
+z-[110] → 일정 모달 이미지
+z-[100] → 인증 모달, 맛집 등록/수정
+z-[95]  → Sheet Overlay/Content, Peek Preview ← 네비바 위에!
+z-[90]  → 하단 네비게이션바
+z-[80]  → AI 추천 스티키 헤더
+```
+
+### 관련 파일
+- `src/components/ui/sheet.tsx` - SheetOverlay, SheetContent z-index 수정
+- `src/components/category-sheet.tsx` - 카테고리/야시장 선택 UI (변경 없음)
+- `src/components/bottom-nav.tsx` - 하단 네비게이션 z-[90] (변경 없음)
+
+### 교훈
+> **모달/오버레이 컴포넌트의 z-index는 반드시 고정 요소(네비게이션바, 헤더 등)보다 높게 설정해야 한다.** Radix UI 같은 서드파티 컴포넌트의 기본 z-index 값이 프로젝트 내 다른 고정 요소와 충돌할 수 있으므로 주의.
+
+---
+
+## 17. GPS 실패 시 앱이 동작하지 않는 문제 (App Store 심사 대응)
+
+### 문제 상황
+App Store 심사 환경(미국 VPN/시뮬레이터)에서 GPS 위치를 가져오지 못하면 주변 맛집 찾기, 화장실 찾기 등 위치 기반 기능이 전혀 동작하지 않는 문제.
+
+### 원인 분석
+- 기존 코드에서 GPS 실패 시 에러만 표시하고 대안 좌표를 제공하지 않음
+- App Store 심사 시 미국 IP/시뮬레이터 환경이므로 대만 내 GPS 좌표를 얻을 수 없음
+- 위치 권한 거부, 타임아웃 등 다양한 실패 원인이 존재
+
+### 해결 방안
+
+#### 시먼딩 기본 위치로 자동 폴백
+```typescript
+// GPS 실패 시 시먼딩 기본 좌표
+const XIMENDING_DEFAULT = {
+  lat: 25.0421,
+  lng: 121.5081,
+};
+
+// Geolocation 실패 핸들러
+navigator.geolocation.getCurrentPosition(
+  (position) => {
+    // 성공: 실제 GPS 좌표 사용
+    setCoordinates({ lat: position.coords.latitude, lng: position.coords.longitude });
+  },
+  (error) => {
+    // 실패: 시먼딩 기본 위치로 폴백
+    console.warn("GPS 실패, 시먼딩 기본 위치 사용:", error.message);
+    setCoordinates(XIMENDING_DEFAULT);
+  },
+  { timeout: 10000, maximumAge: 300000 }
+);
+```
+
+### 폴백 적용 위치
+- `useUserLocation` 훅 (공통 위치 관리)
+- 화장실 찾기 (`toilet-finder.tsx`)
+- 주변 맛집 찾기 (`nearby-restaurants.tsx`)
+
+### 시먼딩을 기본 위치로 선택한 이유
+- 타이베이 관광의 중심지
+- 주변에 다양한 맛집, 편의점, 야시장이 밀집
+- 앱의 핵심 기능을 바로 체험할 수 있는 최적의 위치
+
+### 관련 파일
+- `src/hooks/useUserLocation.ts` - GPS 폴백 로직
+- `src/components/toilet-finder.tsx` - 화장실 찾기 폴백
+- `src/components/nearby-restaurants.tsx` - 주변 맛집 폴백
