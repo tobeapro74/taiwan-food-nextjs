@@ -133,7 +133,41 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-size: 15px;
+    line-height: 1.6;
   }
+}
+
+/*
+ * 모바일 앱 가독성: 최소 폰트 크기 보장 (사주나우 패턴 적용)
+ * text-xs(12px) → 13px, text-sm(14px) → 15px
+ * text-[7px]~text-[9px] → 11px, text-[10px]~text-[11px] → 12px
+ */
+
+/* 임의 픽셀 크기 최소값 보장 — 보조 라벨/범례용 */
+.\!text-\[7px\], .text-\[7px\],
+.\!text-\[8px\], .text-\[8px\],
+.\!text-\[9px\], .text-\[9px\] {
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+}
+
+.\!text-\[10px\], .text-\[10px\],
+.\!text-\[11px\], .text-\[11px\] {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+/* text-xs (12px → 13px) */
+.text-xs {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+/* text-sm (14px → 15px) */
+.text-sm {
+  font-size: 15px !important;
+  line-height: 1.55 !important;
 }
 
 /* 모바일 최적화 */
