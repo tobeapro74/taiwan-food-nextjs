@@ -1821,3 +1821,81 @@ navigator.geolocation.getCurrentPosition(
 - `src/hooks/useUserLocation.ts` - GPS 폴백 로직
 - `src/components/toilet-finder.tsx` - 화장실 찾기 폴백
 - `src/components/nearby-restaurants.tsx` - 주변 맛집 폴백
+
+---
+
+## 18. 모바일 앱 폰트 크기가 너무 작은 문제
+
+### 문제 상황
+대만맛집 앱의 텍스트가 모바일 환경에서 가독성이 떨어짐. 특히 `text-xs`(12px), `text-sm`(14px), `text-[10px]` 등의 보조 텍스트가 작게 느껴짐.
+
+### 원인 분석
+- Tailwind CSS 기본 폰트 크기(`text-xs`=12px, `text-sm`=14px)가 모바일 앱 환경에서 부족
+- 임의 픽셀 크기(`text-[7px]`~`text-[11px]`)를 사용하는 보조 라벨이 극소 크기
+- 사주나우 앱과 비교했을 때 전체적으로 1~2px 작음
+
+### 해결 방안
+
+#### CSS 글로벌 오버라이드 패턴 (사주나우 패턴 적용)
+
+`globals.css` 1개 파일만 수정하여 전체 폰트 사이즈를 일괄 상향. 컴포넌트 파일 수정 없음.
+
+```css
+/* @layer base 내 body에 추가 */
+body {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* @layer base 블록 뒤에 추가 */
+/* 임의 픽셀 크기 최소값 보장 */
+.\!text-\[7px\], .text-\[7px\],
+.\!text-\[8px\], .text-\[8px\],
+.\!text-\[9px\], .text-\[9px\] {
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+}
+
+.\!text-\[10px\], .text-\[10px\],
+.\!text-\[11px\], .text-\[11px\] {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+/* text-xs (12px → 13px) */
+.text-xs {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+/* text-sm (14px → 15px) */
+.text-sm {
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+}
+```
+
+### 변경 요약
+
+| 클래스 | 변경 전 | 변경 후 | 영향 범위 |
+|--------|---------|---------|----------|
+| body | ~16px | 15px | 전체 기본 |
+| `text-xs` | 12px | 13px | 103개 인스턴스 |
+| `text-sm` | 14px | 15px | 57개 인스턴스 |
+| `text-[10px]`~`text-[11px]` | 10~11px | 12px | 보조 라벨 |
+| `text-[7px]`~`text-[9px]` | 7~9px | 11px | 극소 라벨 |
+| `text-base` | 16px | 변경 없음 | - |
+
+### 레이아웃 영향 없는 이유
+- 모든 주요 컴포넌트에 `truncate`/`overflow-hidden`이 이미 적용되어 있음
+- 하단 네비 라벨(2~4글자), 뱃지(`whitespace-nowrap`), 수평 카드(`truncate`) 등 안전
+- 버튼 높이(h-9 = 36px)에 15px 텍스트 충분히 수용
+
+### 롤백 방법
+추가한 CSS 규칙만 삭제하면 즉시 원복 (컴포넌트 파일 변경 없음).
+
+### 관련 파일
+- `src/app/globals.css` - 폰트 크기 오버라이드 규칙
+
+### 교훈
+> **모바일 앱에서 Tailwind 기본 폰트 크기는 가독성이 부족할 수 있다.** `globals.css`에서 CSS `!important` 오버라이드를 사용하면 컴포넌트 파일 수정 없이 전체 폰트 크기를 일괄 조정할 수 있다.

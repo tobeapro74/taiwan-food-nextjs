@@ -93,7 +93,7 @@ src/
 │   │   └── page.tsx                  # 개인정보 처리방침 페이지
 │   ├── support/
 │   │   └── page.tsx                  # 고객지원 페이지
-│   ├── globals.css                # 전역 스타일
+│   ├── globals.css                # 전역 스타일 (폰트 가독성 오버라이드 포함)
 │   ├── layout.tsx                 # 루트 레이아웃
 │   └── page.tsx                   # 메인 페이지 (SPA 라우팅)
 │
@@ -512,6 +512,7 @@ GitHub Repository
 - 이미지 리사이즈 (800px, JPEG 60%)
 - `URL.createObjectURL()` 메모리 효율성
 - 검색 자동완성 디바운스
+- **폰트 가독성 오버라이드**: `globals.css`에서 Tailwind 기본 폰트 크기를 CSS `!important`로 일괄 상향 (text-xs: 13px, text-sm: 15px, body: 15px)
 
 ### 서버 사이드
 - MongoDB 연결 풀링

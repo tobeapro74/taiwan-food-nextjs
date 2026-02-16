@@ -104,6 +104,28 @@
 | 본문 | `text-sm` | 설명 텍스트 |
 | 캡션/보조 | `text-xs` | 위치, 리뷰수 |
 
+### 모바일 앱 가독성 오버라이드
+
+모바일 환경에서 가독성 확보를 위해 `globals.css`에서 Tailwind 기본 폰트 크기를 CSS 오버라이드합니다 (사주나우 패턴 적용). 컴포넌트 파일 수정 없이 CSS 1개 파일만 변경하여 전체 적용됩니다.
+
+| 클래스 | Tailwind 기본 | 오버라이드 | line-height |
+|--------|-------------|-----------|-------------|
+| body 기본 | ~16px | **15px** | 1.6 |
+| `text-sm` | 14px | **15px** | 1.55 |
+| `text-xs` | 12px | **13px** | 1.5 |
+| `text-[10px]`~`text-[11px]` | 10~11px | **12px** | 1.4 |
+| `text-[7px]`~`text-[9px]` | 7~9px | **11px** | 1.4 |
+| `text-base` | 16px | 변경 없음 | - |
+
+```css
+/* globals.css — 모바일 앱 가독성 오버라이드 */
+body { font-size: 15px; line-height: 1.6; }
+.text-xs { font-size: 13px !important; line-height: 1.5 !important; }
+.text-sm { font-size: 15px !important; line-height: 1.55 !important; }
+```
+
+> `!important`를 사용하여 Tailwind의 유틸리티 클래스보다 우선 적용. 롤백 시 해당 CSS 규칙만 삭제하면 즉시 원복 가능.
+
 ---
 
 ## 3. 간격 (Spacing)

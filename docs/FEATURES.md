@@ -272,6 +272,14 @@ src/app/
 - 정적 데이터 캐싱
 - 이미지 lazy loading
 
+### 9.4 모바일 앱 가독성 최적화
+- **CSS 글로벌 오버라이드 패턴**: `globals.css`에서 Tailwind 기본 폰트 크기를 일괄 상향
+- body 기본: 15px (line-height 1.6)
+- `text-sm`: 14px → 15px, `text-xs`: 12px → 13px
+- `text-[10px]`~`text-[11px]` → 12px, `text-[7px]`~`text-[9px]` → 11px
+- 컴포넌트 파일 수정 없이 CSS 1개 파일만 변경하여 전체 적용
+- 롤백 시 CSS 규칙 삭제만으로 즉시 원복 가능
+
 ## 10. 주변 맛집 찾기 (맛집알리미)
 
 ### 10.1 위치 설정
