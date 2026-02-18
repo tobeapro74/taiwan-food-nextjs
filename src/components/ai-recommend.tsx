@@ -14,10 +14,19 @@ interface RecommendationResult {
   matchScore: number;
 }
 
+export interface RecommendState {
+  query: string;
+  results: RecommendationResult[];
+  tip: string;
+  hasSearched: boolean;
+}
+
 interface AIRecommendProps {
   onBack: () => void;
   onSelectRestaurant: (restaurant: Restaurant) => void;
   timeSlot?: string;
+  savedState?: RecommendState | null;
+  onStateChange?: (state: RecommendState) => void;
 }
 
 const presets = [
@@ -42,15 +51,20 @@ const SEARCH_MESSAGES = [
   "거의 다 됐습니다...",
 ];
 
-export function AIRecommend({ onBack, onSelectRestaurant, timeSlot }: AIRecommendProps) {
+export function AIRecommend({ onBack, onSelectRestaurant, timeSlot, savedState, onStateChange }: AIRecommendProps) {
   const { impact } = useHaptic();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(savedState?.query || "");
   const [loading, setLoading] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false); // OpenAI 검색 중 모달
-  const [results, setResults] = useState<RecommendationResult[]>([]);
-  const [tip, setTip] = useState("");
-  const [hasSearched, setHasSearched] = useState(false);
+  const [results, setResults] = useState<RecommendationResult[]>(savedState?.results || []);
+  const [tip, setTip] = useState(savedState?.tip || "");
+  const [hasSearched, setHasSearched] = useState(savedState?.hasSearched || false);
   const [searchMsgIndex, setSearchMsgIndex] = useState(0);
+
+  // 상태 변경 시 부모에 전달
+  useEffect(() => {
+    onStateChange?.({ query, results, tip, hasSearched });
+  }, [query, results, tip, hasSearched, onStateChange]);
 
   // 검색 중 메시지 순환
   useEffect(() => {

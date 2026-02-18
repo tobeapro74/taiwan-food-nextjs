@@ -20,7 +20,7 @@ import { RestaurantHistoryList } from "@/components/restaurant-history";
 import { ToiletFinder } from "@/components/toilet-finder";
 import { ScheduleMain } from "@/components/schedule/schedule-main";
 import { Onboarding } from "@/components/onboarding";
-import { AIRecommend } from "@/components/ai-recommend";
+import { AIRecommend, RecommendState } from "@/components/ai-recommend";
 import {
   Restaurant,
   categories,
@@ -58,6 +58,9 @@ export default function Home() {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [listTitle, setListTitle] = useState("");
   const [listItems, setListItems] = useState<Restaurant[]>([]);
+
+  // AI 추천 상태 보존
+  const [aiRecommendState, setAiRecommendState] = useState<RecommendState | null>(null);
 
   // 시트 상태
   const [categorySheetOpen, setCategorySheetOpen] = useState(false);
@@ -723,6 +726,8 @@ export default function Home() {
           onBack={handleBack}
           onSelectRestaurant={handleRestaurantSelect}
           timeSlot={timeRecommendation?.timeSlot}
+          savedState={aiRecommendState}
+          onStateChange={setAiRecommendState}
         />
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
         <CategorySheet
