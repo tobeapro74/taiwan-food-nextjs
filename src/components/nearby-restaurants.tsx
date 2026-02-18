@@ -20,15 +20,24 @@ interface CustomRestaurant {
   registered_by?: number;
 }
 
+export interface NearbyState {
+  selectedRadius: number;
+  coordinates: { lat: number; lng: number } | null;
+  locationName: string | null;
+  isMockLocation: boolean;
+}
+
 interface NearbyRestaurantsProps {
   onSelectRestaurant: (restaurant: Restaurant) => void;
   onBack: () => void;
+  savedState?: NearbyState | null;
+  onStateChange?: (state: NearbyState) => void;
 }
 
 /**
  * 맛집알리미 - 주변 맛집 찾기 컴포넌트
  */
-export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaurantsProps) {
+export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onStateChange }: NearbyRestaurantsProps) {
   const {
     coordinates,
     locationName,
@@ -44,9 +53,13 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
     selectSearchResult,
     clearSearchResults,
     setManualCoordinates,
-  } = useUserLocation();
+  } = useUserLocation(savedState ? {
+    coordinates: savedState.coordinates,
+    locationName: savedState.locationName,
+    isMockLocation: savedState.isMockLocation,
+  } : undefined);
 
-  const [selectedRadius, setSelectedRadius] = useState(500); // 기본 500m
+  const [selectedRadius, setSelectedRadius] = useState(savedState?.selectedRadius || 500);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [addressInput, setAddressInput] = useState("");
   const [showManualInput, setShowManualInput] = useState(false);
@@ -57,6 +70,11 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack }: NearbyRestaura
   const [isLoadingCustom, setIsLoadingCustom] = useState(false);
 
   const mockLocations = getMockLocationList();
+
+  // 상태 변경 시 부모에 전달
+  useEffect(() => {
+    onStateChange?.({ selectedRadius, coordinates, locationName, isMockLocation });
+  }, [selectedRadius, coordinates, locationName, isMockLocation, onStateChange]);
 
   // 사용자 등록 맛집 가져오기
   useEffect(() => {

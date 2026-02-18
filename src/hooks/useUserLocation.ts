@@ -30,13 +30,17 @@ interface UseUserLocationReturn extends LocationState {
  * - 테스트용 사전 정의 위치 제공
  * - 주소 검색 기능 지원
  */
-export function useUserLocation(): UseUserLocationReturn {
+export function useUserLocation(initialState?: {
+  coordinates?: { lat: number; lng: number } | null;
+  locationName?: string | null;
+  isMockLocation?: boolean;
+}): UseUserLocationReturn {
   const [state, setState] = useState<LocationState>({
-    coordinates: null,
-    locationName: null,
+    coordinates: initialState?.coordinates || null,
+    locationName: initialState?.locationName || null,
     error: null,
     isLoading: false,
-    isMockLocation: false,
+    isMockLocation: initialState?.isMockLocation || false,
     isSearching: false,
     searchResults: [],
     gpsFailed: false,

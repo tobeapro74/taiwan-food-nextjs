@@ -13,7 +13,7 @@ import { RestaurantDetail } from "@/components/restaurant-detail";
 import { CategorySheet } from "@/components/category-sheet";
 import { AuthModal } from "@/components/auth-modal";
 import { ChangePasswordModal } from "@/components/change-password-modal";
-import { NearbyRestaurants } from "@/components/nearby-restaurants";
+import { NearbyRestaurants, NearbyState } from "@/components/nearby-restaurants";
 import { AddRestaurantModal } from "@/components/add-restaurant-modal";
 import { DeleteAccountModal } from "@/components/delete-account-modal";
 import { RestaurantHistoryList } from "@/components/restaurant-history";
@@ -61,6 +61,8 @@ export default function Home() {
 
   // AI 추천 상태 보존
   const [aiRecommendState, setAiRecommendState] = useState<RecommendState | null>(null);
+  // 주변맛집 상태 보존
+  const [nearbyState, setNearbyState] = useState<NearbyState | null>(null);
 
   // 시트 상태
   const [categorySheetOpen, setCategorySheetOpen] = useState(false);
@@ -757,6 +759,8 @@ export default function Home() {
             setCurrentView("home");
             setActiveTab("home");
           }}
+          savedState={nearbyState}
+          onStateChange={setNearbyState}
         />
         <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
         <CategorySheet
