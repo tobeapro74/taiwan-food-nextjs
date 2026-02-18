@@ -34,6 +34,7 @@ interface SavedScheduleItem {
   travelers: number;
   savedAt: string;
   accommodation?: string;
+  ageGenderBreakdown?: AgeGenderCount[];
 }
 
 interface ScheduleMainProps {
@@ -505,7 +506,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                   >
                     <h3 className="font-semibold text-foreground">{item.title}</h3>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {item.days}일 · {item.travelers}명
+                      {item.days}일 · {formatAgeGenderSummary(item.ageGenderBreakdown, item.travelers)}
                       {item.accommodation && ` · ${item.accommodation}`}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -945,4 +946,26 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
       />
     </div>
   );
+}
+
+// 연령대별 남녀 구성 요약 텍스트 생성
+// 예: "40대여(2)+60대여(1)" 또는 "20대남(1)+20대여(2)"
+function formatAgeGenderSummary(breakdown?: AgeGenderCount[], totalFallback?: number): string {
+  if (!breakdown || breakdown.length === 0) {
+    return `${totalFallback || 0}명`;
+  }
+
+  const AGE_LABELS: Record<string, string> = {
+    "10s": "10대", "20s": "20대", "30s": "30대",
+    "40s": "40대", "50s": "50대", "60s_plus": "60대+",
+  };
+
+  const parts: string[] = [];
+  for (const g of breakdown) {
+    const label = AGE_LABELS[g.ageGroup] || g.ageGroup;
+    if (g.male > 0) parts.push(`${label}남(${g.male})`);
+    if (g.female > 0) parts.push(`${label}여(${g.female})`);
+  }
+
+  return parts.length > 0 ? parts.join("+") : `${totalFallback || 0}명`;
 }
