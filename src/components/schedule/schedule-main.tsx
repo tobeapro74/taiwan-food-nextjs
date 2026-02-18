@@ -89,7 +89,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
 
   // 취향 및 목적
   const [preferences, setPreferences] = useState<PreferenceType[]>(["food", "cafe"]);
-  const [purpose, setPurpose] = useState<PurposeType>("food_tour");
+  const [purposes, setPurposes] = useState<PurposeType[]>(["food_tour"]);
 
   // 로딩 및 결과 상태
   const [isLoading, setIsLoading] = useState(false);
@@ -195,6 +195,13 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
     );
   };
 
+  // 여행 목적 토글
+  const togglePurpose = (p: PurposeType) => {
+    setPurposes((prev) =>
+      prev.includes(p) ? prev.filter((v) => v !== p) : [...prev, p]
+    );
+  };
+
   // 저장된 일정 목록 불러오기
   const loadSavedSchedules = async () => {
     if (!user) return;
@@ -292,6 +299,10 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
       setError("취향을 1개 이상 선택해주세요.");
       return;
     }
+    if (purposes.length === 0) {
+      setError("여행 목적을 1개 이상 선택해주세요.");
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -311,7 +322,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
         gender: computedGender,
         ageGroup: computedAgeGroup,
         preferences,
-        purpose,
+        purposes,
         ageGenderBreakdown: activeAgeGroups,
         arrivalTime,
         departureTime,
@@ -845,18 +856,18 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
           </div>
         </section>
 
-        {/* 여행 목적 */}
+        {/* 여행 목적 (복수 선택) */}
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <span>🎯</span> 여행 목적
+            <span>🎯</span> 여행 목적 <span className="text-xs text-muted-foreground">(복수 선택)</span>
           </h2>
           <div className="grid grid-cols-2 gap-2">
             {PURPOSE_OPTIONS.map((opt) => (
               <button
                 key={opt.id}
-                onClick={() => setPurpose(opt.id)}
+                onClick={() => togglePurpose(opt.id)}
                 className={`py-3 px-3 rounded-xl font-medium transition-all flex items-center gap-2 ${
-                  purpose === opt.id
+                  purposes.includes(opt.id)
                     ? "bg-primary text-white shadow-md"
                     : "bg-muted text-foreground hover:bg-muted/80"
                 }`}

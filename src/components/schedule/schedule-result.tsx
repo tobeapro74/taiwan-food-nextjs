@@ -268,7 +268,31 @@ function DayCard({
       {isExpanded && (
         <div className="p-4 space-y-3">
           {daySchedule.activities.map((activity, idx) => (
-            <ActivityItem key={activity.id || idx} activity={activity} onPhotoClick={onPhotoClick} />
+            <div key={activity.id || idx}>
+              {/* 이동 정보 */}
+              {activity.travelFromPrev && (
+                <div className="flex items-center gap-2 py-2 px-3 mb-2">
+                  <div className="flex flex-col items-center">
+                    <div className="w-0.5 h-3 bg-primary/30" />
+                    <div className="text-sm">
+                      {activity.travelFromPrev.method === "도보" ? "🚶" :
+                       activity.travelFromPrev.method === "MRT" || activity.travelFromPrev.method.includes("MRT") ? "🚇" :
+                       activity.travelFromPrev.method === "버스" ? "🚌" :
+                       activity.travelFromPrev.method === "택시" ? "🚕" : "🚶"}
+                    </div>
+                    <div className="w-0.5 h-3 bg-primary/30" />
+                  </div>
+                  <div className="flex-1 bg-primary/5 dark:bg-primary/10 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-xs font-medium text-primary">{activity.travelFromPrev.method}</span>
+                      <span className="text-xs text-muted-foreground">{activity.travelFromPrev.duration}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{activity.travelFromPrev.description}</p>
+                  </div>
+                </div>
+              )}
+              <ActivityItem activity={activity} onPhotoClick={onPhotoClick} />
+            </div>
           ))}
         </div>
       )}

@@ -5,6 +5,7 @@ import {
   ScheduleGenerateRequest,
   DaySchedule,
   PreferenceType,
+  PurposeType,
   AgeGenderCount,
   FlightTimeType,
   AccommodationInfo,
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
       days,
       travelers,
       preferences,
-      purpose,
+      purposes,
       ageGenderBreakdown,
       arrivalTime = "morning",
       departureTime = "afternoon",
@@ -204,13 +205,14 @@ export async function POST(request: NextRequest) {
       .join(", ");
 
     // 여행 목적 텍스트
-    const purposeText = {
+    const purposeMap: Record<PurposeType, string> = {
       healing: "힐링",
       sns: "SNS 감성",
       food_tour: "맛집 투어",
       shopping: "쇼핑",
       culture: "문화 체험",
-    }[purpose];
+    };
+    const purposeText = (purposes || []).map((p: PurposeType) => purposeMap[p]).join(", ");
 
     // 맛집/관광지 목록
     const restaurantList = topRestaurants
@@ -223,7 +225,8 @@ export async function POST(request: NextRequest) {
       .join("\n");
 
     // GPT 프롬프트 구성
-    const systemPrompt = `당신은 타이베이 여행 전문가입니다.
+    const systemPrompt = `당신은 친절하고 경험 많은 타이베이 현지 여행 가이드입니다.
+여행자에게 직접 말하듯 따뜻하고 자연스러운 대화체로 각 장소를 소개합니다.
 다양한 연령대가 함께하는 여행 그룹의 일정을 만들 때, 모든 연령층이 만족할 수 있도록 균형 잡힌 일정을 구성합니다.
 특히 고령 여행자가 있을 경우 이동 거리와 휴식 시간을 충분히 고려합니다.
 응답은 반드시 JSON 형식으로만 해주세요. 다른 텍스트는 포함하지 마세요.`;
@@ -284,7 +287,7 @@ ${placesList}
           "name": "딩타이펑",
           "location": "타이베이 신이",
           "rating": 4.7,
-          "reason": "모든 연령대가 좋아하는 샤오롱바오",
+          "reason": "비행기 타고 오시느라 고생하셨죠? 도착 후 첫 식사는 타이베이를 대표하는 딩타이펑의 샤오롱바오로 시작해보세요! 한국분들도 좋아하고, 남녀노소 누구나 만족하는 맛이에요.",
           "tip": "11시 전 방문 시 대기 없음",
           "forAgeGroups": ["모든 연령"]
         },
@@ -295,8 +298,13 @@ ${placesList}
           "type": "cafe",
           "name": "카페이름",
           "location": "위치",
-          "reason": "중장년층 휴식 + 젊은층 포토존",
-          "tip": "에어컨 완비, 편안한 좌석"
+          "reason": "맛있게 드셨으면 이제 잠시 쉬어갈 시간이에요! 다양한 포토존으로 유명한 이곳에서 커피 한잔하며 여행의 설렘을 느껴보세요. 아이들을 위한 주스나 핫초코도 있답니다.",
+          "tip": "에어컨 완비, 편안한 좌석",
+          "travelFromPrev": {
+            "method": "도보",
+            "duration": "약 10분",
+            "description": "딩타이펑에서 걸어서 10분 정도면 도착해요. 거리 구경하면서 산책삼아 가볍게 걸어보세요!"
+          }
         }
       ]
     }
@@ -317,7 +325,21 @@ ${placesList}
 5. 동선을 고려해 가까운 장소끼리 배치
 6. 각 일차별로 테마를 다르게 구성
 7. 60대 이상이 있으면 매 일정에 휴식 포인트 포함
-8. JSON만 출력. 다른 설명 없이 JSON 객체만 반환`;
+8. JSON만 출력. 다른 설명 없이 JSON 객체만 반환
+9. **reason 필드 작성 규칙 (매우 중요)**:
+   - 반드시 여행자에게 직접 말하는 **친근한 대화체**로 작성 (~세요, ~요, ~죠?, ~어떨까요?)
+   - 현재 여행 상황과 맥락을 고려 (예: 첫날 도착 피로, 식사 후 휴식, 저녁 야시장 분위기 등)
+   - 왜 이 장소를 이 시간에 추천하는지 구체적 이유 설명
+   - 동행자(아이, 부모님 등)를 배려하는 멘트 포함
+   - 이전 일정과 자연스럽게 연결 (예: "맛있게 드셨으면 이제...", "아침 산책 후...")
+   - 2~3문장으로 작성 (너무 짧지도, 너무 길지도 않게)
+10. **travelFromPrev 필드 (이동 정보)**:
+   - 각 일차의 **첫 번째 활동을 제외한** 모든 활동에 travelFromPrev를 포함
+   - method: "도보", "MRT", "버스", "택시", "MRT+도보" 등 실제 이동 수단
+   - duration: "약 5분", "약 15분", "약 30분" 등 실제 예상 소요 시간
+   - description: 친근한 대화체로 이동 안내 (예: "걸어서 10분이면 도착해요. 산책삼아 가볍게 걸어보세요!")
+   - 고령자 동행 시 택시 권장 등 배려 멘트 포함
+   - 타이베이 실제 지리를 반영한 정확한 이동 시간`;
 
     // OpenAI API 호출
     const openaiApiKey = process.env.OPENAI_API_KEY;

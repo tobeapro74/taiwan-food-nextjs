@@ -44,7 +44,7 @@ export interface ScheduleInput {
   gender: "male" | "female" | "mixed"; // 자동 계산
   ageGroup: "20s" | "30s" | "40s_plus"; // 대표 연령대 (자동 계산)
   preferences: PreferenceType[];
-  purpose: PurposeType;
+  purposes: PurposeType[];
   // 세분화된 연령대별 인원
   ageGenderBreakdown?: AgeGenderCount[];
   // 입국/출국 시간대
@@ -75,6 +75,11 @@ export interface ScheduleActivity {
   category?: string;
   isEdited?: boolean;     // 사용자가 수정했는지
   photos?: string[];      // 장소 사진 URL 배열 (최대 10장)
+  travelFromPrev?: {      // 이전 장소에서 이동 정보
+    method: string;       // "도보", "MRT", "버스", "택시" 등
+    duration: string;     // "약 10분", "약 15분" 등
+    description: string;  // 대화체 이동 안내 문구
+  };
 }
 
 // 일차별 일정
@@ -101,7 +106,7 @@ export interface ScheduleGenerateRequest {
   gender: "male" | "female" | "mixed";
   ageGroup: "20s" | "30s" | "40s_plus";
   preferences: PreferenceType[];
-  purpose: PurposeType;
+  purposes: PurposeType[];
   ageGenderBreakdown?: AgeGenderCount[];
   arrivalTime?: FlightTimeType;
   departureTime?: FlightTimeType;
