@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
-import { Share2, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Save, Check, Loader2, ArrowLeft, List, X, Camera } from "lucide-react";
+import { Share2, RotateCcw, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Save, Check, Loader2, ArrowLeft, List, X, Camera, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   TravelSchedule,
@@ -11,6 +11,7 @@ import {
   ScheduleActivity,
   TIME_SLOT_ICON,
 } from "@/lib/schedule-types";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface User {
   id: number;
@@ -29,6 +30,9 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
   const [expandedDays, setExpandedDays] = useState<number[]>([1]);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+
+  // 확인 다이얼로그 상태
+  const [confirmAction, setConfirmAction] = useState<"back" | "list" | null>(null);
 
   // 사진 모달 상태
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
@@ -107,9 +111,8 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
               variant="ghost"
               onClick={() => {
                 if (!isSaved) {
-                  if (!confirm("일정을 아직 저장하지 않았습니다.\n뒤로 가면 현재 일정이 사라집니다.\n이동하시겠습니까?")) {
-                    return;
-                  }
+                  setConfirmAction("back");
+                  return;
                 }
                 onBack();
               }}
@@ -133,9 +136,8 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
                 variant="ghost"
                 onClick={() => {
                   if (!isSaved) {
-                    if (!confirm("일정을 아직 저장하지 않았습니다.\n목록으로 이동하면 현재 일정이 사라집니다.\n이동하시겠습니까?")) {
-                      return;
-                    }
+                    setConfirmAction("list");
+                    return;
                   }
                   onGoToSavedList();
                 }}
@@ -240,6 +242,23 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
         onClose={() => setPhotoModalOpen(false)}
         photos={selectedPhotos}
         placeName={selectedPlaceName}
+      />
+
+      {/* 저장 전 이탈 확인 다이얼로그 */}
+      <ConfirmDialog
+        open={confirmAction !== null}
+        onOpenChange={(open) => { if (!open) setConfirmAction(null); }}
+        title="일정이 저장되지 않았습니다"
+        description={confirmAction === "back"
+          ? "뒤로 가면 현재 일정이 사라집니다.\n이동하시겠습니까?"
+          : "목록으로 이동하면 현재 일정이 사라집니다.\n이동하시겠습니까?"}
+        onConfirm={() => {
+          if (confirmAction === "back") {
+            onBack();
+          } else if (confirmAction === "list" && onGoToSavedList) {
+            onGoToSavedList();
+          }
+        }}
       />
     </div>
   );

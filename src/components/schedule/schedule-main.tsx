@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { ArrowLeft, Sparkles, Loader2, Minus, Plus, Plane, Users, Hotel, MapPin, LogIn, List, Trash2, Calendar, Search, CheckCircle } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import {
   ScheduleInput,
@@ -96,6 +97,10 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
   const [loadingStep, setLoadingStep] = useState("");
   const [schedule, setSchedule] = useState<TravelSchedule | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // 확인 다이얼로그 상태
+  const [confirmNavOpen, setConfirmNavOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // 총 인원 계산
   const totalTravelers = useMemo(() => {
@@ -271,7 +276,10 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
 
   // 저장된 일정 삭제
   const deleteSavedSchedule = async (id: string) => {
-    if (!confirm("이 일정을 삭제하시겠습니까?")) return;
+    setConfirmDeleteId(id);
+  };
+
+  const executeDelete = async (id: string) => {
     try {
       const response = await fetch(`/api/schedules/${id}`, { method: "DELETE" });
       const data = await response.json();
@@ -285,11 +293,10 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
 
   // 목록 보기로 전환
   const showSavedList = () => {
-    // 일정 작성 중(인원 입력됨)이면 확인 모달
+    // 일정 작성 중(인원 입력됨)이면 확인 다이얼로그
     if (viewMode === "create" && totalTravelers > 0) {
-      if (!confirm("일정 작성 중에 목록으로 이동하면\n작성 내용이 저장되지 않습니다.\n이동하시겠습니까?")) {
-        return;
-      }
+      setConfirmNavOpen(true);
+      return;
     }
     loadSavedSchedules();
     setViewMode("list");
@@ -518,6 +525,20 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
             ))
           )}
         </div>
+
+        {/* 일정 삭제 확인 다이얼로그 */}
+        <ConfirmDialog
+          open={confirmDeleteId !== null}
+          onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
+          title="일정 삭제"
+          description="이 일정을 삭제하시겠습니까?"
+          confirmLabel="삭제"
+          cancelLabel="취소"
+          variant="destructive"
+          onConfirm={() => {
+            if (confirmDeleteId) executeDelete(confirmDeleteId);
+          }}
+        />
       </div>
     );
   }
@@ -910,6 +931,18 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
           <p>모두가 만족할 최적의 일정을 만들어드려요</p>
         </div>
       </div>
+
+      {/* 목록 이동 확인 다이얼로그 */}
+      <ConfirmDialog
+        open={confirmNavOpen}
+        onOpenChange={setConfirmNavOpen}
+        title="작성 중인 일정이 있습니다"
+        description={"목록으로 이동하면 작성 내용이\n저장되지 않습니다.\n이동하시겠습니까?"}
+        onConfirm={() => {
+          loadSavedSchedules();
+          setViewMode("list");
+        }}
+      />
     </div>
   );
 }
