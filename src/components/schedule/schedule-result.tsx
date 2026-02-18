@@ -105,7 +105,14 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
-              onClick={onBack}
+              onClick={() => {
+                if (!isSaved) {
+                  if (!confirm("일정을 아직 저장하지 않았습니다.\n뒤로 가면 현재 일정이 사라집니다.\n이동하시겠습니까?")) {
+                    return;
+                  }
+                }
+                onBack();
+              }}
               className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-white/20 hover:bg-white/30 text-white"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -124,7 +131,14 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: Sche
             {onGoToSavedList && (
               <Button
                 variant="ghost"
-                onClick={onGoToSavedList}
+                onClick={() => {
+                  if (!isSaved) {
+                    if (!confirm("일정을 아직 저장하지 않았습니다.\n목록으로 이동하면 현재 일정이 사라집니다.\n이동하시겠습니까?")) {
+                      return;
+                    }
+                  }
+                  onGoToSavedList();
+                }}
                 className="h-11 w-11 min-w-[44px] min-h-[44px] rounded-full bg-white/20 hover:bg-white/30 text-white"
               >
                 <List className="h-5 w-5" />
