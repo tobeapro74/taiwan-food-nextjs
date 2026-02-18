@@ -10,8 +10,26 @@ import {
   DaySchedule,
   ScheduleActivity,
   TIME_SLOT_ICON,
+  AgeGenderCount,
 } from "@/lib/schedule-types";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+
+function formatAgeGenderSummary(breakdown?: AgeGenderCount[], totalFallback?: number): string {
+  if (!breakdown || breakdown.length === 0) {
+    return `${totalFallback || 0}명`;
+  }
+  const AGE_LABELS: Record<string, string> = {
+    "10s": "10대", "20s": "20대", "30s": "30대",
+    "40s": "40대", "50s": "50대", "60s_plus": "60대+",
+  };
+  const parts: string[] = [];
+  for (const g of breakdown) {
+    const label = AGE_LABELS[g.ageGroup] || g.ageGroup;
+    if (g.male > 0) parts.push(`${label}남(${g.male})`);
+    if (g.female > 0) parts.push(`${label}여(${g.female})`);
+  }
+  return parts.length > 0 ? parts.join("+") : `${totalFallback || 0}명`;
+}
 
 interface User {
   id: number;
@@ -126,7 +144,7 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
                 나의 {schedule.input.days}일 일정
               </h1>
               <p className="text-white/80 text-xs">
-                {schedule.input.travelers}명 · {schedule.input.ageGroup === "20s" ? "20대" : schedule.input.ageGroup === "30s" ? "30대" : "40대+"} · {new Date(schedule.createdAt).toLocaleDateString("ko-KR")}
+                {formatAgeGenderSummary(schedule.input.ageGenderBreakdown, schedule.input.travelers)} · {new Date(schedule.createdAt).toLocaleDateString("ko-KR")}
               </p>
             </div>
           </div>
