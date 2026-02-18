@@ -20,7 +20,7 @@ function formatAgeGenderSummary(breakdown?: AgeGenderCount[], totalFallback?: nu
   }
   const AGE_LABELS: Record<string, string> = {
     "10s": "10대", "20s": "20대", "30s": "30대",
-    "40s": "40대", "50s": "50대", "60s_plus": "60대+",
+    "40s": "40대", "50s": "50대", "60s_plus": "60대",
   };
   const parts: string[] = [];
   for (const g of breakdown) {
