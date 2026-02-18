@@ -224,11 +224,32 @@ export async function POST(request: NextRequest) {
       .map((p) => `- ${p.이름} (${p.위치}) - ${p.특징}`)
       .join("\n");
 
+    // 여행자 구성 분석 (프롬프트 동적 생성용)
+    const activeGroups = ageGenderBreakdown?.filter((g: AgeGenderCount) => g.male + g.female > 0) || [];
+    const hasMultipleAgeGroups = activeGroups.length > 1;
+    const hasSenior = activeGroups.some((g: AgeGenderCount) => ["50s", "60s_plus"].includes(g.ageGroup));
+    const hasMiddleAge = activeGroups.some((g: AgeGenderCount) => ["40s", "50s"].includes(g.ageGroup));
+    const hasYoung = activeGroups.some((g: AgeGenderCount) => ["10s", "20s"].includes(g.ageGroup));
+    const isSingleAgeGroup = activeGroups.length === 1;
+
+    // 성별 분석
+    const totalMale = activeGroups.reduce((sum: number, g: AgeGenderCount) => sum + g.male, 0);
+    const totalFemale = activeGroups.reduce((sum: number, g: AgeGenderCount) => sum + g.female, 0);
+    const genderDescription = totalMale === 0 ? "여성" : totalFemale === 0 ? "남성" : "혼성";
+
+    // 대표 연령대 텍스트
+    const mainAgeLabel = isSingleAgeGroup ? {
+      "10s": "10대", "20s": "20대", "30s": "30대",
+      "40s": "40대", "50s": "50대", "60s_plus": "60대 이상"
+    }[activeGroups[0].ageGroup] : null;
+
     // GPT 프롬프트 구성
     const systemPrompt = `당신은 친절하고 경험 많은 타이베이 현지 여행 가이드입니다.
 여행자에게 직접 말하듯 따뜻하고 자연스러운 대화체로 각 장소를 소개합니다.
-다양한 연령대가 함께하는 여행 그룹의 일정을 만들 때, 모든 연령층이 만족할 수 있도록 균형 잡힌 일정을 구성합니다.
-특히 고령 여행자가 있을 경우 이동 거리와 휴식 시간을 충분히 고려합니다.
+${hasMultipleAgeGroups
+  ? "다양한 연령대가 함께하는 여행 그룹의 일정을 만들 때, 모든 연령층이 만족할 수 있도록 균형 잡힌 일정을 구성합니다."
+  : `${mainAgeLabel} ${genderDescription} ${travelers}명의 여행에 딱 맞는 일정을 구성합니다. 이 연령대와 성별의 취향과 관심사에 집중하세요.`}
+${hasSenior ? "특히 고령 여행자가 있으므로 이동 거리와 휴식 시간을 충분히 고려합니다." : ""}
 응답은 반드시 JSON 형식으로만 해주세요. 다른 텍스트는 포함하지 마세요.`;
 
     const userPrompt = `타이베이 ${days}일 여행 일정을 만들어주세요.
@@ -255,16 +276,23 @@ ${accommodation ? `- 숙소: ${accommodation.name || "미정"}
 ## 연령대별 취향 분석
 ${agePreferencesText || "다양한 연령대 고려 필요"}
 
-## 중요: 다양한 연령대 배려 원칙
+${hasMultipleAgeGroups ? `## 중요: 다양한 연령대 배려 원칙
 1. **젊은 층 (10~30대)**: 야시장, 카페, SNS 핫플, 쇼핑 스팟 포함
 2. **중장년층 (40~50대)**: 유명 맛집, 편안한 이동(택시/버스), 품질 좋은 쇼핑
 3. **시니어 (60대+)**: 장시간 도보 피하기, 편안한 식당, 충분한 휴식 시간
-4. **공통**: 모두가 즐길 수 있는 관광 명소, 맛집 포함
+4. **공통**: 모두가 즐길 수 있는 관광 명소, 맛집 포함` : `## 중요: 여행자 맞춤 원칙
+- 이 그룹은 **${mainAgeLabel} ${genderDescription} ${travelers}명**입니다
+- 사용자가 선택한 취향(${prefText})과 목적(${purposeText})에 **철저히 집중**하세요
+- 선택하지 않은 카테고리(예: 문화를 선택 안 했으면 중정기념당 같은 문화 관광지)는 포함하지 마세요
+- ${hasYoung && !hasMiddleAge && !hasSenior ? "젊은 감성에 맞는 트렌디한 장소, SNS 핫플, 감성 카페, 야시장 위주로 구성하세요" : ""}
+- ${genderDescription === "여성" ? "여성 여행자 취향에 맞는 감성 카페, 디저트, 포토스팟, 쇼핑 위주로 구성하세요" : ""}
+- ${genderDescription === "남성" ? "남성 여행자 취향에 맞는 맛집, 야시장, 관광 명소 위주로 구성하세요" : ""}`}
 
-## 이동 관련 주의사항
-- 40대 이상이 있으면: 한 장소에서 30분 이상 걷는 일정 피하기
-- 50대 이상이 있으면: 가능하면 택시/관광버스 이용 권장
-- 60대 이상이 있으면: 오전/오후 각 1-2개 장소만, 중간에 카페 휴식 필수
+${hasSenior || hasMiddleAge ? `## 이동 관련 주의사항
+${hasMiddleAge ? "- 40대 이상이 있으므로: 한 장소에서 30분 이상 걷는 일정 피하기" : ""}
+${hasSenior ? "- 50대 이상이 있으므로: 가능하면 택시/관광버스 이용 권장" : ""}
+${activeGroups.some((g: AgeGenderCount) => g.ageGroup === "60s_plus") ? "- 60대 이상이 있으므로: 오전/오후 각 1-2개 장소만, 중간에 카페 휴식 필수" : ""}` : `## 이동 관련
+- 대중교통(MRT) + 도보 중심으로 자유롭게 구성`}
 
 ## 추천 가능한 맛집 목록 (평점 순)
 ${restaurantList}
@@ -287,9 +315,8 @@ ${placesList}
           "name": "딩타이펑",
           "location": "타이베이 신이",
           "rating": 4.7,
-          "reason": "비행기 타고 오시느라 고생하셨죠? 도착 후 첫 식사는 타이베이를 대표하는 딩타이펑의 샤오롱바오로 시작해보세요! 한국분들도 좋아하고, 남녀노소 누구나 만족하는 맛이에요.",
-          "tip": "11시 전 방문 시 대기 없음",
-          "forAgeGroups": ["모든 연령"]
+          "reason": "(여행자 구성에 맞는 대화체 추천 이유. 예: 20대 여성 3명이면 '타이베이 도착하셨군요! 첫 끼는 역시 딩타이펑 샤오롱바오죠~ 인스타에서 많이 보셨을 텐데, 직접 먹으면 감동이에요!', 10대+40대 가족이면 '비행기 타고 오시느라 고생하셨죠? 온 가족이 좋아하는 딩타이펑으로 시작해볼까요?')",
+          "tip": "11시 전 방문 시 대기 없음"
         },
         {
           "id": "d1_afternoon",
@@ -298,7 +325,7 @@ ${placesList}
           "type": "cafe",
           "name": "카페이름",
           "location": "위치",
-          "reason": "맛있게 드셨으면 이제 잠시 쉬어갈 시간이에요! 다양한 포토존으로 유명한 이곳에서 커피 한잔하며 여행의 설렘을 느껴보세요. 아이들을 위한 주스나 핫초코도 있답니다.",
+          "reason": "(여행자 구성에 맞는 대화체. 예: 20대 여성이면 '배 채웠으니 이제 감성 카페 타임이죠! 여기 포토존이 진짜 예뻐서 인스타 각이에요~', 중장년이면 '식사 후 잠시 쉬어가세요. 조용하고 편안한 분위기의 카페랍니다.')",
           "tip": "에어컨 완비, 편안한 좌석",
           "travelFromPrev": {
             "method": "도보",
@@ -310,9 +337,7 @@ ${placesList}
     }
   ],
   "tips": [
-    "40대 이상 동반 시 택시 이용을 권장합니다",
-    "야시장은 젊은 분들만 따로 다녀오셔도 좋아요",
-    "MRT 이지카드는 필수입니다"
+    "(여행자 구성에 맞는 실용 팁 3~5개. 연령/성별에 맞게 작성)"
   ],
   "budget": "1인당 약 NT$3,000~5,000/일 (숙박 제외)"
 }
@@ -324,13 +349,14 @@ ${placesList}
 4. **출국 시간대에 따라 마지막 날 일정 조정** (이른 출국이면 일정 축소)
 5. 동선을 고려해 가까운 장소끼리 배치
 6. 각 일차별로 테마를 다르게 구성
-7. 60대 이상이 있으면 매 일정에 휴식 포인트 포함
+${activeGroups.some((g: AgeGenderCount) => g.ageGroup === "60s_plus") ? "7. 60대 이상이 있으므로 매 일정에 휴식 포인트 포함" : "7. 여행자 연령/성별에 맞는 에너지 레벨로 일정 구성"}
 8. JSON만 출력. 다른 설명 없이 JSON 객체만 반환
 9. **reason 필드 작성 규칙 (매우 중요)**:
    - 반드시 여행자에게 직접 말하는 **친근한 대화체**로 작성 (~세요, ~요, ~죠?, ~어떨까요?)
    - 현재 여행 상황과 맥락을 고려 (예: 첫날 도착 피로, 식사 후 휴식, 저녁 야시장 분위기 등)
    - 왜 이 장소를 이 시간에 추천하는지 구체적 이유 설명
-   - 동행자(아이, 부모님 등)를 배려하는 멘트 포함
+   - **실제 여행자 구성(${mainAgeLabel || "다양한 연령대"} ${genderDescription} ${travelers}명)에 맞는 멘트 작성** (예: 20대 여성이면 "인스타 감성", 40대 혼성이면 "온 가족이" 등)
+   - ${hasMultipleAgeGroups ? "동행하는 다른 연령대를 배려하는 멘트 포함" : "이 연령대/성별이 실제로 좋아할 만한 포인트를 강조"}
    - 이전 일정과 자연스럽게 연결 (예: "맛있게 드셨으면 이제...", "아침 산책 후...")
    - 2~3문장으로 작성 (너무 짧지도, 너무 길지도 않게)
 10. **travelFromPrev 필드 (이동 정보)**:
@@ -338,7 +364,7 @@ ${placesList}
    - method: "도보", "MRT", "버스", "택시", "MRT+도보" 등 실제 이동 수단
    - duration: "약 5분", "약 15분", "약 30분" 등 실제 예상 소요 시간
    - description: 친근한 대화체로 이동 안내 (예: "걸어서 10분이면 도착해요. 산책삼아 가볍게 걸어보세요!")
-   - 고령자 동행 시 택시 권장 등 배려 멘트 포함
+   ${hasSenior || hasMiddleAge ? "- 고령자/중장년 동행 시 택시 권장 등 배려 멘트 포함" : "- 여행자 연령에 맞는 이동 안내 (젊은 그룹이면 도보 산책도 즐거운 경험으로 소개)"}
    - 타이베이 실제 지리를 반영한 정확한 이동 시간`;
 
     // OpenAI API 호출
