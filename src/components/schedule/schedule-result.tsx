@@ -24,12 +24,13 @@ interface ScheduleResultProps {
   onBack: () => void;
   onGoToSavedList?: () => void;
   user?: User | null;
+  initialSaved?: boolean;
 }
 
-export function ScheduleResult({ schedule, onBack, onGoToSavedList, user }: ScheduleResultProps) {
+export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initialSaved = false }: ScheduleResultProps) {
   const [expandedDays, setExpandedDays] = useState<number[]>([1]);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(initialSaved);
 
   // 확인 다이얼로그 상태
   const [confirmAction, setConfirmAction] = useState<"back" | "list" | null>(null);

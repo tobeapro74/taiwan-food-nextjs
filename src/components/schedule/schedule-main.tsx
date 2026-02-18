@@ -443,7 +443,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
       setSelectedScheduleId(null);
       setViewMode("list");
     };
-    return <ScheduleResult schedule={viewingSchedule} onBack={handleBackToList} onGoToSavedList={showSavedList} user={user} />;
+    return <ScheduleResult schedule={viewingSchedule} onBack={handleBackToList} onGoToSavedList={showSavedList} user={user} initialSaved />;
   }
 
   // 저장된 일정 목록 화면
