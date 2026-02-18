@@ -9,10 +9,15 @@ const config: CapacitorConfig = {
     allowsLinkPreview: true,
     scrollEnabled: true,
   },
+  android: {
+    backgroundColor: '#ffffff',
+    allowMixedContent: false,
+  },
   server: {
     // 배포된 웹앱 URL을 로드 (www 포함 - 리다이렉트 방지)
     url: 'https://www.taiwan-yummy-food.com',
     cleartext: false,
+    androidScheme: 'https',
   },
   plugins: {
     CapacitorHttp: {

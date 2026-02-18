@@ -464,6 +464,7 @@ export default function Home() {
 
     setCurrentView("list");
     setActiveTab("category");
+    window.scrollTo(0, 0);
   };
 
   // 야시장 선택
@@ -473,6 +474,7 @@ export default function Home() {
     setListItems(getRestaurantsByMarket(marketId));
     setCurrentView("list");
     setActiveTab("market");
+    window.scrollTo(0, 0);
   };
 
   // 도심투어 선택
@@ -482,6 +484,7 @@ export default function Home() {
     setListItems(getRestaurantsByTour(areaId));
     setCurrentView("list");
     setActiveTab("tour");
+    window.scrollTo(0, 0);
   };
 
   // 맛집 선택
