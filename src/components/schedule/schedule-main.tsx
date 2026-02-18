@@ -285,6 +285,12 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
 
   // 목록 보기로 전환
   const showSavedList = () => {
+    // 일정 작성 중(인원 입력됨)이면 확인 모달
+    if (viewMode === "create" && totalTravelers > 0) {
+      if (!confirm("일정 작성 중에 목록으로 이동하면\n작성 내용이 저장되지 않습니다.\n이동하시겠습니까?")) {
+        return;
+      }
+    }
     loadSavedSchedules();
     setViewMode("list");
   };
