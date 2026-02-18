@@ -197,8 +197,8 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
           </section>
         )}
 
-        {/* 저장 버튼 (로그인 시에만) */}
-        {user && (
+        {/* 저장 버튼 (새로 생성한 일정 + 로그인 시에만) */}
+        {user && !initialSaved && (
           <button
             onClick={handleSave}
             disabled={isSaving || isSaved}
