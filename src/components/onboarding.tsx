@@ -108,7 +108,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       {!isLastStep && (
         <button
           onClick={handleSkip}
-          className="absolute top-12 right-4 z-10 text-white/70 text-sm font-medium px-3 py-1 rounded-full hover:text-white hover:bg-white/10 transition-all"
+          className="absolute right-4 z-10 text-white/70 text-sm font-medium px-4 py-2 rounded-full hover:text-white hover:bg-white/10 transition-all"
+          style={{ top: "calc(env(safe-area-inset-top, 0px) + 0.75rem)" }}
         >
           건너뛰기
         </button>

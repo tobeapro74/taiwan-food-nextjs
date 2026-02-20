@@ -12,12 +12,14 @@ function KakaoCallbackContent() {
   useEffect(() => {
     const code = searchParams.get("code");
     const errorParam = searchParams.get("error");
+    // 네이티브 앱에서 보낸 요청은 state=native 파라미터가 있음
+    const isNative = searchParams.get("state") === "native";
 
     if (errorParam) {
       setError("카카오 로그인이 취소되었습니다.");
-      setTimeout(() => {
-        window.location.href = "taiwanfood://auth";
-      }, 500);
+      if (isNative) {
+        setTimeout(() => { window.location.href = "taiwanfood://auth"; }, 500);
+      }
       setTimeout(() => router.replace("/"), 2000);
       return;
     }
@@ -39,24 +41,22 @@ function KakaoCallbackContent() {
 
         if (!data.success) {
           setError(data.error || "카카오 로그인에 실패했습니다.");
-          setTimeout(() => {
-            window.location.href = "taiwanfood://auth";
-          }, 500);
+          if (isNative) {
+            setTimeout(() => { window.location.href = "taiwanfood://auth"; }, 500);
+          }
+          setTimeout(() => router.replace("/"), 2000);
           return;
         }
 
-        const token = data.data.token;
-
-        if (token) {
-          // 딥링크로 Capacitor 앱 복귀 (토큰 전달)
+        if (isNative) {
+          // 네이티브: 딥링크로 토큰 전달하여 앱으로 복귀
+          const token = data.data.token;
           const deepLink = `taiwanfood://auth?token=${encodeURIComponent(token)}`;
           window.location.href = deepLink;
-        }
-
-        // 딥링크가 실패하면 (웹 환경) 일반 리다이렉트
-        setTimeout(() => {
+        } else {
+          // 웹: API 응답에서 쿠키가 이미 설정됨 → 바로 메인으로 이동
           window.location.replace("/");
-        }, 1500);
+        }
       } catch {
         setError("네트워크 오류가 발생했습니다.");
         setTimeout(() => router.replace("/"), 2000);

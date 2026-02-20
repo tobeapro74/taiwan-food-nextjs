@@ -45,11 +45,12 @@ export async function kakaoLogin() {
   const restKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
   if (!restKey) return;
 
-  const oauthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${restKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code`;
+  const native = isCapacitorNative();
+  // 네이티브 앱에서는 state=native를 전달하여 콜백에서 딥링크 분기
+  const stateParam = native ? "&state=native" : "";
+  const oauthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${restKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code${stateParam}`;
 
-  if (isCapacitorNative()) {
-    // Capacitor 네이티브: Browser 플러그인으로 Chrome Custom Tab에서 OAuth 진행
-    // 콜백 페이지에서 딥링크(taiwanfood://auth)로 앱 WebView에 복귀
+  if (native) {
     const { Browser } = await import("@capacitor/browser");
     await Browser.open({ url: oauthUrl, presentationStyle: "popover" });
   } else {
