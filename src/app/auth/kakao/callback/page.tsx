@@ -17,9 +17,6 @@ function KakaoCallbackContent() {
 
     if (errorParam) {
       setError("카카오 로그인이 취소되었습니다.");
-      if (isNative) {
-        setTimeout(() => { window.location.href = "taiwanfood://auth"; }, 500);
-      }
       setTimeout(() => router.replace("/"), 2000);
       return;
     }
@@ -41,20 +38,21 @@ function KakaoCallbackContent() {
 
         if (!data.success) {
           setError(data.error || "카카오 로그인에 실패했습니다.");
-          if (isNative) {
-            setTimeout(() => { window.location.href = "taiwanfood://auth"; }, 500);
-          }
           setTimeout(() => router.replace("/"), 2000);
           return;
         }
 
-        if (isNative) {
-          // 네이티브: 딥링크로 토큰 전달하여 앱으로 복귀
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const inWebView = (window as any).Capacitor?.isNativePlatform?.() === true;
+
+        if (isNative && !inWebView) {
+          // 외부 브라우저(Chrome Custom Tab / SFSafariViewController)에서 열린 경우
+          // 딥링크로 토큰을 전달하여 앱 WebView로 복귀
           const token = data.data.token;
           const deepLink = `taiwanfood://auth?token=${encodeURIComponent(token)}`;
           window.location.href = deepLink;
         } else {
-          // 웹: API 응답에서 쿠키가 이미 설정됨 → 바로 메인으로 이동
+          // WebView 안이거나 웹 브라우저: 쿠키가 이미 설정됨 → 바로 메인으로 이동
           window.location.replace("/");
         }
       } catch {
