@@ -22,16 +22,20 @@ export async function POST(request: NextRequest) {
     }
 
     // 1단계: 인가 코드 → access_token 교환
+    const tokenParams: Record<string, string> = {
+      grant_type: "authorization_code",
+      client_id: KAKAO_REST_API_KEY,
+      redirect_uri: KAKAO_REDIRECT_URI,
+      code,
+    };
+    if (KAKAO_CLIENT_SECRET) {
+      tokenParams.client_secret = KAKAO_CLIENT_SECRET;
+    }
+
     const tokenRes = await fetch("https://kauth.kakao.com/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        grant_type: "authorization_code",
-        client_id: KAKAO_REST_API_KEY,
-        client_secret: KAKAO_CLIENT_SECRET,
-        redirect_uri: KAKAO_REDIRECT_URI,
-        code,
-      }),
+      body: new URLSearchParams(tokenParams),
     });
 
     const tokenData = await tokenRes.json();
