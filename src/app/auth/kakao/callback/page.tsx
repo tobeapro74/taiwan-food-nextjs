@@ -51,6 +51,10 @@ function KakaoCallbackContent() {
           const token = data.data.token;
           const deepLink = `taiwanfood://auth?token=${encodeURIComponent(token)}`;
           window.location.href = deepLink;
+          // 딥링크 실패 시 (구 빌드 등) fallback: 쿠키는 이미 설정됨
+          setTimeout(() => {
+            window.location.replace("/");
+          }, 1500);
         } else {
           // WebView 안이거나 웹 브라우저: 쿠키가 이미 설정됨 → 바로 메인으로 이동
           window.location.replace("/");
