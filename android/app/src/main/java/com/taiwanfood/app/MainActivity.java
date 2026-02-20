@@ -8,9 +8,12 @@ import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
 
+    private boolean deepLinkHandled = false;
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        setIntent(intent);
         handleDeepLink(intent);
     }
 
@@ -22,43 +25,35 @@ public class MainActivity extends BridgeActivity {
 
     private void handleDeepLink(Intent intent) {
         if (intent == null || intent.getData() == null) return;
+
         Uri uri = intent.getData();
-        String scheme = uri.getScheme();
-        String host = uri.getHost();
+        if (!"taiwanfood".equals(uri.getScheme()) || !"auth".equals(uri.getHost())) return;
 
-        // taiwanfood://auth?token=xxx
-        if ("taiwanfood".equals(scheme) && "auth".equals(host)) {
-            String token = uri.getQueryParameter("token");
+        // 동일 딥링크 중복 처리 방지
+        if (deepLinkHandled) return;
+        deepLinkHandled = true;
 
-            // 토큰이 있으면 WebView 쿠키에 설정
-            if (token != null && !token.isEmpty()) {
-                String serverUrl = "https://www.taiwan-yummy-food.com";
-                CookieManager cookieManager = CookieManager.getInstance();
-                cookieManager.setCookie(serverUrl, "auth_token=" + token + "; Path=/; Max-Age=604800; Secure; SameSite=Lax");
-                cookieManager.flush();
-            }
+        String token = uri.getQueryParameter("token");
 
-            // 즉시 로딩 오버레이를 표시하여 기존 화면(모달 등)을 가림
-            getBridge().getWebView().post(() -> {
-                getBridge().getWebView().evaluateJavascript(
-                    "(function(){" +
-                    "var o=document.createElement('div');" +
-                    "o.id='kakao-loading';" +
-                    "o.style.cssText='position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;';" +
-                    "o.innerHTML='<div style=\"text-align:center\"><div style=\"width:32px;height:32px;border:3px solid #e5e7eb;border-top-color:#f97316;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto\"></div><p style=\"margin-top:12px;color:#6b7280;font-size:14px\">로그인 처리 중...</p></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';" +
-                    "document.body.appendChild(o);" +
-                    "})()",
-                    null
-                );
-            });
-
-            // 쿠키 동기화 대기 후 메인 페이지로 이동
-            getBridge().getWebView().postDelayed(() -> {
-                getBridge().getWebView().evaluateJavascript(
-                    "window.location.replace('/');",
-                    null
-                );
-            }, 500);
+        // 토큰이 있으면 WebView 쿠키에 설정
+        if (token != null && !token.isEmpty()) {
+            String serverUrl = "https://www.taiwan-yummy-food.com";
+            CookieManager cookieManager = CookieManager.getInstance();
+            cookieManager.setCookie(serverUrl, "auth_token=" + token + "; Path=/; Max-Age=604800; Secure; SameSite=Lax");
+            cookieManager.flush();
         }
+
+        // 쿠키 동기화 대기 후 메인 페이지로 이동
+        getBridge().getWebView().postDelayed(() -> {
+            getBridge().getWebView().evaluateJavascript(
+                "window.location.replace('/');",
+                null
+            );
+            // 다음 딥링크를 받을 수 있도록 플래그 리셋
+            deepLinkHandled = false;
+        }, 300);
+
+        // Intent 데이터 초기화 (재처리 방지)
+        intent.setData(null);
     }
 }
