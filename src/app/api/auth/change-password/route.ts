@@ -64,6 +64,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 카카오 전용 사용자는 비밀번호 변경 불가
+    if (!member.password && member.kakao_id) {
+      return NextResponse.json(
+        { success: false, error: "카카오 로그인 사용자는 비밀번호를 변경할 수 없습니다." },
+        { status: 400 }
+      );
+    }
+
     // 현재 비밀번호 확인
     const isValidPassword = await bcrypt.compare(currentPassword, member.password);
     if (!isValidPassword) {

@@ -1118,48 +1118,77 @@ AI 기반 맛집 추천 (GPT-4o-mini)
 ## AI 여행 일정 API
 
 ### POST /api/schedule-generate
-AI 여행 일정 생성 (Claude API)
+AI 여행 일정 생성 (OpenAI GPT-4o, 동적 프롬프트)
 
 **Request Body**
 ```json
 {
   "days": 3,
-  "travelers": {
-    "adults": 2,
-    "children": 0,
-    "seniors": 0
-  },
-  "preferences": ["맛집", "야경", "쇼핑"],
-  "purpose": "맛집투어",
-  "arrival_time": "오전",
-  "departure_time": "저녁",
-  "accommodation_area": "시먼딩"
+  "travelers": 3,
+  "gender": "female",
+  "ageGroup": "40s_plus",
+  "preferences": ["food", "cafe", "shopping"],
+  "purposes": ["food_tour", "sns"],
+  "ageGenderBreakdown": [
+    { "ageGroup": "40s", "male": 0, "female": 2 },
+    { "ageGroup": "60s_plus", "male": 0, "female": 1 }
+  ],
+  "arrivalTime": "morning",
+  "departureTime": "afternoon",
+  "accommodation": {
+    "districtId": "ximending",
+    "district": "시먼딩",
+    "name": "시저파크 호텔"
+  }
 }
 ```
+
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| days | O | 여행 일수 (1~14) |
+| travelers | O | 총 인원 (자동 계산) |
+| gender | O | 대표 성별 (`male`/`female`/`mixed`) |
+| ageGroup | O | 대표 연령대 (`20s`/`30s`/`40s_plus`) |
+| preferences | O | 취향 배열 (`food`/`cafe`/`shopping`/`culture`/`nightview`/`nature`) |
+| purposes | O | 여행 목적 배열 (`food_tour`/`sns`/`healing`/`shopping`/`culture`) |
+| ageGenderBreakdown | X | 연령대별 남녀 인원 배열 |
+| arrivalTime | X | 입국 시간대 (`early_morning`/`morning`/`afternoon`/`evening`/`night`) |
+| departureTime | X | 출국 시간대 |
+| accommodation | X | 숙소 정보 (districtId, district, name) |
 
 **Response**
 ```json
 {
   "success": true,
   "data": {
+    "input": { "days": 3, "travelers": 3, "..." : "..." },
     "schedule": [
       {
         "day": 1,
-        "date": "도착일",
+        "theme": "도착 & 시먼딩 탐방",
         "activities": [
           {
-            "time": "14:00",
-            "name": "딩타이펑 본점",
-            "type": "맛집",
-            "address": "...",
-            "tip": "...",
-            "duration": "90분"
+            "id": "d1_lunch",
+            "timeSlot": "lunch",
+            "timeSlotKo": "점심",
+            "type": "restaurant",
+            "name": "딩타이펑",
+            "location": "타이베이 신이",
+            "rating": 4.7,
+            "reason": "타이베이 도착하셨군요! 첫 끼는 역시 딩타이펑...",
+            "tip": "11시 전 방문 시 대기 없음",
+            "photos": ["https://..."],
+            "travelFromPrev": {
+              "method": "MRT",
+              "duration": "약 15분",
+              "description": "MRT 타고 15분이면 도착해요."
+            }
           }
         ]
       }
     ],
     "tips": ["여행 팁 1", "여행 팁 2"],
-    "estimated_budget": "1인당 약 3만원/일"
+    "budget": "1인당 약 NT$3,000~5,000/일 (숙박 제외)"
   }
 }
 ```
@@ -1176,9 +1205,15 @@ AI 여행 일정 생성 (Claude API)
   "data": [
     {
       "_id": "...",
-      "title": "3박 4일 대만 여행",
-      "days": 4,
-      "created_at": "2025-02-01T00:00:00.000Z"
+      "title": "3일 타이베이 여행 (3명)",
+      "days": 3,
+      "travelers": 3,
+      "savedAt": "2025-02-15T10:30:00.000Z",
+      "accommodation": "시먼딩",
+      "ageGenderBreakdown": [
+        { "ageGroup": "40s", "male": 0, "female": 2 },
+        { "ageGroup": "60s_plus", "male": 0, "female": 1 }
+      ]
     }
   ]
 }
@@ -1192,18 +1227,24 @@ AI 여행 일정 생성 (Claude API)
 **Request Body**
 ```json
 {
-  "title": "3박 4일 대만 여행",
-  "schedule": { ... },
-  "days": 4,
-  "preferences": ["맛집", "야경"]
+  "schedule": { "input": { ... }, "schedule": [...], "tips": [...], "budget": "..." },
+  "title": "3일 타이베이 여행 (3명)"
 }
 ```
+
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| schedule | O | 전체 TravelSchedule 객체 |
+| title | X | 일정 제목 (미입력 시 자동 생성: `{days}일 타이베이 여행 ({travelers}명)`) |
 
 **Response**
 ```json
 {
   "success": true,
-  "data": { "insertedId": "..." }
+  "data": {
+    "_id": "...",
+    "title": "3일 타이베이 여행 (3명)"
+  }
 }
 ```
 

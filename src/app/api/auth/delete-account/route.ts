@@ -22,15 +22,7 @@ export async function POST(request: NextRequest) {
     const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
     const userId = decoded.userId;
 
-    // 비밀번호 확인
     const { password } = await request.json();
-
-    if (!password) {
-      return NextResponse.json(
-        { success: false, error: "비밀번호를 입력해주세요." },
-        { status: 400 }
-      );
-    }
 
     const db = await connectToDatabase();
     const membersCollection = db.collection("members");
@@ -45,14 +37,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 비밀번호 확인
-    const isPasswordValid = await bcrypt.compare(password, member.password);
+    // 카카오 전용 사용자가 아닌 경우 비밀번호 확인 필요
+    if (member.password) {
+      if (!password) {
+        return NextResponse.json(
+          { success: false, error: "비밀번호를 입력해주세요." },
+          { status: 400 }
+        );
+      }
 
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { success: false, error: "비밀번호가 일치하지 않습니다." },
-        { status: 400 }
-      );
+      const isPasswordValid = await bcrypt.compare(password, member.password);
+      if (!isPasswordValid) {
+        return NextResponse.json(
+          { success: false, error: "비밀번호가 일치하지 않습니다." },
+          { status: 400 }
+        );
+      }
     }
 
     // 회원 삭제

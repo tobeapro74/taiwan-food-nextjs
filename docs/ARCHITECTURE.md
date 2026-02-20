@@ -73,7 +73,7 @@ src/
 │   │   │   ├── route.ts              # POST: AI 맛집 추천 (GPT-4o-mini)
 │   │   │   └── seed/route.ts         # GET: 프리셋 캐시 사전 생성
 │   │   ├── schedule-generate/
-│   │   │   └── route.ts              # POST: AI 여행 일정 생성 (Claude API)
+│   │   │   └── route.ts              # POST: AI 여행 일정 생성 (OpenAI GPT-4o, 동적 프롬프트)
 │   │   ├── schedules/
 │   │   │   ├── route.ts              # GET/POST: 일정 목록/저장
 │   │   │   └── [id]/route.ts         # GET/DELETE: 일정 상세/삭제
@@ -102,6 +102,7 @@ src/
 │   │   ├── button.tsx
 │   │   ├── card.tsx
 │   │   ├── dialog.tsx
+│   │   ├── confirm-dialog.tsx     # 커스텀 확인 다이얼로그 (confirm() 대체)
 │   │   ├── sheet.tsx              # 바텀 시트 (모달)
 │   │   ├── scroll-area.tsx
 │   │   ├── empty-state.tsx        # 빈 화면 컴포넌트
@@ -124,7 +125,10 @@ src/
 │   ├── theme-provider.tsx         # 다크모드 테마 프로바이더
 │   ├── onboarding.tsx             # 온보딩 캐러셀 (스와이프 지원)
 │   ├── ai-recommend.tsx           # AI 맛집 추천 (GPT-4o-mini)
-│   └── peek-preview.tsx           # 카드 롱프레스 미리보기
+│   ├── peek-preview.tsx           # 카드 롱프레스 미리보기
+│   └── schedule/
+│       ├── schedule-main.tsx      # 일정 메인 (생성 폼, 저장 목록, 연령대별 요약)
+│       └── schedule-result.tsx    # 일정 결과 (일차별 카드, 이동정보, 사진)
 │
 ├── hooks/
 │   ├── useSwipeBack.ts            # iOS 스타일 스와이프 뒤로가기
@@ -147,6 +151,7 @@ src/
     │   ├── getRestaurantDistrict() # 맛집의 구(지역) 가져오기
     │   └── isValidDistrict()      # 유효한 구(지역)인지 확인
     ├── types.ts                   # TypeScript 타입 정의
+    ├── schedule-types.ts          # 일정 관련 타입 (ScheduleInput, AgeGenderCount, travelFromPrev 등)
     └── utils.ts                   # 유틸리티 (cn 함수)
 ```
 
@@ -569,6 +574,71 @@ ThemeProvider (layout.tsx)
 - GPT가 반환한 맛집명을 실제 `taiwan-food.ts` + DB 데이터와 매칭
 - 매칭 실패한 추천은 필터링
 - 시스템 프롬프트에 레스토랑 DB 요약 포함 (이름+카테고리+특징+평점)
+
+## AI 여행 일정 프롬프트 아키텍처
+
+### 동적 프롬프트 생성 (`schedule-generate/route.ts`)
+
+여행자 구성(연령대/성별)에 따라 시스템 프롬프트와 사용자 프롬프트가 동적으로 변경됩니다.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  여행자 구성 분석                          │
+│                                                         │
+│  ageGenderBreakdown → activeGroups 필터                  │
+│       │                                                  │
+│       ├── hasMultipleAgeGroups  (다양한 연령대?)           │
+│       ├── hasSenior           (50대+/60대+ 포함?)        │
+│       ├── hasMiddleAge        (40대/50대 포함?)           │
+│       ├── hasYoung            (10대/20대 포함?)           │
+│       ├── isSingleAgeGroup    (단일 연령대?)              │
+│       └── genderDescription   (여성/남성/혼성)            │
+└────────────────────────┬────────────────────────────────┘
+                         │
+              ┌──────────┴──────────┐
+              ▼                     ▼
+   ┌──────────────────┐  ┌──────────────────┐
+   │ 다양한 연령대     │  │ 단일 연령대       │
+   │ systemPrompt:    │  │ systemPrompt:    │
+   │  "모든 연령층이   │  │  "{연령대} {성별}  │
+   │   만족할 수 있는  │  │   {인원}명에 딱   │
+   │   균형 잡힌 일정" │  │   맞는 일정"      │
+   ├──────────────────┤  ├──────────────────┤
+   │ userPrompt 포함:  │  │ userPrompt 포함:  │
+   │  - 연령대 배려 원칙│  │  - 여행자 맞춤 원칙│
+   │  - 젊은층/중장년  │  │  - 취향/목적 집중  │
+   │    /시니어 각 고려│  │  - 성별 특화 멘트  │
+   └──────────────────┘  └──────────────────┘
+```
+
+### 프롬프트 주요 섹션
+
+| 섹션 | 조건 | 내용 |
+|------|------|------|
+| 시스템 프롬프트 | 항상 | 가이드 역할 + 대화체 스타일 지정 |
+| 여행자 정보 | 항상 | 인원, 연령대별 구성, 취향, 목적 |
+| 항공편 정보 | 항상 | 입출국 시간대 → 일정 축소/확대 |
+| 숙소 정보 | 선택 | 동선 최적화 (숙소 인근 아침/저녁 배치) |
+| 연령대별 취향 | 항상 | AGE_GROUP_PREFERENCES 참조 |
+| 연령대 배려 원칙 | 다양한 연령대 | 젊은층/중장년/시니어 각각 고려 |
+| 여행자 맞춤 원칙 | 단일 연령대 | 취향/목적 집중 + 성별 특화 |
+| 이동 주의사항 | 중장년/시니어 | 택시 권장, 도보 제한 등 |
+| reason 작성 규칙 | 항상 | 대화체, 여행자 구성 맞춤, 맥락 연결 |
+| travelFromPrev | 항상 | 이동수단, 소요시간, 대화체 안내 |
+
+### ConfirmDialog 패턴
+
+브라우저 `confirm()` 대신 커스텀 `ConfirmDialog` 컴포넌트를 사용합니다.
+
+```typescript
+// confirm-dialog.tsx (Radix UI Dialog 기반)
+// 한국어 버튼, 앱 디자인 통일, destructive 변형 지원
+
+// 적용 위치:
+// 1. schedule-main.tsx: 일정 작성 중 목록 이동 확인
+// 2. schedule-main.tsx: 저장된 일정 삭제 확인 (destructive)
+// 3. schedule-result.tsx: 저장 전 뒤로가기/목록 이동 확인
+```
 
 ---
 

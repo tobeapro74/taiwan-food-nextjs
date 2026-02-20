@@ -10,12 +10,14 @@ interface DeleteAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  isKakaoUser?: boolean;
 }
 
 export function DeleteAccountModal({
   isOpen,
   onClose,
   onSuccess,
+  isKakaoUser = false,
 }: DeleteAccountModalProps) {
   const [password, setPassword] = useState("");
   const [confirmText, setConfirmText] = useState("");
@@ -45,7 +47,7 @@ export function DeleteAccountModal({
       return;
     }
 
-    if (!password) {
+    if (!isKakaoUser && !password) {
       setError("비밀번호를 입력해주세요.");
       return;
     }
@@ -56,7 +58,7 @@ export function DeleteAccountModal({
       const res = await fetch("/api/auth/delete-account", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password: isKakaoUser ? null : password }),
       });
 
       const data = await res.json();
@@ -127,18 +129,20 @@ export function DeleteAccountModal({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              비밀번호 확인
-            </label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="비밀번호를 입력하세요"
-              className="w-full"
-            />
-          </div>
+          {!isKakaoUser && (
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                비밀번호 확인
+              </label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="비밀번호를 입력하세요"
+                className="w-full"
+              />
+            </div>
+          )}
 
           {error && (
             <p className="text-sm text-destructive text-center">{error}</p>

@@ -36,6 +36,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# android keystore
+*.jks
+*.keystore
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

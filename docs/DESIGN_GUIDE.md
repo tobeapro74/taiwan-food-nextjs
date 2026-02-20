@@ -543,11 +543,66 @@ toast.warning("주의가 필요합니다");
 | 유효성 | `~를 선택해주세요` | "카테고리를 선택해주세요" |
 
 - 위치: `top-center` (Toaster는 `layout.tsx`에 한 번 선언)
-- `confirm()` 다이얼로그: 삭제 확인용 3개소만 유지 (맛집/리뷰/일정 삭제)
+- **ConfirmDialog**: 브라우저 `confirm()`을 전면 교체한 커스텀 다이얼로그 (아래 별도 섹션 참고)
 
 ---
 
-## 17. 모바일 최적화
+## 17. 확인 다이얼로그 (ConfirmDialog)
+
+브라우저 기본 `confirm()`을 교체하는 커스텀 다이얼로그입니다. Capacitor 앱에서 `confirm()`은 OS 네이티브 다이얼로그(영문 CANCEL/OK)를 표시하므로, 앱 디자인과 한국어 버튼에 맞는 커스텀 컴포넌트를 사용합니다.
+
+### 컴포넌트 (`confirm-dialog.tsx`)
+
+```tsx
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+
+<ConfirmDialog
+  open={isOpen}
+  onOpenChange={setIsOpen}
+  title="일정이 저장되지 않았습니다"
+  description={"뒤로 가면 현재 일정이 사라집니다.\n이동하시겠습니까?"}
+  confirmLabel="예"        // 기본값
+  cancelLabel="아니오"     // 기본값
+  variant="default"        // "default" | "destructive"
+  onConfirm={handleConfirm}
+/>
+```
+
+### Props
+
+| Prop | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| `open` | `boolean` | - | 다이얼로그 열림 상태 |
+| `onOpenChange` | `(open: boolean) => void` | - | 열림 상태 변경 |
+| `title` | `string` | - | 제목 텍스트 |
+| `description` | `string` | - | 설명 (줄바꿈 `\n` 지원) |
+| `confirmLabel` | `string` | `"예"` | 확인 버튼 텍스트 |
+| `cancelLabel` | `string` | `"아니오"` | 취소 버튼 텍스트 |
+| `variant` | `"default" \| "destructive"` | `"default"` | 확인 버튼 스타일 |
+| `onConfirm` | `() => void` | - | 확인 시 실행 함수 |
+
+### 디자인
+
+- **최대 너비**: `max-w-[320px]`
+- **모서리**: `rounded-2xl` (다이얼로그), `rounded-xl` (버튼)
+- **닫기 버튼 없음**: `showCloseButton={false}`
+- **중앙 정렬**: 제목, 설명 모두 `text-center`
+- **줄바꿈 지원**: `whitespace-pre-line`
+- **버튼 레이아웃**: 가로 배치 (`flex-row`), 동일 너비 (`flex-1`)
+- **destructive 변형**: 확인 버튼이 빨간색
+
+### 적용 위치
+
+| 위치 | 용도 | variant |
+|------|------|---------|
+| `schedule-main.tsx` | 일정 작성 중 목록 이동 확인 | `default` |
+| `schedule-main.tsx` | 저장된 일정 삭제 확인 | `destructive` |
+| `schedule-result.tsx` | 저장 전 뒤로가기 확인 | `default` |
+| `schedule-result.tsx` | 저장 전 목록 이동 확인 | `default` |
+
+---
+
+## 18. 모바일 최적화
 
 ### 터치 최적화
 
@@ -580,7 +635,7 @@ export const viewport: Viewport = {
 
 ---
 
-## 18. Z-Index 계층
+## 19. Z-Index 계층
 
 | 레벨 | 값 | 용도 |
 |------|-----|------|
@@ -596,7 +651,7 @@ export const viewport: Viewport = {
 
 ---
 
-## 19. 아이콘
+## 20. 아이콘
 
 ### 라이브러리
 
@@ -614,7 +669,7 @@ const categoryIcons = {
 
 ---
 
-## 20. UI 모던화 히스토리
+## 21. UI 모던화 히스토리
 
 ### Phase 1 (기본 UI 개선)
 - Shimmer 로딩 (이미지 placeholder)

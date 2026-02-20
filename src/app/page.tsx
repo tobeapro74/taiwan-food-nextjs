@@ -48,6 +48,7 @@ interface UserInfo {
   name: string;
   profile_image?: string;
   is_admin: boolean;
+  has_password?: boolean;
 }
 
 export default function Home() {
@@ -1964,16 +1965,18 @@ export default function Home() {
                       <History className="w-4 h-4" />
                       등록 히스토리
                     </button>
-                    <button
-                      onClick={() => {
-                        setChangePasswordModalOpen(true);
-                        setUserMenuOpen(false);
-                      }}
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2"
-                    >
-                      <Key className="w-4 h-4" />
-                      비밀번호 변경
-                    </button>
+                    {user?.has_password !== false && (
+                      <button
+                        onClick={() => {
+                          setChangePasswordModalOpen(true);
+                          setUserMenuOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                      >
+                        <Key className="w-4 h-4" />
+                        비밀번호 변경
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         handleLogout();
@@ -2342,6 +2345,7 @@ export default function Home() {
         isOpen={deleteAccountModalOpen}
         onClose={() => setDeleteAccountModalOpen(false)}
         onSuccess={() => setUser(null)}
+        isKakaoUser={user?.has_password === false}
       />
 
       {/* 맛집 등록 모달 */}

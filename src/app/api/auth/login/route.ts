@@ -66,12 +66,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 비밀번호 확인
-    console.log("Login attempt:", { email, passwordLength: password?.length });
-    console.log("Member password field:", member.password ? "exists" : "missing");
+    // 카카오 전용 사용자인 경우
+    if (!member.password && member.kakao_id) {
+      return NextResponse.json(
+        { success: false, error: "카카오 로그인으로 가입된 계정입니다. 카카오 로그인을 이용해주세요." },
+        { status: 400 }
+      );
+    }
 
+    // 비밀번호 확인
     const isValidPassword = await bcrypt.compare(password, member.password);
-    console.log("Password valid:", isValidPassword);
 
     if (!isValidPassword) {
       return NextResponse.json(
