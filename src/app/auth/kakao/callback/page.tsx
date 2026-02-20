@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
@@ -8,8 +8,13 @@ function KakaoCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
+  const processed = useRef(false);
 
   useEffect(() => {
+    // React Strict Mode 등에서 useEffect 중복 실행 방지
+    if (processed.current) return;
+    processed.current = true;
+
     const code = searchParams.get("code");
     const errorParam = searchParams.get("error");
     // 네이티브 앱에서 보낸 요청은 state=native 파라미터가 있음
