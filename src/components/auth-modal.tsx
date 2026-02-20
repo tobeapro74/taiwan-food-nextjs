@@ -56,6 +56,8 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
   // 카카오 로그인 핸들러
   const handleKakaoLogin = async () => {
     setError("");
+    // 모달을 먼저 닫아서 딥링크 복귀 시 모달이 보이지 않도록 함
+    onClose();
     initKakaoSDK();
     await kakaoLogin();
   };

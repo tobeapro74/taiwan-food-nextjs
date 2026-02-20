@@ -38,13 +38,27 @@ public class MainActivity extends BridgeActivity {
                 cookieManager.flush();
             }
 
-            // WebView에서 메인 페이지로 이동
+            // 즉시 로딩 오버레이를 표시하여 기존 화면(모달 등)을 가림
             getBridge().getWebView().post(() -> {
+                getBridge().getWebView().evaluateJavascript(
+                    "(function(){" +
+                    "var o=document.createElement('div');" +
+                    "o.id='kakao-loading';" +
+                    "o.style.cssText='position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;';" +
+                    "o.innerHTML='<div style=\"text-align:center\"><div style=\"width:32px;height:32px;border:3px solid #e5e7eb;border-top-color:#f97316;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto\"></div><p style=\"margin-top:12px;color:#6b7280;font-size:14px\">로그인 처리 중...</p></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';" +
+                    "document.body.appendChild(o);" +
+                    "})()",
+                    null
+                );
+            });
+
+            // 쿠키 동기화 대기 후 메인 페이지로 이동
+            getBridge().getWebView().postDelayed(() -> {
                 getBridge().getWebView().evaluateJavascript(
                     "window.location.replace('/');",
                     null
                 );
-            });
+            }, 500);
         }
     }
 }
