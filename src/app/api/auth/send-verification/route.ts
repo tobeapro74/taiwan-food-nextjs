@@ -56,9 +56,9 @@ export async function POST(request: NextRequest) {
       createdAt: new Date(),
     });
 
-    // 이메일 발송 (Resend 무료 플랜은 onboarding@resend.dev만 사용 가능)
+    // 이메일 발송 (커스텀 도메인: yeouido-food.com)
     const { error } = await resend.emails.send({
-      from: "대만맛집 <onboarding@resend.dev>",
+      from: "대만맛집 <noreply@yeouido-food.com>",
       to: email,
       subject: "[대만맛집] 이메일 인증 코드",
       html: `
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("Email send error:", JSON.stringify(error, null, 2));
       return NextResponse.json(
-        { success: false, error: `이메일 발송 실패: ${error.message || JSON.stringify(error)}` },
+        { success: false, error: "이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요." },
         { status: 500 }
       );
     }
