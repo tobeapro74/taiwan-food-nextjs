@@ -132,6 +132,42 @@ export default function Home() {
     checkAuth();
   }, []);
 
+  // iOS 딥링크 리스너 (카카오 로그인 토큰 수신)
+  useEffect(() => {
+    const setupDeepLinkListener = async () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const isNative = (window as any).Capacitor?.isNativePlatform?.() === true;
+        if (!isNative) return;
+
+        const { App } = await import("@capacitor/app");
+        App.addListener("appUrlOpen", async (event) => {
+          const url = new URL(event.url);
+          if (url.protocol === "taiwanfood:" && url.hostname === "auth") {
+            const token = url.searchParams.get("token");
+            if (token) {
+              // 서버에 토큰을 보내 httpOnly 쿠키 설정
+              await fetch("/api/auth/set-token", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token }),
+              });
+              // 인증 상태 갱신
+              const res = await fetch("/api/auth/me");
+              const data = await res.json();
+              if (data.success) {
+                setUser(data.data);
+              }
+            }
+          }
+        });
+      } catch {
+        // Capacitor 미설치 환경 무시
+      }
+    };
+    setupDeepLinkListener();
+  }, []);
+
   // 검색창 외부 클릭 시 자동완성 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
