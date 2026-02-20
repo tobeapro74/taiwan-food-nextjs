@@ -38,8 +38,13 @@ export async function POST(request: NextRequest) {
 
     if (!tokenRes.ok || !tokenData.access_token) {
       console.error("카카오 토큰 교환 실패:", tokenData);
+      console.error("사용한 redirect_uri:", KAKAO_REDIRECT_URI);
+      console.error("사용한 client_id:", KAKAO_REST_API_KEY);
       return NextResponse.json(
-        { success: false, error: "카카오 인증에 실패했습니다." },
+        {
+          success: false,
+          error: `카카오 인증에 실패했습니다. (${tokenData.error_code || tokenData.error || "unknown"}: ${tokenData.error_description || ""})`,
+        },
         { status: 401 }
       );
     }
@@ -155,7 +160,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("카카오 로그인 오류:", error);
     return NextResponse.json(
-      { success: false, error: "카카오 로그인 처리 중 오류가 발생했습니다." },
+      { success: false, error: `카카오 로그인 처리 중 오류가 발생했습니다. (${error instanceof Error ? error.message : "unknown"})` },
       { status: 500 }
     );
   }
