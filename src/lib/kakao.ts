@@ -51,8 +51,13 @@ export async function kakaoLogin() {
   const oauthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${restKey}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code${stateParam}`;
 
   if (native) {
-    const { Browser } = await import("@capacitor/browser");
-    await Browser.open({ url: oauthUrl, presentationStyle: "popover" });
+    try {
+      const { Browser } = await import("@capacitor/browser");
+      await Browser.open({ url: oauthUrl, presentationStyle: "popover" });
+    } catch {
+      // Browser 플러그인이 네이티브에 없는 경우 (구 빌드) fallback
+      window.location.href = oauthUrl;
+    }
   } else {
     window.location.href = oauthUrl;
   }
