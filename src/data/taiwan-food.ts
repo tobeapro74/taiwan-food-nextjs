@@ -549,18 +549,45 @@ export interface SearchResult extends Restaurant {
   matchType: 'name' | 'location' | 'market' | 'feature';
 }
 
+// 음식 종류 키워드 → 카테고리 매핑
+const foodKeywordMap: Record<string, string[]> = {
+  '디저트': ['누가크래커', '누가', '크래커', '팥빙수', '빙수', '케이크', '마카롱', '와플', '타르트', '푸딩', '젤리', '초콜릿', '아이스크림', '파인애플케이크', '펑리수', '에그타르트', '망고빙수', '두화', '선초', '떡'],
+  '카페': ['라떼', '커피', '아메리카노', '카푸치노', '밀크티', '버블티', '타피오카', '스무디', '주스', '차', '홍차', '녹차', '우롱차', '매실차'],
+  '면류': ['우육면', '소고기면', '라멘', '국수', '비빔면', '쌀국수', '단자이면', '탄자이면'],
+  '밥류': ['루러우판', '지파이', '치킨', '도시락', '볶음밥', '덮밥', '카레'],
+  '탕류': ['훠궈', '마라', '마라탕', '샤브샤브', '우유훠궈', '갈비탕'],
+  '만두': ['샤오롱바오', '소룡포', '만두', '딤섬', '바오즈', '군만두', '물만두'],
+  '길거리음식': ['꼬치', '닭날개', '소시지', '계란빵', '호떡', '튀김', '선혈떡', '닭튀김', '옥수수'],
+  '까르푸': ['까르푸', '마트', '쇼핑'],
+};
+
+function getMatchedCategories(query: string): Set<string> {
+  const matched = new Set<string>();
+  const q = query.toLowerCase();
+  for (const [cat, keywords] of Object.entries(foodKeywordMap)) {
+    if (keywords.some(kw => kw.includes(q) || q.includes(kw))) {
+      matched.add(cat);
+    }
+  }
+  return matched;
+}
+
 export function searchRestaurants(query: string): SearchResult[] {
   const q = query.toLowerCase().trim();
   if (!q) return [];
 
   const results: SearchResult[] = [];
   const seenNames = new Set<string>();
+  const matchedCategories = getMatchedCategories(q);
 
   // 모든 카테고리에서 검색
   const cats = ["면류", "만두", "밥류", "탕류", "디저트", "길거리음식", "카페", "까르푸"] as const;
 
   for (const cat of cats) {
     const items = taiwanFoodMap[cat] || [];
+    // 키워드로 매칭된 카테고리면 해당 카테고리 전체 포함
+    const categoryMatched = matchedCategories.has(cat);
+
     for (const item of items) {
       if (seenNames.has(item.이름)) continue;
 
@@ -569,7 +596,7 @@ export function searchRestaurants(query: string): SearchResult[] {
       const feature = (item.특징 || '').toLowerCase();
       const market = (item.야시장 || '').toLowerCase();
 
-      if (name.includes(q) || location.includes(q) || feature.includes(q) || market.includes(q)) {
+      if (categoryMatched || name.includes(q) || location.includes(q) || feature.includes(q) || market.includes(q)) {
         seenNames.add(item.이름);
         results.push({
           ...item,
@@ -578,7 +605,8 @@ export function searchRestaurants(query: string): SearchResult[] {
           category: cat,
           matchType: name.includes(q) ? 'name' :
                      location.includes(q) ? 'location' :
-                     market.includes(q) ? 'market' : 'feature'
+                     market.includes(q) ? 'market' :
+                     feature.includes(q) ? 'feature' : 'feature'
         });
       }
     }

@@ -145,6 +145,7 @@ export async function GET(request: NextRequest) {
     const placeId = searchParams.get('place_id');
     const lat = searchParams.get('lat');
     const lng = searchParams.get('lng');
+    const searchQuery = searchParams.get('q');
 
     const db = await connectToDatabase();
     const collection = db.collection<CustomRestaurant>('custom_restaurants');
@@ -165,6 +166,57 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: nearbyRestaurants,
+      });
+    }
+
+    // 텍스트 검색 (이름, 주소, 특징, 카테고리 + 음식종류 키워드)
+    if (searchQuery) {
+      const regex = new RegExp(searchQuery, 'i');
+
+      // 음식 종류 키워드 → 카테고리 매핑
+      const foodKeywords: Record<string, string[]> = {
+        '디저트': ['누가크래커', '누가', '크래커', '팥빙수', '빙수', '케이크', '마카롱', '와플', '타르트', '푸딩', '젤리', '초콜릿', '아이스크림', '파인애플케이크', '펑리수', '에그타르트', '망고빙수', '두화', '선초', '떡'],
+        '카페': ['라떼', '커피', '아메리카노', '카푸치노', '밀크티', '버블티', '타피오카', '스무디', '주스', '차', '홍차', '녹차', '우롱차', '매실차'],
+        '면류': ['우육면', '소고기면', '라멘', '국수', '비빔면', '쌀국수', '단자이면', '탄자이면'],
+        '밥류': ['루러우판', '지파이', '치킨', '도시락', '볶음밥', '덮밥', '카레'],
+        '탕류': ['훠궈', '마라', '마라탕', '샤브샤브', '우유훠궈', '갈비탕'],
+        '만두': ['샤오롱바오', '소룡포', '만두', '딤섬', '바오즈', '군만두', '물만두'],
+        '길거리음식': ['꼬치', '닭날개', '소시지', '계란빵', '호떡', '튀김', '선혈떡', '쑹산', '스린', '닭튀김', '옥수수'],
+        '까르푸': ['까르푸', '마트', '쇼핑'],
+      };
+
+      // 검색어가 음식 키워드에 매칭되면 해당 카테고리도 검색 조건에 추가
+      const matchedCategories: string[] = [];
+      const q = searchQuery.toLowerCase();
+      for (const [cat, keywords] of Object.entries(foodKeywords)) {
+        if (keywords.some(kw => kw.includes(q) || q.includes(kw))) {
+          matchedCategories.push(cat);
+        }
+      }
+
+      const orConditions = [
+        { name: regex },
+        { address: regex },
+        { feature: regex },
+        { category: regex },
+      ];
+
+      // 매칭된 카테고리가 있으면 해당 카테고리 전체도 포함
+      if (matchedCategories.length > 0) {
+        orConditions.push({ category: { $in: matchedCategories } } as any);
+      }
+
+      const searchResults = await collection
+        .find({
+          deleted: { $ne: true },
+          $or: orConditions,
+        })
+        .sort({ created_at: -1 })
+        .toArray();
+
+      return NextResponse.json({
+        success: true,
+        data: searchResults,
       });
     }
 

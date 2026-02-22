@@ -368,16 +368,75 @@ export default function Home() {
     window.scrollTo(0, 0);
   }, [currentView]);
 
-  // 검색 처리
-  const handleSearch = useCallback((query: string) => {
-    if (query.trim().length >= 1) {
-      const results = searchRestaurants(query);
-      setListTitle(`"${query}" 검색 결과 (${results.length}건)`);
-      setListItems(results);
-      setCurrentView("list");
-      setActiveTab("home");
-      setShowSuggestions(false);
+  // 검색 처리 (정적 데이터 + DB 맛집 통합 검색)
+  const handleSearch = useCallback(async (query: string) => {
+    if (query.trim().length < 1) return;
+
+    setShowSuggestions(false);
+    setCurrentView("list");
+    setActiveTab("home");
+
+    // 정적 데이터 검색
+    const staticResults = searchRestaurants(query);
+
+    // DB 맛집 검색
+    try {
+      const res = await fetch(`/api/custom-restaurants?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+
+      if (data.success && data.data?.length > 0) {
+        const getPriceRangeText = (level?: number): string | undefined => {
+          if (level === undefined) return undefined;
+          const priceMap: Record<number, string> = {
+            1: "저렴 (NT$100 이하)",
+            2: "보통 (NT$100~300)",
+            3: "비쌈 (NT$300~600)",
+            4: "매우 비쌈 (NT$600 이상)",
+          };
+          return priceMap[level];
+        };
+
+        const dbResults: Restaurant[] = data.data.map((item: {
+          place_id: string;
+          name: string;
+          address: string;
+          category: string;
+          feature?: string;
+          google_rating?: number;
+          google_reviews_count?: number;
+          coordinates?: { lat: number; lng: number };
+          price_level?: number;
+          phone_number?: string;
+          registered_by?: number;
+        }) => ({
+          이름: item.name,
+          위치: item.address,
+          특징: item.feature || "",
+          평점: item.google_rating,
+          리뷰수: item.google_reviews_count,
+          coordinates: item.coordinates,
+          전화번호: item.phone_number,
+          가격대: getPriceRangeText(item.price_level),
+          place_id: item.place_id,
+          category: item.category,
+          registered_by: item.registered_by,
+        }));
+
+        // 중복 제거 (DB 맛집 우선)
+        const dbNames = new Set(dbResults.map(r => r.이름));
+        const filteredStatic = staticResults.filter(r => !dbNames.has(r.이름));
+        const merged = [...dbResults, ...filteredStatic];
+
+        setListTitle(`"${query}" 검색 결과 (${merged.length}건)`);
+        setListItems(merged);
+        return;
+      }
+    } catch (error) {
+      console.error("DB 맛집 검색 오류:", error);
     }
+
+    setListTitle(`"${query}" 검색 결과 (${staticResults.length}건)`);
+    setListItems(staticResults);
   }, []);
 
   // 자동완성에서 식당 선택
