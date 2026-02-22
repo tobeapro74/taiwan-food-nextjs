@@ -68,6 +68,34 @@
 
 ---
 
+### GET /api/auth/set-token
+딥링크에서 받은 JWT 토큰을 httpOnly 쿠키로 설정 후 메인 페이지로 리다이렉트.
+CapacitorHttp가 fetch를 프록시하여 POST의 Set-Cookie가 WebView에 안 붙는 문제를 우회하기 위해 GET 방식 사용.
+
+**Query Parameters**
+| 파라미터 | 설명 |
+|---------|------|
+| `token` | JWT 토큰 |
+
+**동작**: 토큰 검증 → `auth_token` 쿠키 설정 → `/`로 302 리다이렉트
+
+---
+
+### POST /api/auth/set-token
+기존 방식: JSON body로 토큰을 받아 쿠키 설정 (웹 브라우저용).
+
+**Request Body**
+```json
+{ "token": "jwt-token-here" }
+```
+
+**Response**
+```json
+{ "success": true }
+```
+
+---
+
 ### GET /api/auth/me
 현재 로그인 사용자 정보
 
@@ -305,12 +333,18 @@ Google Places 이미지 프록시
 ## 사용자 등록 맛집 API
 
 ### GET /api/custom-restaurants
-사용자 등록 맛집 목록 조회
+사용자 등록 맛집 목록 조회 / 텍스트 검색
 
 **Query Parameters**
 | 파라미터 | 필수 | 설명 |
 |---------|------|------|
 | category | X | 카테고리 필터 |
+| q | X | 텍스트 검색 (이름, 주소, 특징, 카테고리 + 음식 키워드 매칭) |
+| place_id | X | place_id로 조회 (중복 확인용) |
+| registeredBy | X | 등록자 ID 필터 |
+| lat, lng | X | 좌표 기반 검색 (100m 반경 내) |
+
+> `?q=누가크래커` → 이름/주소/특징에 "누가크래커" 포함 + 키워드 매핑으로 "디저트" 카테고리 전체 포함
 
 **Response**
 ```json

@@ -164,15 +164,34 @@ src/
 taiwan-food.ts ──► getRestaurantsByCategory() ──► 컴포넌트
                  ──► getRestaurantsByMarket()
                  ──► getRestaurantsByTour()
-                 ──► searchRestaurants()
+                 ──► searchRestaurants()          # 정적 데이터 검색 + 음식 키워드 매칭
                  ──► getPopularRestaurants()
-                 ──► generateStaticPlaceId()    # place_id 생성
+                 ──► generateStaticPlaceId()       # place_id 생성
+                 ──► foodKeywordMap                # 음식 종류 → 카테고리 매핑 사전
 ```
 
 - 맛집 데이터는 `taiwan-food.ts`에 정적으로 저장
 - 카테고리: 면류, 밥류, 탕류, 만두, 디저트, 길거리음식, 카페, 까르푸
 - 야시장: 스린, 닝샤, 라오허제, 통화, 펑자, 단수이
 - 도심투어: 시먼딩, 융캉제, 중산, 신이
+
+#### 1.1.1 통합 검색 아키텍처
+```
+사용자 검색어 입력 ("누가크래커")
+     │
+     ├─► 자동완성 (useMemo, 동기)
+     │   └─► searchRestaurants() → 정적 데이터만 검색 (즉시 응답)
+     │
+     └─► 전체 검색 (Enter / 검색 클릭, 비동기)
+         ├─► searchRestaurants() → 정적 데이터 검색
+         │   └─► foodKeywordMap: "누가크래커" → "디저트" 카테고리 전체 매칭
+         │
+         └─► fetch("/api/custom-restaurants?q=누가크래커") → DB 맛집 검색
+             └─► MongoDB regex 검색 (name, address, feature, category)
+                 + 음식 키워드 → 카테고리 매칭
+         │
+         └─► 두 결과 병합 (DB 우선, 중복 제거)
+```
 
 #### 1.2 정적 데이터 자동 마이그레이션
 ```

@@ -1899,3 +1899,146 @@ body {
 
 ### 교훈
 > **모바일 앱에서 Tailwind 기본 폰트 크기는 가독성이 부족할 수 있다.** `globals.css`에서 CSS `!important` 오버라이드를 사용하면 컴포넌트 파일 수정 없이 전체 폰트 크기를 일괄 조정할 수 있다.
+
+---
+
+## 19. iOS 카카오 로그인 후 팝업 모달이 안 닫히는 문제
+
+### 문제 상황
+iOS 앱에서 카카오 로그인 완료 후 SFSafariViewController(팝업 브라우저)가 계속 떠있고, 로그인 상태도 반영되지 않음.
+
+### 원인 분석 (4가지)
+
+#### 1. Browser.close() 미호출
+딥링크(`taiwanfood://auth?token=...`) 수신 시 `Browser.close()`를 호출하지 않아 SFSafariViewController가 자동으로 닫히지 않음.
+
+#### 2. CapacitorHttp가 fetch를 프록시하여 쿠키 미적용
+`capacitor.config.ts`에서 `CapacitorHttp: { enabled: true }`로 설정하면 `fetch()`가 Capacitor의 네이티브 HTTP 엔진으로 프록시됨. 이 때 서버의 `Set-Cookie` 헤더가 WebView 쿠키 저장소에 반영되지 않음.
+
+- `fetch("/api/auth/set-token", { method: "POST" })` → 서버가 Set-Cookie를 보내지만 WebView에는 적용 안 됨
+- 해결: `window.location.href = "/api/auth/set-token?token=..."` GET 방식으로 브라우저 네이티브 요청을 사용하면 Set-Cookie가 정상 동작
+
+#### 3. URL 파싱 실패 (new URL)
+`new URL("taiwanfood://auth?token=...")` → custom scheme은 브라우저마다 파싱 동작이 다름. `searchParams.get("token")`이 null을 반환할 수 있음.
+
+- 해결: regex 패턴 매칭 `event.url.match(/[?&]token=([^&]+)/)`
+
+#### 4. 콜백 페이지 fallback 타이머가 딥링크 방해
+딥링크 시도 후 1.5초 뒤 `window.location.replace("/")`가 실행되어 딥링크 성공 여부와 관계없이 외부 브라우저가 메인 페이지로 이동 → 딥링크 동작을 취소/방해.
+
+### 해결 (4개 파일 수정)
+
+#### 1. `src/app/api/auth/set-token/route.ts` — GET 핸들러 추가
+```typescript
+// GET: 딥링크에서 토큰을 받아 쿠키 설정 후 메인 페이지로 리다이렉트
+export async function GET(request: NextRequest) {
+  const token = request.nextUrl.searchParams.get("token");
+  if (!token) return NextResponse.redirect(new URL("/", request.url));
+
+  try {
+    jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const response = NextResponse.redirect(new URL("/", request.url));
+    response.cookies.set("auth_token", token, {
+      httpOnly: true, secure: process.env.NODE_ENV === "production",
+      sameSite: "lax", maxAge: 60 * 60 * 24 * 7, path: "/",
+    });
+    return response;
+  } catch {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+}
+```
+
+#### 2. `src/app/page.tsx` — 딥링크 리스너 전면 수정
+```typescript
+const listener = await CapApp.addListener("appUrlOpen", async (event) => {
+  if (event.url.startsWith("taiwanfood://auth")) {
+    try { await Browser.close(); } catch { /* ignore */ }  // SFSafariViewController 닫기
+
+    const tokenMatch = event.url.match(/[?&]token=([^&]+)/);  // regex로 파싱
+    const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : null;
+
+    if (token) {
+      window.location.href = `/api/auth/set-token?token=${encodeURIComponent(token)}`;  // GET 방식
+    }
+  }
+});
+cleanup = () => listener.remove();  // 리스너 cleanup
+```
+
+#### 3. `src/app/auth/kakao/callback/page.tsx` — fallback 타이머 제거
+```typescript
+// ❌ 제거: setTimeout(() => { window.location.replace("/"); }, 1500);
+window.location.href = deepLink;
+// 끝. fallback 없음.
+```
+
+#### 4. `ios/App/App/Info.plist` — CFBundleURLName 추가 (선택)
+```xml
+<key>CFBundleURLName</key>
+<string>com.taiwanfood.app</string>
+```
+
+### 관련 파일
+- `src/app/api/auth/set-token/route.ts` — GET 핸들러 추가
+- `src/app/page.tsx` — 딥링크 리스너 (Browser.close + GET 방식 + regex + cleanup)
+- `src/app/auth/kakao/callback/page.tsx` — fallback 타이머 제거
+- `ios/App/App/Info.plist` — CFBundleURLName 추가
+
+### 교훈
+> **CapacitorHttp 플러그인이 활성화된 환경에서는 fetch()의 Set-Cookie가 WebView에 반영되지 않는다.** 쿠키 설정이 필요한 경우 `window.location.href`로 GET 요청을 사용하여 브라우저 네이티브 요청으로 우회해야 한다. 또한 딥링크 수신 시 `Browser.close()`를 반드시 호출하여 SFSafariViewController를 닫아야 한다.
+
+---
+
+## 20. 검색에서 사용자 등록 맛집(DB)이 검색되지 않는 문제
+
+### 문제 상황
+검색바에서 '지아빈', '누가크래커' 등 사용자가 등록한 맛집을 검색하면 결과가 나오지 않음.
+
+### 원인 분석
+- `searchRestaurants()` 함수가 정적 데이터(`taiwanFoodMap`)만 검색
+- 사용자 등록 맛집은 MongoDB(`custom_restaurants` 컬렉션)에 저장되어 있어 검색 대상에서 제외됨
+- "누가크래커" 같은 음식 종류로 검색해도 이름이 정확히 일치하지 않으면 결과 없음
+
+### 해결
+
+#### 1. API에 텍스트 검색 파라미터 추가 (`custom-restaurants/route.ts`)
+```typescript
+const searchQuery = searchParams.get('q');
+
+if (searchQuery) {
+  const regex = new RegExp(searchQuery, 'i');
+  // 음식 키워드 → 카테고리 매핑으로 관련 카테고리 전체도 검색
+  const matchedCategories = getMatchedCategories(searchQuery);
+
+  const searchResults = await collection.find({
+    deleted: { $ne: true },
+    $or: [
+      { name: regex }, { address: regex }, { feature: regex }, { category: regex },
+      ...(matchedCategories.length > 0 ? [{ category: { $in: matchedCategories } }] : []),
+    ],
+  }).toArray();
+}
+```
+
+#### 2. handleSearch를 비동기로 변경 (`page.tsx`)
+정적 데이터 + DB 맛집 통합 검색 후 중복 제거하여 결과 표시.
+
+#### 3. 음식 종류 키워드 사전 추가 (`taiwan-food.ts`, `custom-restaurants/route.ts`)
+```typescript
+const foodKeywordMap = {
+  '디저트': ['누가크래커', '빙수', '케이크', '마카롱', ...],
+  '카페': ['라떼', '커피', '밀크티', '버블티', ...],
+  '면류': ['우육면', '라멘', '국수', ...],
+  '탕류': ['훠궈', '마라', '마라탕', ...],
+  // ...
+};
+```
+
+### 관련 파일
+- `src/app/api/custom-restaurants/route.ts` — `?q=` 텍스트 검색 파라미터
+- `src/app/page.tsx` — handleSearch 비동기 통합 검색
+- `src/data/taiwan-food.ts` — 음식 키워드 사전 + searchRestaurants 카테고리 매칭
+
+### 교훈
+> **정적 데이터와 DB 데이터가 공존하는 앱에서는 검색 기능이 양쪽을 모두 커버해야 한다.** 또한 음식 종류별 키워드 사전을 추가하면 사용자가 직관적으로 검색할 수 있다 (예: "빙수" → 디저트 전체).
