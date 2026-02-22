@@ -132,40 +132,45 @@ export default function Home() {
     checkAuth();
   }, []);
 
-  // iOS 딥링크 리스너 (카카오 로그인 토큰 수신)
+  // 네이티브 앱: 카카오 로그인 딥링크(taiwanfood://auth?token=...) 수신 처리
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const isNative = (window as any).Capacitor?.isNativePlatform?.() === true;
+    if (!isNative) return;
+
+    let cleanup: (() => void) | undefined;
+
     const setupDeepLinkListener = async () => {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const isNative = (window as any).Capacitor?.isNativePlatform?.() === true;
-        if (!isNative) return;
+        const { App: CapApp } = await import("@capacitor/app");
+        const { Browser } = await import("@capacitor/browser");
 
-        const { App } = await import("@capacitor/app");
-        App.addListener("appUrlOpen", async (event) => {
-          const url = new URL(event.url);
-          if (url.protocol === "taiwanfood:" && url.hostname === "auth") {
-            const token = url.searchParams.get("token");
+        const listener = await CapApp.addListener("appUrlOpen", async (event) => {
+          // taiwanfood://auth?token=... 형식의 딥링크 처리
+          if (event.url.startsWith("taiwanfood://auth")) {
+            // SFSafariViewController 먼저 닫기
+            try { await Browser.close(); } catch { /* ignore */ }
+
+            // URL에서 토큰 추출 (custom scheme은 new URL() 파싱 실패 가능 → regex 사용)
+            const tokenMatch = event.url.match(/[?&]token=([^&]+)/);
+            const token = tokenMatch ? decodeURIComponent(tokenMatch[1]) : null;
+
             if (token) {
-              // 서버에 토큰을 보내 httpOnly 쿠키 설정
-              await fetch("/api/auth/set-token", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token }),
-              });
-              // 인증 상태 갱신
-              const res = await fetch("/api/auth/me");
-              const data = await res.json();
-              if (data.success) {
-                setUser(data.data);
-              }
+              // GET 요청으로 쿠키 설정 후 메인 페이지로 리다이렉트
+              // (CapacitorHttp가 fetch를 프록시하여 쿠키가 안 붙는 문제 우회)
+              window.location.href = `/api/auth/set-token?token=${encodeURIComponent(token)}`;
             }
           }
         });
+
+        cleanup = () => listener.remove();
       } catch {
-        // Capacitor 미설치 환경 무시
+        // Capacitor App 플러그인 없는 경우 무시
       }
     };
+
     setupDeepLinkListener();
+    return () => cleanup?.();
   }, []);
 
   // 검색창 외부 클릭 시 자동완성 닫기

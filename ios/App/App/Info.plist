@@ -50,6 +50,8 @@
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.taiwanfood.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>taiwanfood</string>
