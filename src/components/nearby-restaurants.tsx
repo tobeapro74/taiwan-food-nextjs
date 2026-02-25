@@ -41,6 +41,29 @@ interface NearbyRestaurantsProps {
 /**
  * 맛집알리미 - 주변 맛집 찾기 컴포넌트
  */
+// 에러 메시지 다국어 변환
+function translateError(error: string, t: (key: string, params?: Record<string, string | number>) => string): string {
+  if (error === "__location_not_supported__") return t("nearby.location_not_supported");
+  if (error === "__no_search_results__") return t("nearby.no_address_results");
+  if (error === "__search_error__") return t("nearby.address_search_error");
+  if (error.startsWith("__unknown_location__:")) return t("nearby.unknown_location", { key: error.split(":")[1] });
+  return error;
+}
+
+// 현재 위치 이름을 다국어로 표시
+function getTranslatedLocationName(locationName: string | null, t: (key: string) => string): string | null {
+  if (!locationName) return null;
+  // GPS 현재 위치
+  if (locationName === "__current_location__") return t("nearby.current_location");
+  // mock 위치 매칭: Korean name → nameKey → t()
+  for (const value of Object.values(MOCK_LOCATIONS)) {
+    if (value.name === locationName) {
+      return t(value.nameKey);
+    }
+  }
+  return locationName;
+}
+
 export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onStateChange }: NearbyRestaurantsProps) {
   const { t } = useLanguage();
   const {
@@ -74,7 +97,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
   const [customRestaurants, setCustomRestaurants] = useState<Restaurant[]>([]);
   const [isLoadingCustom, setIsLoadingCustom] = useState(false);
 
-  const mockLocations = getMockLocationList();
+  const mockLocations = getMockLocationList(t);
 
   // 상태 변경 시 부모에 전달
   useEffect(() => {
@@ -213,7 +236,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
             <span className="font-medium">
-              {locationName || t("nearby.select_location")}
+              {getTranslatedLocationName(locationName, t) || t("nearby.select_location")}
             </span>
             {isMockLocation && (
               <span className="text-xs bg-accent/10 dark:bg-accent/20 text-accent-foreground px-2 py-0.5 rounded">
@@ -399,22 +422,27 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
               {t("nearby.test_locations")}
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {mockLocations.map((location) => (
-                <button
-                  key={location.key}
-                  onClick={() => {
-                    setMockLocation(location.key);
-                    setShowLocationPicker(false);
-                  }}
-                  className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-                    locationName === location.name
-                      ? "bg-primary/10 dark:bg-primary/20 border-primary text-primary"
-                      : "bg-card border-border hover:bg-muted"
-                  }`}
-                >
-                  {location.name}
-                </button>
-              ))}
+              {mockLocations.map((location) => {
+                const mockLoc = MOCK_LOCATIONS[location.key];
+                const isActive = mockLoc && coordinates &&
+                  coordinates.lat === mockLoc.lat && coordinates.lng === mockLoc.lng;
+                return (
+                  <button
+                    key={location.key}
+                    onClick={() => {
+                      setMockLocation(location.key);
+                      setShowLocationPicker(false);
+                    }}
+                    className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
+                      isActive
+                        ? "bg-primary/10 dark:bg-primary/20 border-primary text-primary"
+                        : "bg-card border-border hover:bg-muted"
+                    }`}
+                  >
+                    {location.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -422,7 +450,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
         {/* 에러 메시지 */}
         {error && (
           <div className="mt-2 text-sm text-destructive bg-destructive/10 dark:bg-destructive/20 p-2 rounded">
-            {error}
+            {translateError(error, t)}
           </div>
         )}
 

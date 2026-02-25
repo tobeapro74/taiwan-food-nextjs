@@ -187,6 +187,7 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
             isExpanded={expandedDays.includes(daySchedule.day)}
             onToggle={() => toggleDay(daySchedule.day)}
             onPhotoClick={handlePhotoClick}
+            t={t}
           />
         ))}
 
@@ -287,16 +288,27 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
 }
 
 // 일차별 카드 컴포넌트
+// timeSlot → i18n 키 매핑
+const TIMESLOT_I18N_KEY: Record<string, string> = {
+  morning: "schedule.timeslot_morning",
+  lunch: "schedule.timeslot_lunch",
+  afternoon: "schedule.timeslot_afternoon",
+  dinner: "schedule.timeslot_dinner",
+  night: "schedule.timeslot_night",
+};
+
 function DayCard({
   daySchedule,
   isExpanded,
   onToggle,
   onPhotoClick,
+  t,
 }: {
   daySchedule: DaySchedule;
   isExpanded: boolean;
   onToggle: () => void;
   onPhotoClick?: (photos: string[], name: string) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   return (
     <section className="bg-white dark:bg-card rounded-2xl shadow-md overflow-hidden">
@@ -309,7 +321,7 @@ function DayCard({
             {daySchedule.day}
           </div>
           <div className="text-left">
-            <div className="font-semibold text-foreground">Day {daySchedule.day}</div>
+            <div className="font-semibold text-foreground">{t("schedule.day_label", { day: daySchedule.day })}</div>
             <div className="text-xs text-muted-foreground">{daySchedule.theme}</div>
           </div>
         </div>
@@ -346,7 +358,7 @@ function DayCard({
                   </div>
                 </div>
               )}
-              <ActivityItem activity={activity} onPhotoClick={onPhotoClick} />
+              <ActivityItem activity={activity} onPhotoClick={onPhotoClick} t={t} />
             </div>
           ))}
         </div>
@@ -356,7 +368,7 @@ function DayCard({
 }
 
 // 개별 활동 컴포넌트
-function ActivityItem({ activity, onPhotoClick }: { activity: ScheduleActivity; onPhotoClick?: (photos: string[], name: string) => void }) {
+function ActivityItem({ activity, onPhotoClick, t }: { activity: ScheduleActivity; onPhotoClick?: (photos: string[], name: string) => void; t: (key: string, params?: Record<string, string | number>) => string }) {
   const icon = TIME_SLOT_ICON[activity.timeSlot] || "📍";
   const hasPhotos = activity.photos && activity.photos.length > 0;
 
@@ -382,7 +394,7 @@ function ActivityItem({ activity, onPhotoClick }: { activity: ScheduleActivity; 
         <div className="text-2xl">{icon}</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs text-muted-foreground">{activity.timeSlotKo}</span>
+            <span className="text-xs text-muted-foreground">{t(TIMESLOT_I18N_KEY[activity.timeSlot] || "schedule.timeslot_morning")}</span>
             {activity.rating && (
               <span className="text-xs text-accent flex items-center gap-0.5">
                 ⭐ {activity.rating}
@@ -618,9 +630,9 @@ function formatScheduleAsText(schedule: TravelSchedule, t: (key: string, params?
   text += `👥 ${t("schedule.people", { count: schedule.input.travelers })}\n\n`;
 
   for (const day of schedule.schedule) {
-    text += `📍 Day ${day.day} - ${day.theme}\n`;
+    text += `📍 ${t("schedule.day_label", { day: day.day })} - ${day.theme}\n`;
     for (const activity of day.activities) {
-      text += `• ${activity.timeSlotKo}: ${activity.name}`;
+      text += `• ${t(TIMESLOT_I18N_KEY[activity.timeSlot] || "schedule.timeslot_morning")}: ${activity.name}`;
       if (activity.rating) text += ` ⭐${activity.rating}`;
       text += `\n`;
       if (activity.reason) text += `  → ${activity.reason}\n`;

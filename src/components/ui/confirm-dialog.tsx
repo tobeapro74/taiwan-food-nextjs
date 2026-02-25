@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/language-provider";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -26,11 +27,14 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "예",
-  cancelLabel = "아니오",
+  confirmLabel,
+  cancelLabel,
   onConfirm,
   variant = "default",
 }: ConfirmDialogProps) {
+  const { t } = useLanguage();
+  const resolvedConfirmLabel = confirmLabel || t("common.yes");
+  const resolvedCancelLabel = cancelLabel || t("common.no");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton={false} className="max-w-[320px] rounded-2xl p-6">
@@ -46,7 +50,7 @@ export function ConfirmDialog({
             onClick={() => onOpenChange(false)}
             className="flex-1 rounded-xl"
           >
-            {cancelLabel}
+            {resolvedCancelLabel}
           </Button>
           <Button
             variant={variant === "destructive" ? "destructive" : "default"}
@@ -56,7 +60,7 @@ export function ConfirmDialog({
             }}
             className="flex-1 rounded-xl"
           >
-            {confirmLabel}
+            {resolvedConfirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

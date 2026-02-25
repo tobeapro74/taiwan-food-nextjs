@@ -113,16 +113,16 @@ export function filterByRadius<T extends { coordinates?: Coordinates }>(
 /**
  * Mock 위치 상수 (테스트용)
  */
-export const MOCK_LOCATIONS: Record<string, Coordinates & { name: string }> = {
-  타이베이역: { lat: 25.0478, lng: 121.5170, name: "타이베이역" },
-  시먼딩: { lat: 25.0421, lng: 121.5074, name: "시먼딩 (행복당 근처)" },
-  융캉제: { lat: 25.0330, lng: 121.5290, name: "융캉제" },
-  중정기념당: { lat: 25.0350, lng: 121.5200, name: "중정기념당" },
-  스린야시장: { lat: 25.0875, lng: 121.5245, name: "스린 야시장" },
-  닝샤야시장: { lat: 25.0558, lng: 121.5155, name: "닝샤 야시장" },
-  중산: { lat: 25.0527, lng: 121.5207, name: "중산역" },
-  라오허제: { lat: 25.0505, lng: 121.5774, name: "라오허제 야시장" },
-  난지창: { lat: 25.0325, lng: 121.5085, name: "난지창 야시장" },
+export const MOCK_LOCATIONS: Record<string, Coordinates & { name: string; nameKey: string }> = {
+  타이베이역: { lat: 25.0478, lng: 121.5170, name: "타이베이역", nameKey: "schedule.loc_taipei_station" },
+  시먼딩: { lat: 25.0421, lng: 121.5074, name: "시먼딩 (행복당 근처)", nameKey: "schedule.loc_ximending" },
+  융캉제: { lat: 25.0330, lng: 121.5290, name: "융캉제", nameKey: "schedule.loc_yongkang" },
+  중정기념당: { lat: 25.0350, lng: 121.5200, name: "중정기념당", nameKey: "schedule.loc_cks_memorial" },
+  스린야시장: { lat: 25.0875, lng: 121.5245, name: "스린 야시장", nameKey: "schedule.loc_shilin_market" },
+  닝샤야시장: { lat: 25.0558, lng: 121.5155, name: "닝샤 야시장", nameKey: "schedule.loc_ningxia_market" },
+  중산: { lat: 25.0527, lng: 121.5207, name: "중산역", nameKey: "schedule.loc_zhongshan" },
+  라오허제: { lat: 25.0505, lng: 121.5774, name: "라오허제 야시장", nameKey: "schedule.loc_raohe_market" },
+  난지창: { lat: 25.0325, lng: 121.5085, name: "난지창 야시장", nameKey: "schedule.loc_nanjichang" },
 };
 
 /**

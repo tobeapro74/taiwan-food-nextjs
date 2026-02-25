@@ -54,7 +54,7 @@ export function useUserLocation(initialState?: {
     if (!navigator.geolocation) {
       setState((prev) => ({
         ...prev,
-        error: "이 브라우저에서는 위치 서비스를 지원하지 않습니다.",
+        error: "__location_not_supported__",
         isLoading: false,
       }));
       return;
@@ -97,7 +97,7 @@ export function useUserLocation(initialState?: {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           },
-          locationName: "현재 위치",
+          locationName: "__current_location__",
           error: null,
           isLoading: false,
           isMockLocation: false,
@@ -139,7 +139,7 @@ export function useUserLocation(initialState?: {
     } else {
       setState((prev) => ({
         ...prev,
-        error: `알 수 없는 위치: ${locationKey}`,
+        error: `__unknown_location__:${locationKey}`,
       }));
     }
   }, []);
@@ -177,14 +177,14 @@ export function useUserLocation(initialState?: {
         ...prev,
         isSearching: false,
         searchResults: results,
-        error: results.length === 0 ? "검색 결과가 없습니다. 다른 주소를 입력해보세요." : null,
+        error: results.length === 0 ? "__no_search_results__" : null,
       }));
     } catch {
       setState((prev) => ({
         ...prev,
         isSearching: false,
         searchResults: [],
-        error: "주소 검색 중 오류가 발생했습니다.",
+        error: "__search_error__",
       }));
     }
   }, []);
@@ -242,10 +242,11 @@ export function useUserLocation(initialState?: {
 
 /**
  * 사용 가능한 Mock 위치 목록
+ * @param t 다국어 번역 함수 (선택). 전달하면 nameKey로 번역된 이름 반환
  */
-export function getMockLocationList(): { key: string; name: string }[] {
+export function getMockLocationList(t?: (key: string) => string): { key: string; name: string }[] {
   return Object.entries(MOCK_LOCATIONS).map(([key, value]) => ({
     key,
-    name: value.name,
+    name: t ? t(value.nameKey) : value.name,
   }));
 }
