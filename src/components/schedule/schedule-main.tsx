@@ -380,6 +380,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
         schedule: data.data.schedule,
         tips: data.data.tips,
         budget: data.data.budget,
+        generatedLanguage: language,
       };
 
       setSchedule(newSchedule);
@@ -802,7 +803,12 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
           {accommodationDistrict && accommodationDistrict !== "other" && (
             <div className="mt-3 p-3 bg-primary/5 dark:bg-primary/10 rounded-lg">
               <p className="text-xs text-primary">
-                📍 {t("schedule.nearby_attractions")}: {TAIPEI_DISTRICT_OPTIONS.find(d => d.id === accommodationDistrict)?.nearbyAttractions.join(", ")}
+                📍 {t("schedule.nearby_attractions")}: {(() => {
+                  const district = TAIPEI_DISTRICT_OPTIONS.find(d => d.id === accommodationDistrict);
+                  return language === "en"
+                    ? district?.nearbyAttractionsEn.join(", ")
+                    : district?.nearbyAttractions.join(", ");
+                })()}
               </p>
             </div>
           )}

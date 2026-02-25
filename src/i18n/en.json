@@ -78,6 +78,7 @@
     "register_success": "Registration complete. Please log in.",
     "register_failed": "Registration failed.",
     "server_error": "Server connection failed.",
+    "or": "or",
     "login_required": "Login required.",
     "no_account": "Don't have an account?",
     "has_account": "Already have an account?",
@@ -263,7 +264,8 @@
     "submitting": "Submitting...",
     "updating": "Updating...",
     "no_reviews": "No reviews yet. Be the first to write one!",
-    "delete_confirm": "Delete this review?"
+    "delete_confirm": "Delete this review?",
+    "photo_alt": "Review photo {{index}}"
   },
   "ai": {
     "title": "AI Restaurant Picks",
@@ -431,6 +433,7 @@
     "loading_generic_error": "An error occurred while generating the itinerary.",
     "loading_title": "Creating your travel itinerary",
     "photo_alt": "{{name}} photo {{index}}",
+    "language_mismatch_notice": "This itinerary was created in Korean mode, so details are shown in Korean. Create a new one for English content.",
     "day_label": "Day {{day}}",
     "timeslot_morning": "Morning",
     "timeslot_lunch": "Lunch",

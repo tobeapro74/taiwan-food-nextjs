@@ -303,7 +303,7 @@ ${hasSenior ? "특히 고령 여행자가 있으므로 이동 거리와 휴식 �
 ## Accommodation Information
 ${accommodation ? `- Hotel: ${accommodation.name || "TBD"}
 - Location: ${accommodation.district || "TBD"}
-- Nearby attractions: ${accommodation.districtId ? TAIPEI_DISTRICT_OPTIONS.find(d => d.id === accommodation.districtId)?.nearbyAttractions.join(", ") || "N/A" : "N/A"}
+- Nearby attractions: ${accommodation.districtId ? (TAIPEI_DISTRICT_OPTIONS.find(d => d.id === accommodation.districtId)?.nearbyAttractionsEn || TAIPEI_DISTRICT_OPTIONS.find(d => d.id === accommodation.districtId)?.nearbyAttractions)?.join(", ") || "N/A" : "N/A"}
 → **Route optimization**: Place nearby areas in morning/evening schedule, visit farther areas during midday` : "- Accommodation location TBD (use general routing)"}
 
 ## Age Group Preference Analysis

@@ -97,6 +97,7 @@ export interface TravelSchedule {
   schedule: DaySchedule[];
   tips: string[];
   budget: string;
+  generatedLanguage?: string; // 일정이 생성된 언어 ("ko" | "en")
 }
 
 // API 요청
@@ -243,6 +244,7 @@ export const TAIPEI_DISTRICT_OPTIONS: {
   description: string;
   descKey: string;
   nearbyAttractions: string[];
+  nearbyAttractionsEn: string[];
 }[] = [
   {
     id: "ximending",
@@ -251,7 +253,8 @@ export const TAIPEI_DISTRICT_OPTIONS: {
     labelEn: "Ximending",
     description: "젊은 감성, 쇼핑, 야시장",
     descKey: "schedule.district_ximending_desc",
-    nearbyAttractions: ["시먼딩 거리", "홍러우", "용산사"]
+    nearbyAttractions: ["시먼딩 거리", "홍러우", "용산사"],
+    nearbyAttractionsEn: ["Ximending Street", "The Red House", "Longshan Temple"],
   },
   {
     id: "zhongshan",
@@ -260,7 +263,8 @@ export const TAIPEI_DISTRICT_OPTIONS: {
     labelEn: "Zhongshan",
     description: "비즈니스, 쇼핑몰, 마사지",
     descKey: "schedule.district_zhongshan_desc",
-    nearbyAttractions: ["중산역 지하상가", "닝샤야시장", "타이베이역"]
+    nearbyAttractions: ["중산역 지하상가", "닝샤야시장", "타이베이역"],
+    nearbyAttractionsEn: ["Zhongshan Underground Mall", "Ningxia Night Market", "Taipei Main Station"],
   },
   {
     id: "xinyi",
@@ -269,7 +273,8 @@ export const TAIPEI_DISTRICT_OPTIONS: {
     labelEn: "Xinyi",
     description: "타이베이101, 고급 쇼핑, 야경",
     descKey: "schedule.district_xinyi_desc",
-    nearbyAttractions: ["타이베이101", "신광미츠코시", "상산"]
+    nearbyAttractions: ["타이베이101", "신광미츠코시", "상산"],
+    nearbyAttractionsEn: ["Taipei 101", "Shin Kong Mitsukoshi", "Elephant Mountain"],
   },
   {
     id: "daan",
@@ -278,7 +283,8 @@ export const TAIPEI_DISTRICT_OPTIONS: {
     labelEn: "Da'an",
     description: "용캉제, 감성 카페, 로컬 맛집",
     descKey: "schedule.district_daan_desc",
-    nearbyAttractions: ["용캉제", "다안삼림공원", "영강우육면"]
+    nearbyAttractions: ["용캉제", "다안삼림공원", "영강우육면"],
+    nearbyAttractionsEn: ["Yongkang Street", "Daan Forest Park", "Yongkang Beef Noodle"],
   },
   {
     id: "zhongzheng",
@@ -287,7 +293,8 @@ export const TAIPEI_DISTRICT_OPTIONS: {
     labelEn: "Zhongzheng",
     description: "타이베이역, 중정기념당",
     descKey: "schedule.district_zhongzheng_desc",
-    nearbyAttractions: ["중정기념당", "타이베이역", "화산1914"]
+    nearbyAttractions: ["중정기념당", "타이베이역", "화산1914"],
+    nearbyAttractionsEn: ["CKS Memorial Hall", "Taipei Main Station", "Huashan 1914"],
   },
   {
     id: "wanhua",
@@ -296,7 +303,8 @@ export const TAIPEI_DISTRICT_OPTIONS: {
     labelEn: "Wanhua",
     description: "용산사, 전통시장, 역사",
     descKey: "schedule.district_wanhua_desc",
-    nearbyAttractions: ["용산사", "화시제야시장", "보피랴오거리"]
+    nearbyAttractions: ["용산사", "화시제야시장", "보피랴오거리"],
+    nearbyAttractionsEn: ["Longshan Temple", "Huaxi Night Market", "Bopiliao Street"],
   },
   {
     id: "songshan",
@@ -305,7 +313,8 @@ export const TAIPEI_DISTRICT_OPTIONS: {
     labelEn: "Songshan",
     description: "라오허제야시장, 송산문창",
     descKey: "schedule.district_songshan_desc",
-    nearbyAttractions: ["라오허제야시장", "송산문창원구", "무지개다리"]
+    nearbyAttractions: ["라오허제야시장", "송산문창원구", "무지개다리"],
+    nearbyAttractionsEn: ["Raohe Night Market", "Songshan Cultural Park", "Rainbow Bridge"],
   },
   {
     id: "shilin",
@@ -314,7 +323,8 @@ export const TAIPEI_DISTRICT_OPTIONS: {
     labelEn: "Shilin",
     description: "스린야시장, 고궁박물원",
     descKey: "schedule.district_shilin_desc",
-    nearbyAttractions: ["스린야시장", "고궁박물원", "양밍산"]
+    nearbyAttractions: ["스린야시장", "고궁박물원", "양밍산"],
+    nearbyAttractionsEn: ["Shilin Night Market", "National Palace Museum", "Yangmingshan"],
   },
   {
     id: "beitou",
@@ -323,7 +333,8 @@ export const TAIPEI_DISTRICT_OPTIONS: {
     labelEn: "Beitou",
     description: "온천, 휴양",
     descKey: "schedule.district_beitou_desc",
-    nearbyAttractions: ["베이터우온천", "지열곡", "베이터우도서관"]
+    nearbyAttractions: ["베이터우온천", "지열곡", "베이터우도서관"],
+    nearbyAttractionsEn: ["Beitou Hot Springs", "Thermal Valley", "Beitou Library"],
   },
   {
     id: "neihu",
@@ -332,7 +343,8 @@ export const TAIPEI_DISTRICT_OPTIONS: {
     labelEn: "Neihu",
     description: "미라마 관람차, IT단지",
     descKey: "schedule.district_neihu_desc",
-    nearbyAttractions: ["미라마 관람차", "네이후 IT파크"]
+    nearbyAttractions: ["미라마 관람차", "네이후 IT파크"],
+    nearbyAttractionsEn: ["Miramar Ferris Wheel", "Neihu Tech Park"],
   },
   {
     id: "banqiao",
@@ -341,7 +353,8 @@ export const TAIPEI_DISTRICT_OPTIONS: {
     labelEn: "Banqiao",
     description: "반차오역, 신베이시청",
     descKey: "schedule.district_banqiao_desc",
-    nearbyAttractions: ["반차오역", "신베이시민광장", "린가 야시장"]
+    nearbyAttractions: ["반차오역", "신베이시민광장", "린가 야시장"],
+    nearbyAttractionsEn: ["Banqiao Station", "New Taipei Civic Plaza", "Lehua Night Market"],
   },
   {
     id: "other",
@@ -350,6 +363,7 @@ export const TAIPEI_DISTRICT_OPTIONS: {
     labelEn: "Other",
     description: "직접 입력",
     descKey: "schedule.district_other_desc",
-    nearbyAttractions: []
+    nearbyAttractions: [],
+    nearbyAttractionsEn: [],
   },
 ];

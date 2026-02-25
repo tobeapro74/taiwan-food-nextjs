@@ -394,7 +394,7 @@ export function ReviewModal({
                 <div key={index} className="relative flex-shrink-0">
                   <Image
                     src={photo}
-                    alt={`리뷰 사진 ${index + 1}`}
+                    alt={t("review.photo_alt", { index: index + 1 })}
                     width={80}
                     height={80}
                     className="w-20 h-20 object-cover rounded-lg"

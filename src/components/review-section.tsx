@@ -258,7 +258,7 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
                         <img
                           key={idx}
                           src={photo}
-                          alt={`리뷰 사진 ${idx + 1}`}
+                          alt={t("review.photo_alt", { index: idx + 1 })}
                           className="w-20 h-20 rounded-lg object-cover"
                         />
                       ))}
