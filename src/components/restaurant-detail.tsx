@@ -81,8 +81,8 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
   const [currentPhoneNumber, setCurrentPhoneNumber] = useState(restaurant.phone_number || "");
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // 사용자 등록 맛집인지 확인 (place_id가 있으면 사용자 등록 맛집)
-  const isCustomRestaurant = !!restaurant.place_id;
+  // 사용자 등록 맛집인지 확인 (place_id가 있고 static_ prefix가 아닌 경우)
+  const isCustomRestaurant = !!restaurant.place_id && !restaurant.place_id.startsWith("static_");
 
   // 수정 권한 확인 (등록자 본인 또는 관리자 또는 박병철)
   // registered_by가 없는 기존 맛집도 관리자/박병철이면 수정 가능

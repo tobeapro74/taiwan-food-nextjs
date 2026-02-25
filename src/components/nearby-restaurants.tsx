@@ -551,7 +551,7 @@ interface NearbyRestaurantCardProps {
 
 function NearbyRestaurantCard({ restaurant, distance, onSelect }: NearbyRestaurantCardProps) {
   const { t, language } = useLanguage();
-  const isCustom = !!restaurant.place_id;
+  const isCustom = !!restaurant.place_id && !restaurant.place_id.startsWith("static_");
 
   const getCategoryLabel = (categoryId: string) => {
     const cat = foodCategories.find(c => c.id === categoryId);
