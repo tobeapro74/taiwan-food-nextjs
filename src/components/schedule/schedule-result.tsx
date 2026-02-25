@@ -104,7 +104,7 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
       const response = await fetch("/api/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ schedule }),
+        body: JSON.stringify({ schedule, language }),
       });
 
       const data = await response.json();

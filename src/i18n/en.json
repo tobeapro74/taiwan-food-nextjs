@@ -349,6 +349,7 @@
     "saved": "Saved",
     "save_success": "Itinerary saved.",
     "save_failed": "Failed to save.",
+    "load_schedule_failed": "Failed to load the schedule.",
     "new_schedule": "Create New Itinerary",
     "unsaved_warning": "Itinerary not saved",
     "back_warning": "Going back will discard the current itinerary.\nProceed?",

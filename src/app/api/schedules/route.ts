@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { schedule, title } = body as { schedule: TravelSchedule; title?: string };
+    const { schedule, title, language } = body as { schedule: TravelSchedule; title?: string; language?: string };
 
     if (!schedule || !schedule.schedule) {
       return NextResponse.json(
@@ -80,8 +80,12 @@ export async function POST(request: NextRequest) {
 
     const db = await connectToDatabase();
 
-    // 자동 제목 생성
-    const autoTitle = title || `${schedule.input.days}일 타이베이 여행 (${schedule.input.travelers}명)`;
+    // 자동 제목 생성 (다국어)
+    const autoTitle = title || (
+      language === "en"
+        ? `${schedule.input.days}-Day Taipei Trip (${schedule.input.travelers} pax)`
+        : `${schedule.input.days}일 타이베이 여행 (${schedule.input.travelers}명)`
+    );
 
     const result = await db.collection("saved_schedules").insertOne({
       userId: user.userId,

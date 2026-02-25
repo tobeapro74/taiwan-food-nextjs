@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { toast } from "sonner";
 import { ArrowLeft, Sparkles, Loader2, Minus, Plus, Plane, Users, Hotel, MapPin, LogIn, List, Trash2, Calendar, Search, CheckCircle } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
@@ -267,12 +268,15 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
     try {
       const response = await fetch(`/api/schedules/${id}`);
       const data = await response.json();
-      if (data.success) {
+      if (data.success && data.data?.schedule) {
         setViewingSchedule(data.data.schedule);
         setViewMode("view");
+      } else {
+        toast.error(data.error || t("schedule.load_schedule_failed"));
       }
     } catch (error) {
       console.error("Failed to load schedule:", error);
+      toast.error(t("schedule.load_schedule_failed"));
     } finally {
       setLoadingSaved(false);
     }
