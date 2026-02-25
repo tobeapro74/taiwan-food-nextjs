@@ -350,6 +350,7 @@
     "save_success": "일정 저장을 완료했습니다.",
     "save_failed": "저장에 실패했습니다.",
     "load_schedule_failed": "일정을 불러오는데 실패했습니다.",
+    "schedule_list_title": "{{days}}일 타이베이 여행 ({{travelers}}명)",
     "new_schedule": "새로운 일정 만들기",
     "unsaved_warning": "일정이 저장되지 않았습니다",
     "back_warning": "뒤로 가면 현재 일정이 사라집니다.\n이동하시겠습니까?",

@@ -517,7 +517,11 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                     className="flex-1 cursor-pointer"
                     onClick={() => viewSavedSchedule(item._id)}
                   >
-                    <h3 className="font-semibold text-foreground">{item.title}</h3>
+                    <h3 className="font-semibold text-foreground">
+                      {item.days && item.travelers
+                        ? t("schedule.schedule_list_title", { days: item.days, travelers: item.travelers })
+                        : item.title}
+                    </h3>
                     <p className="text-xs text-muted-foreground mt-1">
                       {t("schedule.days_with_unit", { days: item.days })} · {formatAgeGenderSummary(item.ageGenderBreakdown, item.travelers, t)}
                       {item.accommodation && ` · ${

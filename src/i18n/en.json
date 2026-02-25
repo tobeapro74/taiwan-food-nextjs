@@ -350,6 +350,7 @@
     "save_success": "Itinerary saved.",
     "save_failed": "Failed to save.",
     "load_schedule_failed": "Failed to load the schedule.",
+    "schedule_list_title": "{{days}}-Day Taipei Trip ({{travelers}} pax)",
     "new_schedule": "Create New Itinerary",
     "unsaved_warning": "Itinerary not saved",
     "back_warning": "Going back will discard the current itinerary.\nProceed?",
