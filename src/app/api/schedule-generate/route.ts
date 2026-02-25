@@ -15,30 +15,57 @@ import {
 } from "@/lib/schedule-types";
 
 // 입출국 시간대 텍스트 변환
-const FLIGHT_TIME_TEXT: Record<FlightTimeType, string> = {
-  early_morning: "이른 아침 (06:00~09:00)",
-  morning: "오전 (09:00~12:00)",
-  afternoon: "오후 (12:00~17:00)",
-  evening: "저녁 (17:00~21:00)",
-  night: "밤/심야 (21:00~06:00)",
+const FLIGHT_TIME_TEXT: Record<string, Record<FlightTimeType, string>> = {
+  ko: {
+    early_morning: "이른 아침 (06:00~09:00)",
+    morning: "오전 (09:00~12:00)",
+    afternoon: "오후 (12:00~17:00)",
+    evening: "저녁 (17:00~21:00)",
+    night: "밤/심야 (21:00~06:00)",
+  },
+  en: {
+    early_morning: "Early morning (06:00~09:00)",
+    morning: "Morning (09:00~12:00)",
+    afternoon: "Afternoon (12:00~17:00)",
+    evening: "Evening (17:00~21:00)",
+    night: "Night/Late night (21:00~06:00)",
+  },
 };
 
 // 입국 시간대에 따른 첫날 시작 시간대
-const ARRIVAL_START_SLOT: Record<FlightTimeType, string> = {
-  early_morning: "오전부터 일정 가능 (공항에서 시내까지 이동 시간 고려)",
-  morning: "점심부터 일정 가능",
-  afternoon: "저녁부터 일정 가능",
-  evening: "밤 일정만 가능 (야시장 추천)",
-  night: "첫날은 숙소에서 휴식, 다음날부터 일정 시작",
+const ARRIVAL_START_SLOT: Record<string, Record<FlightTimeType, string>> = {
+  ko: {
+    early_morning: "오전부터 일정 가능 (공항에서 시내까지 이동 시간 고려)",
+    morning: "점심부터 일정 가능",
+    afternoon: "저녁부터 일정 가능",
+    evening: "밤 일정만 가능 (야시장 추천)",
+    night: "첫날은 숙소에서 휴식, 다음날부터 일정 시작",
+  },
+  en: {
+    early_morning: "Schedule available from morning (considering airport to city travel time)",
+    morning: "Schedule available from lunch",
+    afternoon: "Schedule available from evening",
+    evening: "Only night schedule available (night market recommended)",
+    night: "Rest at hotel on first day, start schedule from next day",
+  },
 };
 
 // 출국 시간대에 따른 마지막날 일정
-const DEPARTURE_END_SLOT: Record<FlightTimeType, string> = {
-  early_morning: "마지막날은 전날 밤까지 일정, 당일은 공항 이동만",
-  morning: "마지막날 오전 공항 이동 필요, 전날 밤까지 일정 가능",
-  afternoon: "마지막날 오전까지 가벼운 일정 가능",
-  evening: "마지막날 오후까지 일정 가능",
-  night: "마지막날 저녁까지 일정 가능",
+const DEPARTURE_END_SLOT: Record<string, Record<FlightTimeType, string>> = {
+  ko: {
+    early_morning: "마지막날은 전날 밤까지 일정, 당일은 공항 이동만",
+    morning: "마지막날 오전 공항 이동 필요, 전날 밤까지 일정 가능",
+    afternoon: "마지막날 오전까지 가벼운 일정 가능",
+    evening: "마지막날 오후까지 일정 가능",
+    night: "마지막날 저녁까지 일정 가능",
+  },
+  en: {
+    early_morning: "Last day: schedule until previous night only, day of departure is airport transfer only",
+    morning: "Last day: need to head to airport in the morning, schedule possible until previous night",
+    afternoon: "Last day: light schedule possible until morning",
+    evening: "Last day: schedule possible until afternoon",
+    night: "Last day: schedule possible until evening",
+  },
 };
 
 // 장소 사진 캐시 조회/저장
@@ -118,7 +145,7 @@ async function fetchPlacePhotos(placeName: string): Promise<string[]> {
 
 export async function POST(request: NextRequest) {
   try {
-    const body: ScheduleGenerateRequest = await request.json();
+    const body = await request.json();
     const {
       days,
       travelers,
@@ -127,8 +154,10 @@ export async function POST(request: NextRequest) {
       ageGenderBreakdown,
       arrivalTime = "morning",
       departureTime = "afternoon",
-      accommodation
-    } = body;
+      accommodation,
+      language = "ko",
+    } = body as ScheduleGenerateRequest & { language?: string };
+    const isEn = language === "en";
 
     // 유효성 검사
     if (!days || days < 1 || days > 14) {
@@ -149,79 +178,75 @@ export async function POST(request: NextRequest) {
       .sort((a, b) => (b.평점 || 0) - (a.평점 || 0))
       .slice(0, 40);
 
+    // 연령대 라벨 맵
+    const AGE_LABELS: Record<string, Record<string, string>> = {
+      ko: { "10s": "10대", "20s": "20대", "30s": "30대", "40s": "40대", "50s": "50대", "60s_plus": "60대 이상" },
+      en: { "10s": "Teens", "20s": "20s", "30s": "30s", "40s": "40s", "50s": "50s", "60s_plus": "60s+" },
+    };
+
     // 연령대별 인원 텍스트 생성
     const ageBreakdownText = ageGenderBreakdown && ageGenderBreakdown.length > 0
       ? ageGenderBreakdown.map((group: AgeGenderCount) => {
-          const ageLabel = {
-            "10s": "10대",
-            "20s": "20대",
-            "30s": "30대",
-            "40s": "40대",
-            "50s": "50대",
-            "60s_plus": "60대 이상"
-          }[group.ageGroup];
+          const ageLabel = AGE_LABELS[isEn ? "en" : "ko"][group.ageGroup];
           const parts = [];
-          if (group.male > 0) parts.push(`남 ${group.male}명`);
-          if (group.female > 0) parts.push(`여 ${group.female}명`);
+          if (group.male > 0) parts.push(isEn ? `Male ${group.male}` : `남 ${group.male}명`);
+          if (group.female > 0) parts.push(isEn ? `Female ${group.female}` : `여 ${group.female}명`);
           return `${ageLabel}: ${parts.join(", ")}`;
         }).join("\n  ")
-      : `${travelers}명`;
+      : (isEn ? `${travelers} people` : `${travelers}명`);
 
-    // 연령대별 취향 분석
+    // 연령대별 취향 분석 (영문)
+    const AGE_GROUP_PREFERENCES_EN: Record<string, { food: string; shopping: string; activity: string; mobility: string }> = {
+      "10s": { food: "Night market street food, bubble tea, trendy desserts, SNS hotspots", shopping: "Character goods, stickers, stationery, trendy accessories", activity: "Photo zones, hands-on experiences, trendy spots", mobility: "Active, comfortable walking long distances" },
+      "20s": { food: "Night market street food (chicken cutlet, noodles), bubble tea, aesthetic cafe desserts", shopping: "Street fashion, sneakers, character goods, cafe accessories", activity: "Instagram-worthy spots, affordable diverse food, experiential spending", mobility: "Active, comfortable walking, prefer public transit" },
+      "30s": { food: "Xiao long bao, beef noodle soup, local restaurants, atmospheric dining", shopping: "Design goods, tea/coffee supplies, quality souvenirs", activity: "Food exploration, cultural experiences, moderate shopping", mobility: "Mix of public transit + taxi, moderate walking" },
+      "40s": { food: "Beef noodle soup, xiao long bao, lu rou fan, traditional tea", shopping: "Tea/health food, traditional snacks, brand clothing", activity: "Rich flavored cuisine, famous restaurants, value quality & health", mobility: "Prefer taxi/bus, gets tired from long walks" },
+      "50s": { food: "Beef noodle soup, xiao long bao, lu rou fan, traditional tea, healthy food", shopping: "Tea/health food, traditional snacks, family gift items", activity: "Famous tourist spots, relaxed schedule, practical spending", mobility: "Prefer taxi/tour bus, difficulty with long walks" },
+      "60s_plus": { food: "Congee, noodle soups, traditional tea houses, easy-to-digest food", shopping: "Souvenirs, traditional crafts, dried fruits/tea", activity: "Comfortable dining, traditional cultural experiences", mobility: "Taxi/tour bus essential, need plenty of rest time" },
+    };
+
     const agePreferencesText = ageGenderBreakdown && ageGenderBreakdown.length > 0
       ? ageGenderBreakdown.map((group: AgeGenderCount) => {
-          const prefs = AGE_GROUP_PREFERENCES[group.ageGroup];
+          const prefs = isEn ? AGE_GROUP_PREFERENCES_EN[group.ageGroup] : AGE_GROUP_PREFERENCES[group.ageGroup];
           const total = group.male + group.female;
           if (total === 0) return "";
-          const ageLabel = {
-            "10s": "10대",
-            "20s": "20대",
-            "30s": "30대",
-            "40s": "40대",
-            "50s": "50대",
-            "60s_plus": "60대 이상"
-          }[group.ageGroup];
-          return `### ${ageLabel} (${total}명)
-- 음식: ${prefs.food}
-- 쇼핑: ${prefs.shopping}
-- 활동: ${prefs.activity}
-- 이동: ${prefs.mobility}`;
+          const ageLabel = AGE_LABELS[isEn ? "en" : "ko"][group.ageGroup];
+          return isEn
+            ? `### ${ageLabel} (${total} people)\n- Food: ${prefs.food}\n- Shopping: ${prefs.shopping}\n- Activity: ${prefs.activity}\n- Mobility: ${prefs.mobility}`
+            : `### ${ageLabel} (${total}명)\n- 음식: ${prefs.food}\n- 쇼핑: ${prefs.shopping}\n- 활동: ${prefs.activity}\n- 이동: ${prefs.mobility}`;
         }).filter(Boolean).join("\n\n")
       : "";
 
     // 취향 텍스트
     const prefText = preferences
       .map((p: PreferenceType) => {
-        const map: Record<PreferenceType, string> = {
-          food: "맛집",
-          cafe: "카페",
-          shopping: "쇼핑",
-          culture: "문화",
-          nightview: "야경",
-          nature: "자연",
+        const map: Record<string, Record<PreferenceType, string>> = {
+          ko: { food: "맛집", cafe: "카페", shopping: "쇼핑", culture: "문화", nightview: "야경", nature: "자연" },
+          en: { food: "Food", cafe: "Cafe", shopping: "Shopping", culture: "Culture", nightview: "Night view", nature: "Nature" },
         };
-        return map[p];
+        return map[isEn ? "en" : "ko"][p];
       })
       .join(", ");
 
     // 여행 목적 텍스트
-    const purposeMap: Record<PurposeType, string> = {
-      healing: "힐링",
-      sns: "SNS 감성",
-      food_tour: "맛집 투어",
-      shopping: "쇼핑",
-      culture: "문화 체험",
+    const purposeMap: Record<string, Record<PurposeType, string>> = {
+      ko: { healing: "힐링", sns: "SNS 감성", food_tour: "맛집 투어", shopping: "쇼핑", culture: "문화 체험" },
+      en: { healing: "Healing", sns: "SNS aesthetic", food_tour: "Food tour", shopping: "Shopping", culture: "Cultural experience" },
     };
-    const purposeText = (purposes || []).map((p: PurposeType) => purposeMap[p]).join(", ");
+    const purposeText = (purposes || []).map((p: PurposeType) => purposeMap[isEn ? "en" : "ko"][p]).join(", ");
 
     // 맛집/관광지 목록
     const restaurantList = topRestaurants
-      .map((r) => `- ${r.이름} (${r.위치}) ⭐${r.평점} - ${r.특징}`)
+      .map((r) => isEn
+        ? `- ${r.name_en || r.이름} (${r.location_en || r.위치}) ⭐${r.평점} - ${r.feature_en || r.특징}`
+        : `- ${r.이름} (${r.위치}) ⭐${r.평점} - ${r.특징}`)
       .join("\n");
 
     const placesList = places
       .slice(0, 20)
-      .map((p) => `- ${p.이름} (${p.위치}) - ${p.특징}`)
+      .map((p) => isEn
+        ? `- ${p.name_en || p.이름} (${p.location_en || p.위치}) - ${p.feature_en || p.특징}`
+        : `- ${p.이름} (${p.위치}) - ${p.특징}`)
       .join("\n");
 
     // 여행자 구성 분석 (프롬프트 동적 생성용)
@@ -235,16 +260,23 @@ export async function POST(request: NextRequest) {
     // 성별 분석
     const totalMale = activeGroups.reduce((sum: number, g: AgeGenderCount) => sum + g.male, 0);
     const totalFemale = activeGroups.reduce((sum: number, g: AgeGenderCount) => sum + g.female, 0);
-    const genderDescription = totalMale === 0 ? "여성" : totalFemale === 0 ? "남성" : "혼성";
+    const genderDescription = isEn
+      ? (totalMale === 0 ? "female" : totalFemale === 0 ? "male" : "mixed")
+      : (totalMale === 0 ? "여성" : totalFemale === 0 ? "남성" : "혼성");
 
     // 대표 연령대 텍스트
-    const mainAgeLabel = isSingleAgeGroup ? {
-      "10s": "10대", "20s": "20대", "30s": "30대",
-      "40s": "40대", "50s": "50대", "60s_plus": "60대 이상"
-    }[activeGroups[0].ageGroup] : null;
+    const mainAgeLabel = isSingleAgeGroup ? AGE_LABELS[isEn ? "en" : "ko"][activeGroups[0].ageGroup] : null;
 
     // GPT 프롬프트 구성
-    const systemPrompt = `당신은 친절하고 경험 많은 타이베이 현지 여행 가이드입니다.
+    const systemPrompt = isEn
+      ? `You are a friendly and experienced Taipei local travel guide.
+You introduce each place in a warm, natural conversational tone as if speaking directly to the travelers.
+${hasMultipleAgeGroups
+  ? "When creating an itinerary for a travel group with various age groups, create a balanced schedule that satisfies all age groups."
+  : `Create an itinerary perfectly suited for ${travelers} ${genderDescription} traveler(s) in their ${mainAgeLabel}. Focus on the tastes and interests of this age group and gender.`}
+${hasSenior ? "Since there are elderly travelers, carefully consider travel distance and rest time." : ""}
+**IMPORTANT: All output must be in English.** Respond only in JSON format. Do not include any other text.`
+      : `당신은 친절하고 경험 많은 타이베이 현지 여행 가이드입니다.
 여행자에게 직접 말하듯 따뜻하고 자연스러운 대화체로 각 장소를 소개합니다.
 ${hasMultipleAgeGroups
   ? "다양한 연령대가 함께하는 여행 그룹의 일정을 만들 때, 모든 연령층이 만족할 수 있도록 균형 잡힌 일정을 구성합니다."
@@ -252,7 +284,123 @@ ${hasMultipleAgeGroups
 ${hasSenior ? "특히 고령 여행자가 있으므로 이동 거리와 휴식 시간을 충분히 고려합니다." : ""}
 응답은 반드시 JSON 형식으로만 해주세요. 다른 텍스트는 포함하지 마세요.`;
 
-    const userPrompt = `타이베이 ${days}일 여행 일정을 만들어주세요.
+    const userPrompt = isEn
+    ? `Please create a ${days}-day Taipei travel itinerary.
+
+## Traveler Information
+- Total travelers: ${travelers} people
+- Composition:
+  ${ageBreakdownText}
+- Preferences: ${prefText}
+- Travel purpose: ${purposeText}
+
+## Flight Information
+- Arrival (Day 1): ${FLIGHT_TIME_TEXT.en[arrivalTime]}
+  → ${ARRIVAL_START_SLOT.en[arrivalTime]}
+- Departure (Day ${days}): ${FLIGHT_TIME_TEXT.en[departureTime]}
+  → ${DEPARTURE_END_SLOT.en[departureTime]}
+
+## Accommodation Information
+${accommodation ? `- Hotel: ${accommodation.name || "TBD"}
+- Location: ${accommodation.district || "TBD"}
+- Nearby attractions: ${accommodation.districtId ? TAIPEI_DISTRICT_OPTIONS.find(d => d.id === accommodation.districtId)?.nearbyAttractions.join(", ") || "N/A" : "N/A"}
+→ **Route optimization**: Place nearby areas in morning/evening schedule, visit farther areas during midday` : "- Accommodation location TBD (use general routing)"}
+
+## Age Group Preference Analysis
+${agePreferencesText || "Need to consider various age groups"}
+
+${hasMultipleAgeGroups ? `## Important: Multi-age Group Considerations
+1. **Young (Teens~30s)**: Include night markets, cafes, SNS hotspots, shopping spots
+2. **Middle-aged (40s~50s)**: Famous restaurants, comfortable transport (taxi/bus), quality shopping
+3. **Senior (60s+)**: Avoid long walks, comfortable dining, plenty of rest time
+4. **Common**: Include attractions and restaurants everyone can enjoy` : `## Important: Traveler-Customized Principles
+- This group is **${travelers} ${genderDescription} traveler(s) in their ${mainAgeLabel}**
+- **Strictly focus** on the selected preferences (${prefText}) and purposes (${purposeText})
+- Do not include unselected categories (e.g., if culture was not selected, skip cultural landmarks like Chiang Kai-shek Memorial Hall)
+- ${hasYoung && !hasMiddleAge && !hasSenior ? "Focus on trendy places, SNS hotspots, aesthetic cafes, and night markets for young travelers" : ""}
+- ${genderDescription === "female" ? "Focus on aesthetic cafes, desserts, photo spots, and shopping for female travelers" : ""}
+- ${genderDescription === "male" ? "Focus on famous restaurants, night markets, and attractions for male travelers" : ""}`}
+
+${hasSenior || hasMiddleAge ? `## Transportation Notes
+${hasMiddleAge ? "- With travelers 40+: Avoid walks longer than 30 minutes between locations" : ""}
+${hasSenior ? "- With travelers 50+: Recommend taxi/tour bus when possible" : ""}
+${activeGroups.some((g: AgeGenderCount) => g.ageGroup === "60s_plus") ? "- With travelers 60+: Only 1-2 places per morning/afternoon, mandatory cafe rest in between" : ""}` : `## Transportation
+- Freely use public transit (MRT) + walking`}
+
+## Available Restaurant List (by rating)
+${restaurantList}
+
+## Available Attraction List
+${placesList}
+
+## Response Format (JSON)
+{
+  "schedule": [
+    {
+      "day": 1,
+      "theme": "Ximending Exploration + Night Market",
+      "activities": [
+        {
+          "id": "d1_lunch",
+          "timeSlot": "lunch",
+          "timeSlotKo": "Lunch",
+          "type": "restaurant",
+          "name": "Din Tai Fung",
+          "location": "Taipei Xinyi",
+          "rating": 4.7,
+          "reason": "(Conversational recommendation tailored to the traveler group. e.g., for 3 women in their 20s: 'Welcome to Taipei! Your first meal has to be Din Tai Fung's xiao long bao~ You've probably seen it on Instagram, but tasting it in person is a whole different experience!')",
+          "tip": "Visit before 11am to avoid waiting"
+        },
+        {
+          "id": "d1_afternoon",
+          "timeSlot": "afternoon",
+          "timeSlotKo": "Afternoon",
+          "type": "cafe",
+          "name": "Cafe Name",
+          "location": "Location",
+          "reason": "(Conversational recommendation tailored to travelers. e.g., for young women: 'Now that you're full, it's cafe time! This place has the most amazing photo spots - perfect for your Instagram~')",
+          "tip": "Air-conditioned, comfortable seating",
+          "travelFromPrev": {
+            "method": "Walk",
+            "duration": "About 10 min",
+            "description": "It's about a 10-minute walk from Din Tai Fung. Enjoy the street views as you stroll along!"
+          }
+        }
+      ]
+    }
+  ],
+  "tips": [
+    "(3~5 practical tips tailored to the traveler group)"
+  ],
+  "budget": "About NT$3,000~5,000/day per person (excluding accommodation)"
+}
+
+## Important Rules
+1. Restaurants must be selected from the restaurant list above (exact names)
+2. Attractions from the list above or well-known landmarks
+3. **Adjust Day 1 schedule based on arrival time** (late arrival = fewer activities)
+4. **Adjust last day schedule based on departure time** (early departure = fewer activities)
+5. Arrange nearby places together for efficient routing
+6. Different theme for each day
+${activeGroups.some((g: AgeGenderCount) => g.ageGroup === "60s_plus") ? "7. Include rest points in every day's schedule for 60+ travelers" : "7. Match energy levels to the travelers' age/gender"}
+8. Output only JSON. Return only the JSON object without any explanation
+9. **Rules for the 'reason' field (VERY IMPORTANT)**:
+   - Write in a **friendly conversational tone** as if speaking directly to the travelers
+   - Consider the current travel context (e.g., first-day fatigue, post-meal rest, evening night market atmosphere)
+   - Explain specifically why this place is recommended at this time
+   - **Write comments suited to the actual traveler composition (${mainAgeLabel || "various ages"} ${genderDescription} ${travelers} people)**
+   - ${hasMultipleAgeGroups ? "Include considerate comments for different age groups traveling together" : "Highlight points that this age group/gender would actually enjoy"}
+   - Connect naturally with the previous schedule (e.g., "Now that you've had a great meal...", "After your morning walk...")
+   - Write 2~3 sentences (not too short, not too long)
+   - **ALL text must be in English**
+10. **travelFromPrev field (travel information)**:
+   - Include travelFromPrev for all activities **except the first activity** of each day
+   - method: "Walk", "MRT", "Bus", "Taxi", "MRT+Walk" etc. - actual transportation
+   - duration: "About 5 min", "About 15 min", "About 30 min" etc. - actual estimated time
+   - description: Friendly conversational travel guide in English
+   ${hasSenior || hasMiddleAge ? "- For elderly/middle-aged companions, include considerate mentions like recommending taxis" : "- Match travel guidance to traveler age (for young groups, present walks as enjoyable experiences)"}
+   - Use accurate travel times reflecting actual Taipei geography`
+    : `타이베이 ${days}일 여행 일정을 만들어주세요.
 
 ## 여행자 정보
 - 총 인원: ${travelers}명
@@ -262,10 +410,10 @@ ${hasSenior ? "특히 고령 여행자가 있으므로 이동 거리와 휴식 �
 - 여행 목적: ${purposeText}
 
 ## 항공편 정보
-- 입국 (Day 1): ${FLIGHT_TIME_TEXT[arrivalTime]}
-  → ${ARRIVAL_START_SLOT[arrivalTime]}
-- 출국 (Day ${days}): ${FLIGHT_TIME_TEXT[departureTime]}
-  → ${DEPARTURE_END_SLOT[departureTime]}
+- 입국 (Day 1): ${FLIGHT_TIME_TEXT.ko[arrivalTime]}
+  → ${ARRIVAL_START_SLOT.ko[arrivalTime]}
+- 출국 (Day ${days}): ${FLIGHT_TIME_TEXT.ko[departureTime]}
+  → ${DEPARTURE_END_SLOT.ko[departureTime]}
 
 ## 숙소 정보
 ${accommodation ? `- 숙소: ${accommodation.name || "미정"}

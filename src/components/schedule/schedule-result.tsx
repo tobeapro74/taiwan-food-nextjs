@@ -330,10 +330,10 @@ function DayCard({
                   <div className="flex flex-col items-center">
                     <div className="w-0.5 h-3 bg-primary/30" />
                     <div className="text-sm">
-                      {activity.travelFromPrev.method === "도보" ? "🚶" :
+                      {activity.travelFromPrev.method === "도보" || activity.travelFromPrev.method === "Walk" ? "🚶" :
                        activity.travelFromPrev.method === "MRT" || activity.travelFromPrev.method.includes("MRT") ? "🚇" :
-                       activity.travelFromPrev.method === "버스" ? "🚌" :
-                       activity.travelFromPrev.method === "택시" ? "🚕" : "🚶"}
+                       activity.travelFromPrev.method === "버스" || activity.travelFromPrev.method === "Bus" ? "🚌" :
+                       activity.travelFromPrev.method === "택시" || activity.travelFromPrev.method === "Taxi" ? "🚕" : "🚶"}
                     </div>
                     <div className="w-0.5 h-3 bg-primary/30" />
                   </div>

@@ -351,7 +351,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
       const response = await fetch("/api/schedule-generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
+        body: JSON.stringify({ ...input, language }),
       });
 
       const data = await response.json();
