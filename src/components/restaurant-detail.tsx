@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MapPin, Info, Map, Phone, Banknote, Building2, Tag, Settings, Trash2, Clock, Star } from "lucide-react";
-import { Restaurant, getGoogleMapsLink, getUnsplashImage, categories } from "@/data/taiwan-food";
+import { Restaurant, getGoogleMapsLink, getUnsplashImage, categories, getDisplayName, getDisplayLocation, getDisplayFeature, getDisplayBuilding, getDisplayNightMarket } from "@/data/taiwan-food";
 import { ReviewSection } from "@/components/review-section";
 import { GoogleReviews } from "@/components/google-reviews";
 import { CategoryEditModal } from "@/components/category-edit-modal";
 import { RestaurantEditModal } from "@/components/restaurant-edit-modal";
 import Image from "next/image";
+import { useLanguage } from "@/components/language-provider";
 
 // 사용자 등록 맛집용 확장 인터페이스
 interface ExtendedRestaurant extends Restaurant {
@@ -57,6 +58,7 @@ const getRestaurantInfoCache = (): Record<string, { priceRange: string | null; p
 };
 
 export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, onDelete, onUpdate }: RestaurantDetailProps) {
+  const { t, language } = useLanguage();
   const fallbackUrl = getUnsplashImage(restaurant.이름);
   const [imageUrl, setImageUrl] = useState<string>(fallbackUrl);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,6 +77,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
   // 상세 정보 수정 모달 상태
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [currentFeature, setCurrentFeature] = useState(restaurant.feature || restaurant.특징 || "");
+  const [currentFeatureEn, setCurrentFeatureEn] = useState(restaurant.feature_en || "");
   const [currentPhoneNumber, setCurrentPhoneNumber] = useState(restaurant.phone_number || "");
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -92,13 +95,13 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
   // 카테고리 아이콘 및 이름 가져오기
   const getCategoryInfo = (categoryId: string) => {
     const cat = categories.find(c => c.id === categoryId);
-    return cat ? { icon: cat.icon, name: cat.name } : { icon: "🍽️", name: categoryId };
+    return cat ? { icon: cat.icon, name: t(cat.nameKey) } : { icon: "🍽️", name: categoryId };
   };
 
   // 맛집 삭제 핸들러
   const handleDelete = async () => {
     if (!restaurant.place_id) return;
-    if (!confirm(`"${restaurant.이름}"을(를) 삭제하시겠습니까?\n\n삭제된 맛집은 복구할 수 없습니다.`)) return;
+    if (!confirm(t("restaurant.delete_confirm", { name: getDisplayName(restaurant, language) }))) return;
 
     setIsDeleting(true);
     try {
@@ -107,14 +110,14 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
       });
       const data = await res.json();
       if (data.success) {
-        toast.success("맛집 삭제를 완료했습니다.");
+        toast.success(t("restaurant.delete_success"));
         onDelete?.();
         onBack();
       } else {
-        toast.error(data.error || "삭제에 실패했습니다.");
+        toast.error(data.error || t("restaurant.delete_failed"));
       }
     } catch {
-      toast.error("삭제에 실패했습니다.");
+      toast.error(t("restaurant.delete_failed"));
     } finally {
       setIsDeleting(false);
     }
@@ -138,6 +141,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
           // 최신 데이터로 상태 업데이트
           if (latestData.category) setCurrentCategory(latestData.category);
           if (latestData.feature !== undefined) setCurrentFeature(latestData.feature || "");
+          if (latestData.feature_en !== undefined) setCurrentFeatureEn(latestData.feature_en || "");
           if (latestData.phone_number !== undefined) {
             setCurrentPhoneNumber(latestData.phone_number || "");
             setPhoneNumber(latestData.phone_number || null);
@@ -262,7 +266,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
             <Button variant="ghost" onClick={onBack} className="h-9 w-9 rounded-full">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <span className="font-semibold truncate flex-1">{restaurant.이름}</span>
+            <span className="font-semibold truncate flex-1">{getDisplayName(restaurant, language)}</span>
             {canEdit && (
               <div className="flex gap-1">
                 <Button variant="ghost" size="icon" onClick={() => setEditModalOpen(true)} className="h-9 w-9 text-muted-foreground hover:text-primary">
@@ -284,7 +288,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
         )}
         <Image
           src={imageUrl}
-          alt={restaurant.이름}
+          alt={getDisplayName(restaurant, language)}
           fill
           className={`object-cover transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}
           sizes="100vw"
@@ -325,7 +329,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
 
         {/* 타이틀 + 뱃지 (이미지 하단 오버레이) */}
         <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
-          <h1 className="text-2xl font-bold text-white drop-shadow-md">{restaurant.이름}</h1>
+          <h1 className="text-2xl font-bold text-white drop-shadow-md">{getDisplayName(restaurant, language)}</h1>
           <div className="flex flex-wrap gap-2 mt-2">
             {isCustomRestaurant && currentCategory && (
               <Badge className="bg-white/20 text-white border-white/30" style={{ WebkitBackdropFilter: 'blur(4px)', backdropFilter: 'blur(4px)' }}>
@@ -334,7 +338,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
             )}
             {restaurant.야시장 && (
               <Badge className="bg-white/20 text-white border-white/30" style={{ WebkitBackdropFilter: 'blur(4px)', backdropFilter: 'blur(4px)' }}>
-                {restaurant.야시장}
+                {getDisplayNightMarket(restaurant.야시장, language)}
               </Badge>
             )}
           </div>
@@ -351,18 +355,22 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
               <div className="flex flex-wrap gap-2 items-center">
                 <Badge variant="outline" className="text-muted-foreground border-border bg-muted/50">
                   <Building2 className="h-3 w-3 mr-1" />
-                  {restaurant.빌딩 || buildingName}
+                  {getDisplayBuilding(restaurant, language) || buildingName}
                 </Badge>
               </div>
             )}
 
             {/* 상세 정보 목록 */}
             <div className="space-y-3 bg-muted/30 rounded-xl p-4">
-              {/* 주소 - 사용자 등록 맛집은 address, 정적 데이터는 위치 */}
+              {/* 주소 - 사용자 등록 맛집은 address/location_en, 정적 데이터는 위치 */}
               {(restaurant.address || restaurant.위치) && (
                 <div className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">{restaurant.address || restaurant.위치}</span>
+                  <span className="text-sm">
+                    {isCustomRestaurant
+                      ? (language === "en" && restaurant.location_en ? restaurant.location_en : restaurant.address)
+                      : getDisplayLocation(restaurant, language)}
+                  </span>
                 </div>
               )}
 
@@ -374,18 +382,22 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
                     {restaurant.google_rating.toFixed(1)}
                     {restaurant.google_reviews_count && (
                       <span className="text-muted-foreground ml-1">
-                        ({restaurant.google_reviews_count.toLocaleString()}개 리뷰)
+                        ({t("restaurant.reviews_count", { count: restaurant.google_reviews_count.toLocaleString() })})
                       </span>
                     )}
                   </span>
                 </div>
               )}
 
-              {/* 특징/메모 - 사용자 등록 맛집은 feature, 정적 데이터는 특징 */}
-              {(currentFeature || restaurant.특징) && (
+              {/* 특징/메모 - 사용자 등록 맛집은 feature/feature_en, 정적 데이터는 특징 */}
+              {(currentFeature || currentFeatureEn || restaurant.특징 || restaurant.feature_en) && (
                 <div className="flex items-start gap-3">
                   <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">{currentFeature || restaurant.특징}</span>
+                  <span className="text-sm">
+                    {isCustomRestaurant
+                      ? (language === "en" && currentFeatureEn ? currentFeatureEn : currentFeature)
+                      : getDisplayFeature(restaurant, language)}
+                  </span>
                 </div>
               )}
 
@@ -426,7 +438,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
               {!isCustomRestaurant && !infoLoaded && (
                 <div className="flex items-center gap-3 text-muted-foreground">
                   <div className="h-5 w-5 animate-pulse bg-muted rounded" />
-                  <span className="text-sm animate-pulse">정보 불러오는 중...</span>
+                  <span className="text-sm animate-pulse">{t("restaurant.loading_info")}</span>
                 </div>
               )}
             </div>
@@ -438,7 +450,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
               className="w-full h-12 text-base mt-4 inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
             >
               <Map className="h-5 w-5" />
-              구글 지도에서 보기
+              {t("restaurant.view_on_google_maps")}
             </a>
           </CardContent>
         </Card>

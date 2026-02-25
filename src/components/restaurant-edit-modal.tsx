@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { X, Loader2, Check, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { categories } from "@/data/taiwan-food";
+import { useLanguage } from "@/components/language-provider";
 
 // 좌표 형식 감지 정규식: (25.055701, 121.519953) 또는 25.055701, 121.519953
 const COORDINATE_REGEX = /^\s*\(?\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*\)?\s*$/;
@@ -33,6 +34,7 @@ export function RestaurantEditModal({
   restaurant,
   onSuccess,
 }: RestaurantEditModalProps) {
+  const { t } = useLanguage();
   const [category, setCategory] = useState(restaurant.category);
   const [feature, setFeature] = useState(restaurant.feature || "");
   const [phoneNumber, setPhoneNumber] = useState(restaurant.phone_number || "");
@@ -80,10 +82,10 @@ export function RestaurantEditModal({
         setAddress(data.data.address);
         setCoordinates({ lat, lng });
       } else {
-        setError(data.error || "주소 변환에 실패했습니다.");
+        setError(data.error || t("edit_restaurant.address_convert_failed"));
       }
     } catch {
-      setError("주소 변환 중 오류가 발생했습니다.");
+      setError(t("edit_restaurant.address_convert_error"));
     } finally {
       setIsConvertingAddress(false);
     }
@@ -180,7 +182,7 @@ export function RestaurantEditModal({
         });
         const data = await res.json();
         if (!data.success) {
-          throw new Error(data.error || "카테고리 수정에 실패했습니다.");
+          throw new Error(data.error || t("edit_restaurant.category_update_failed"));
         }
       }
 
@@ -199,14 +201,14 @@ export function RestaurantEditModal({
         });
         const data = await res.json();
         if (!data.success) {
-          throw new Error(data.error || "정보 수정에 실패했습니다.");
+          throw new Error(data.error || t("edit_restaurant.update_failed"));
         }
       }
 
       onSuccess(updates as Partial<RestaurantData>);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "수정 중 오류가 발생했습니다.");
+      setError(err instanceof Error ? err.message : t("edit_restaurant.update_error"));
     } finally {
       setIsLoading(false);
     }
@@ -229,7 +231,7 @@ export function RestaurantEditModal({
 
         {/* 헤더 */}
         <div className="px-5 pb-3 flex items-center justify-between border-b">
-          <h2 className="text-lg font-semibold">맛집 정보 수정</h2>
+          <h2 className="text-lg font-semibold">{t("edit_restaurant.title")}</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-muted transition-colors"
@@ -242,7 +244,7 @@ export function RestaurantEditModal({
         <div className="p-5 space-y-5 overflow-y-auto flex-1">
           {/* 맛집명 (읽기 전용) */}
           <div>
-            <label className="block text-sm font-medium mb-2">맛집명</label>
+            <label className="block text-sm font-medium mb-2">{t("restaurant.name")}</label>
             <div className="px-3 py-2 bg-muted rounded-lg text-sm">
               {restaurant.name}
             </div>
@@ -253,7 +255,7 @@ export function RestaurantEditModal({
             <label className="block text-sm font-medium mb-2">
               <span className="flex items-center gap-1">
                 <MapPin className="w-4 h-4" />
-                주소
+                {t("restaurant.location")}
               </span>
             </label>
             <div className="relative">
@@ -261,7 +263,7 @@ export function RestaurantEditModal({
                 type="text"
                 value={address}
                 onChange={(e) => handleAddressChange(e.target.value)}
-                placeholder="주소 또는 좌표를 입력하세요"
+                placeholder={t("edit_restaurant.address_placeholder")}
                 className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
                 disabled={isConvertingAddress}
               />
@@ -272,7 +274,7 @@ export function RestaurantEditModal({
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              구글맵에서 복사한 좌표 (25.xxx, 121.xxx) 붙여넣기 시 자동 변환
+              {t("edit_restaurant.coords_hint")}
             </p>
           </div>
 
@@ -285,7 +287,7 @@ export function RestaurantEditModal({
 
           {/* 카테고리 선택 */}
           <div>
-            <label className="block text-sm font-medium mb-2">카테고리</label>
+            <label className="block text-sm font-medium mb-2">{t("add_restaurant.category_label")}</label>
             <div className="grid grid-cols-2 gap-2">
               {availableCategories.map((cat) => (
                 <button
@@ -299,7 +301,7 @@ export function RestaurantEditModal({
                 >
                   <span className="flex items-center gap-2">
                     <span>{cat.icon}</span>
-                    <span className="font-medium">{cat.name}</span>
+                    <span className="font-medium">{t(cat.nameKey)}</span>
                   </span>
                   {category === cat.id && (
                     <Check className="w-4 h-4" />
@@ -311,38 +313,38 @@ export function RestaurantEditModal({
 
           {/* 특징/메모 */}
           <div>
-            <label className="block text-sm font-medium mb-2">특징/메모</label>
+            <label className="block text-sm font-medium mb-2">{t("edit_restaurant.feature_label")}</label>
             <textarea
               value={feature}
               onChange={(e) => setFeature(e.target.value)}
-              placeholder="맛집 특징이나 메모를 입력하세요"
+              placeholder={t("edit_restaurant.feature_placeholder")}
               className="w-full px-3 py-2 border border-border rounded-lg resize-none h-20 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
             />
           </div>
 
           {/* 전화번호 */}
           <div>
-            <label className="block text-sm font-medium mb-2">전화번호</label>
+            <label className="block text-sm font-medium mb-2">{t("restaurant.phone")}</label>
             <input
               type="tel"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="전화번호를 입력하세요"
+              placeholder={t("edit_restaurant.phone_placeholder")}
               className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
             />
           </div>
 
           {/* 영업시간 */}
           <div>
-            <label className="block text-sm font-medium mb-2">영업시간</label>
+            <label className="block text-sm font-medium mb-2">{t("restaurant.opening_hours")}</label>
             <textarea
               value={openingHours}
               onChange={(e) => setOpeningHours(e.target.value)}
-              placeholder="영업시간을 입력하세요 (줄바꿈으로 구분)"
+              placeholder={t("edit_restaurant.hours_placeholder")}
               className="w-full px-3 py-2 border border-border rounded-lg resize-none h-24 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              예: 월-금: 11:00-21:00 (줄바꿈으로 요일 구분)
+              {t("edit_restaurant.hours_hint")}
             </p>
           </div>
         </div>
@@ -355,7 +357,7 @@ export function RestaurantEditModal({
             className="flex-1 h-12"
             disabled={isLoading}
           >
-            취소
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleSaveClick}
@@ -365,7 +367,7 @@ export function RestaurantEditModal({
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              "저장"
+              t("common.save")
             )}
           </Button>
         </div>
@@ -380,9 +382,9 @@ export function RestaurantEditModal({
           />
           <div className="relative bg-background w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in">
             <div className="p-6 text-center">
-              <h3 className="text-lg font-semibold mb-2">수정 확인</h3>
+              <h3 className="text-lg font-semibold mb-2">{t("edit_restaurant.confirm_title")}</h3>
               <p className="text-sm text-muted-foreground mb-6">
-                맛집 정보를 수정하시겠습니까?
+                {t("edit_restaurant.confirm_message")}
               </p>
               <div className="flex gap-3">
                 <Button
@@ -390,13 +392,13 @@ export function RestaurantEditModal({
                   onClick={() => setShowConfirm(false)}
                   className="flex-1"
                 >
-                  취소
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   onClick={handleSubmit}
                   className="flex-1"
                 >
-                  확인
+                  {t("common.confirm")}
                 </Button>
               </div>
             </div>

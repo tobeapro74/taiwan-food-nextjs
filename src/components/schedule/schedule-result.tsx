@@ -13,22 +13,23 @@ import {
   AgeGenderCount,
 } from "@/lib/schedule-types";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useLanguage } from "@/components/language-provider";
 
-function formatAgeGenderSummary(breakdown?: AgeGenderCount[], totalFallback?: number): string {
+function formatAgeGenderSummary(breakdown?: AgeGenderCount[], totalFallback?: number, t?: (key: string, params?: Record<string, string | number>) => string): string {
   if (!breakdown || breakdown.length === 0) {
-    return `${totalFallback || 0}명`;
+    return t ? t("schedule.count_suffix", { count: totalFallback || 0 }) : `${totalFallback || 0}`;
   }
-  const AGE_LABELS: Record<string, string> = {
-    "10s": "10대", "20s": "20대", "30s": "30대",
-    "40s": "40대", "50s": "50대", "60s_plus": "60대",
+  const AGE_KEY_MAP: Record<string, string> = {
+    "10s": "schedule.age_10s", "20s": "schedule.age_20s", "30s": "schedule.age_30s",
+    "40s": "schedule.age_40s", "50s": "schedule.age_50s", "60s_plus": "schedule.age_60s",
   };
   const parts: string[] = [];
   for (const g of breakdown) {
-    const label = AGE_LABELS[g.ageGroup] || g.ageGroup;
-    if (g.male > 0) parts.push(`${label}남(${g.male})`);
-    if (g.female > 0) parts.push(`${label}여(${g.female})`);
+    const label = t ? t(AGE_KEY_MAP[g.ageGroup] || g.ageGroup) : g.ageGroup;
+    if (g.male > 0) parts.push(t ? t("schedule.age_summary_male", { label, count: g.male }) : `${label}M(${g.male})`);
+    if (g.female > 0) parts.push(t ? t("schedule.age_summary_female", { label, count: g.female }) : `${label}F(${g.female})`);
   }
-  return parts.length > 0 ? parts.join("+") : `${totalFallback || 0}명`;
+  return parts.length > 0 ? parts.join("+") : (t ? t("schedule.count_suffix", { count: totalFallback || 0 }) : `${totalFallback || 0}`);
 }
 
 interface User {
@@ -46,6 +47,7 @@ interface ScheduleResultProps {
 }
 
 export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initialSaved = false }: ScheduleResultProps) {
+  const { t, language } = useLanguage();
   const [expandedDays, setExpandedDays] = useState<number[]>([1]);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(initialSaved);
@@ -72,12 +74,12 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
 
   // 공유 기능
   const handleShare = async () => {
-    const text = formatScheduleAsText(schedule);
+    const text = formatScheduleAsText(schedule, t);
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `타이베이 ${schedule.input.days}일 여행 일정`,
+          title: t("schedule.share_title", { days: schedule.input.days }),
           text,
         });
       } catch (err) {
@@ -86,7 +88,7 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
     } else {
       try {
         await navigator.clipboard.writeText(text);
-        toast.success("일정을 클립보드에 복사했습니다.");
+        toast.success(t("schedule.copied"));
       } catch (err) {
         console.error("Copy failed:", err);
       }
@@ -108,13 +110,13 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
       const data = await response.json();
       if (data.success) {
         setIsSaved(true);
-        toast.success("일정 저장을 완료했습니다.");
+        toast.success(t("schedule.save_success"));
       } else {
-        toast.error(data.error || "저장에 실패했습니다.");
+        toast.error(data.error || t("schedule.save_failed"));
       }
     } catch (error) {
       console.error("Save error:", error);
-      toast.error("저장에 실패했습니다.");
+      toast.error(t("schedule.save_failed"));
     } finally {
       setIsSaving(false);
     }
@@ -141,10 +143,10 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
             </Button>
             <div>
               <h1 className="font-bold text-white text-lg">
-                나의 {schedule.input.days}일 일정
+                {t("schedule.my_schedule", { days: schedule.input.days })}
               </h1>
               <p className="text-white/80 text-xs">
-                {formatAgeGenderSummary(schedule.input.ageGenderBreakdown, schedule.input.travelers)} · {new Date(schedule.createdAt).toLocaleDateString("ko-KR")}
+                {formatAgeGenderSummary(schedule.input.ageGenderBreakdown, schedule.input.travelers, t)} · {new Date(schedule.createdAt).toLocaleDateString(language === "ko" ? "ko-KR" : "en-US")}
               </p>
             </div>
           </div>
@@ -192,7 +194,7 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
         {schedule.tips && schedule.tips.length > 0 && (
           <section className="bg-accent/5 dark:bg-accent/10 rounded-2xl p-5 shadow-md border border-accent/10 dark:border-accent/20">
             <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-              <span>💡</span> 여행 팁
+              <span>💡</span> {t("schedule.travel_tips")}
             </h3>
             <ul className="space-y-2">
               {schedule.tips.map((tip, idx) => (
@@ -209,7 +211,7 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
         {schedule.budget && (
           <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
             <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-              <span>💰</span> 예상 예산
+              <span>💰</span> {t("schedule.budget")}
             </h3>
             <p className="text-sm text-muted-foreground">{schedule.budget}</p>
           </section>
@@ -229,17 +231,17 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
             {isSaving ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                저장 중...
+                {t("schedule.saving")}
               </>
             ) : isSaved ? (
               <>
                 <Check className="w-5 h-5" />
-                저장 완료
+                {t("schedule.saved")}
               </>
             ) : (
               <>
                 <Save className="w-5 h-5" />
-                일정 저장하기
+                {t("schedule.save_button")}
               </>
             )}
           </button>
@@ -251,7 +253,7 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
           className="w-full py-4 bg-muted text-foreground font-medium rounded-2xl hover:bg-muted/80 transition-all flex items-center justify-center gap-2"
         >
           <RotateCcw className="w-4 h-4" />
-          새로운 일정 만들기
+          {t("schedule.new_schedule")}
         </button>
       </div>
 
@@ -261,16 +263,17 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
         onClose={() => setPhotoModalOpen(false)}
         photos={selectedPhotos}
         placeName={selectedPlaceName}
+        t={t}
       />
 
       {/* 저장 전 이탈 확인 다이얼로그 */}
       <ConfirmDialog
         open={confirmAction !== null}
         onOpenChange={(open) => { if (!open) setConfirmAction(null); }}
-        title="일정이 저장되지 않았습니다"
+        title={t("schedule.unsaved_warning")}
         description={confirmAction === "back"
-          ? "뒤로 가면 현재 일정이 사라집니다.\n이동하시겠습니까?"
-          : "목록으로 이동하면 현재 일정이 사라집니다.\n이동하시겠습니까?"}
+          ? t("schedule.back_warning")
+          : t("schedule.list_warning")}
         onConfirm={() => {
           if (confirmAction === "back") {
             onBack();
@@ -427,11 +430,13 @@ function PhotoPreviewModal({
   onClose,
   photos,
   placeName,
+  t,
 }: {
   isOpen: boolean;
   onClose: () => void;
   photos: string[];
   placeName: string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -506,7 +511,7 @@ function PhotoPreviewModal({
         <div className="px-5 pb-3 flex items-center justify-between border-b">
           <div>
             <h2 className="text-lg font-semibold">{placeName}</h2>
-            <p className="text-xs text-muted-foreground">{photos.length}장의 사진</p>
+            <p className="text-xs text-muted-foreground">{t("schedule.photos", { count: photos.length })}</p>
           </div>
           <button
             onClick={onClose}
@@ -528,7 +533,7 @@ function PhotoPreviewModal({
                 {!imageErrors.has(idx) ? (
                   <Image
                     src={photo}
-                    alt={`${placeName} 사진 ${idx + 1}`}
+                    alt={t("schedule.photo_alt", { name: placeName, index: idx + 1 })}
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 50vw, 33vw"
@@ -592,7 +597,7 @@ function PhotoPreviewModal({
           >
             <Image
               src={photos[selectedIndex]}
-              alt={`${placeName} 사진 ${selectedIndex + 1}`}
+              alt={t("schedule.photo_alt", { name: placeName, index: selectedIndex + 1 })}
               fill
               className="object-contain"
               sizes="90vw"
@@ -608,9 +613,9 @@ function PhotoPreviewModal({
 }
 
 // 일정을 텍스트로 포맷
-function formatScheduleAsText(schedule: TravelSchedule): string {
-  let text = `🗓️ 타이베이 ${schedule.input.days}일 여행 일정\n`;
-  text += `👥 ${schedule.input.travelers}명\n\n`;
+function formatScheduleAsText(schedule: TravelSchedule, t: (key: string, params?: Record<string, string | number>) => string): string {
+  let text = `🗓️ ${t("schedule.title", { days: schedule.input.days })}\n`;
+  text += `👥 ${t("schedule.people", { count: schedule.input.travelers })}\n\n`;
 
   for (const day of schedule.schedule) {
     text += `📍 Day ${day.day} - ${day.theme}\n`;
@@ -624,7 +629,7 @@ function formatScheduleAsText(schedule: TravelSchedule): string {
   }
 
   if (schedule.tips && schedule.tips.length > 0) {
-    text += `💡 여행 팁\n`;
+    text += `💡 ${t("schedule.travel_tips")}\n`;
     for (const tip of schedule.tips) {
       text += `• ${tip}\n`;
     }
@@ -632,10 +637,10 @@ function formatScheduleAsText(schedule: TravelSchedule): string {
   }
 
   if (schedule.budget) {
-    text += `💰 예상 예산: ${schedule.budget}\n`;
+    text += `💰 ${t("schedule.budget")}: ${schedule.budget}\n`;
   }
 
-  text += `\n🍜 Made by 대만맛집`;
+  text += `\n🍜 ${t("schedule.made_by")}`;
 
   return text;
 }

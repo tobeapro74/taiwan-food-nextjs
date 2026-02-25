@@ -3,10 +3,12 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/components/language-provider";
 
 function KakaoCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const [error, setError] = useState("");
   const processed = useRef(false);
 
@@ -21,13 +23,13 @@ function KakaoCallbackContent() {
     const isNative = searchParams.get("state") === "native";
 
     if (errorParam) {
-      setError("카카오 로그인이 취소되었습니다.");
+      setError(t("kakao.login_cancelled"));
       setTimeout(() => router.replace("/"), 2000);
       return;
     }
 
     if (!code) {
-      setError("인가 코드가 없습니다.");
+      setError(t("kakao.no_auth_code"));
       setTimeout(() => router.replace("/"), 2000);
       return;
     }
@@ -42,7 +44,7 @@ function KakaoCallbackContent() {
         const data = await res.json();
 
         if (!data.success) {
-          setError(data.error || "카카오 로그인에 실패했습니다.");
+          setError(data.error || t("kakao.login_failed"));
           setTimeout(() => router.replace("/"), 2000);
           return;
         }
@@ -61,7 +63,7 @@ function KakaoCallbackContent() {
           window.location.replace("/");
         }
       } catch {
-        setError("네트워크 오류가 발생했습니다.");
+        setError(t("kakao.network_error"));
         setTimeout(() => router.replace("/"), 2000);
       }
     };
@@ -73,20 +75,20 @@ function KakaoCallbackContent() {
     <div className="flex flex-col items-center justify-center min-h-dvh gap-4">
       {error ? (
         <div className="max-w-sm px-4 text-center space-y-3">
-          <p className="text-destructive text-sm font-medium">카카오 인증에 실패했습니다.</p>
+          <p className="text-destructive text-sm font-medium">{t("kakao.auth_failed")}</p>
           <p className="text-muted-foreground text-xs break-all whitespace-pre-wrap">{error}</p>
           <button
             onClick={() => router.replace("/")}
             className="text-xs text-primary underline"
           >
-            메인 페이지로 돌아가기
+            {t("kakao.go_home")}
           </button>
         </div>
       ) : (
         <>
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
           <p className="text-sm text-muted-foreground">
-            카카오 로그인 처리 중...
+            {t("kakao.processing")}
           </p>
         </>
       )}

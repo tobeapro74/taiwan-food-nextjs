@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Loader2, ChevronLeft, ChevronRight, ExternalLink, Info } from "lucide-react";
 import { RestaurantHistory } from "@/lib/types";
+import { categories as foodCategories } from "@/data/taiwan-food";
+import { useLanguage } from "@/components/language-provider";
 
 interface RestaurantHistoryListProps {
   onBack: () => void;
@@ -12,6 +14,7 @@ interface RestaurantHistoryListProps {
 }
 
 export function RestaurantHistoryList({ onBack, onSelectRestaurant }: RestaurantHistoryListProps) {
+  const { t, language } = useLanguage();
   const [history, setHistory] = useState<RestaurantHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -42,21 +45,26 @@ export function RestaurantHistoryList({ onBack, onSelectRestaurant }: Restaurant
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("ko-KR", {
+    return date.toLocaleDateString(language === "ko" ? "ko-KR" : "en-US", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
     }).replace(/\. /g, ".").replace(/\.$/, "");
   };
 
+  const getCategoryLabel = (categoryId: string) => {
+    const cat = foodCategories.find(c => c.id === categoryId);
+    return cat ? t(cat.nameKey) : categoryId;
+  };
+
   const getActionBadge = (action: string) => {
     switch (action) {
       case "register":
-        return <Badge className="bg-primary text-primary-foreground text-xs">등록</Badge>;
+        return <Badge className="bg-primary text-primary-foreground text-xs">{t("history.registered")}</Badge>;
       case "delete":
-        return <Badge className="bg-destructive text-white text-xs">삭제</Badge>;
+        return <Badge className="bg-destructive text-white text-xs">{t("history.deleted")}</Badge>;
       case "update":
-        return <Badge className="bg-muted-foreground text-white text-xs">수정</Badge>;
+        return <Badge className="bg-muted-foreground text-white text-xs">{t("history.modified")}</Badge>;
       default:
         return <Badge variant="secondary" className="text-xs">{action}</Badge>;
     }
@@ -74,9 +82,9 @@ export function RestaurantHistoryList({ onBack, onSelectRestaurant }: Restaurant
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="font-semibold">맛집 등록 히스토리</h1>
+          <h1 className="font-semibold">{t("history.title")}</h1>
           <span className="text-sm text-muted-foreground ml-auto">
-            총 {total}건
+            {t("history.total", { count: total })}
           </span>
         </div>
       </div>
@@ -85,11 +93,11 @@ export function RestaurantHistoryList({ onBack, onSelectRestaurant }: Restaurant
       <div className="sticky top-[60px] z-10 bg-muted/50 border-b border-border hidden md:block overflow-hidden">
         <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs font-medium text-muted-foreground">
           <div className="col-span-1 text-center overflow-hidden">#</div>
-          <div className="col-span-2 overflow-hidden">날짜</div>
-          <div className="col-span-3 overflow-hidden">맛집명</div>
-          <div className="col-span-3 overflow-hidden">지역</div>
-          <div className="col-span-2 overflow-hidden">카테고리</div>
-          <div className="col-span-1 text-center overflow-hidden">상태</div>
+          <div className="col-span-2 overflow-hidden">{t("history.date")}</div>
+          <div className="col-span-3 overflow-hidden">{t("history.name")}</div>
+          <div className="col-span-3 overflow-hidden">{t("history.area")}</div>
+          <div className="col-span-2 overflow-hidden">{t("history.category")}</div>
+          <div className="col-span-1 text-center overflow-hidden">{t("history.status")}</div>
         </div>
       </div>
 
@@ -116,14 +124,14 @@ export function RestaurantHistoryList({ onBack, onSelectRestaurant }: Restaurant
                           <span className="text-xs text-muted-foreground">#{item.seq}</span>
                           {getActionBadge(item.action)}
                           <Badge variant="outline" className="text-xs">
-                            {item.category}
+                            {getCategoryLabel(item.category)}
                           </Badge>
                         </div>
                         {item.action !== "delete" ? (
                           <button
                             onClick={() => onSelectRestaurant?.(item.place_id)}
                             className="text-sm font-medium text-primary hover:underline flex items-center gap-1 active:scale-95 transition-transform duration-150"
-                            title={`${item.name} 상세보기`}
+                            title={`${item.name} - ${t("restaurant.view_detail")}`}
                           >
                             <span className="truncate">{item.name}</span>
                             <ExternalLink className="h-3 w-3 flex-shrink-0" />
@@ -165,7 +173,7 @@ export function RestaurantHistoryList({ onBack, onSelectRestaurant }: Restaurant
                           <button
                             onClick={() => onSelectRestaurant?.(item.place_id)}
                             className="text-sm font-medium text-primary hover:underline flex items-center gap-1 max-w-full overflow-hidden active:scale-95 transition-transform duration-150"
-                            title={`${item.name} 상세보기`}
+                            title={`${item.name} - ${t("restaurant.view_detail")}`}
                           >
                             <span className="truncate">{item.name}</span>
                             <ExternalLink className="h-3 w-3 flex-shrink-0" />
@@ -181,7 +189,7 @@ export function RestaurantHistoryList({ onBack, onSelectRestaurant }: Restaurant
                       </div>
                       <div className="col-span-2 overflow-hidden">
                         <Badge variant="outline" className="text-xs truncate max-w-full">
-                          {item.category}
+                          {getCategoryLabel(item.category)}
                         </Badge>
                       </div>
                       <div className="col-span-1 flex justify-center overflow-hidden">
@@ -199,7 +207,7 @@ export function RestaurantHistoryList({ onBack, onSelectRestaurant }: Restaurant
               ))
             ) : (
               <div className="text-center text-muted-foreground py-12">
-                등록된 히스토리가 없습니다.
+                {t("history.no_entries")}
               </div>
             )}
           </div>

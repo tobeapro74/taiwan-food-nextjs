@@ -4,65 +4,94 @@
 
 /**
  * 타이베이 12개 구 + 기타 지역 정보
+ * nameKey/descKey는 i18n 키를 참조
  */
-export const DISTRICT_INFO: Record<string, { name: string; description: string }> = {
+export const DISTRICT_INFO: Record<string, { name: string; nameKey: string; description: string; descKey: string }> = {
   // 타이베이 12구
   "중정구": {
     name: "중정구 (Zhongzheng)",
-    description: "중정기념당과 타이베이 메인스테이션이 위치하고 있으며 시먼딩, 중산 상권과 가까이에 있어 교통과 관광의 중심지입니다."
+    nameKey: "district.zhongzheng.name",
+    description: "중정기념당과 타이베이 메인스테이션이 위치. 교통과 관광의 중심지.",
+    descKey: "district.zhongzheng.desc",
   },
   "다안구": {
     name: "다안구 (Da'an)",
-    description: "융캉제가 자리해 있으며 카페와 맛집이 밀집된 지역으로, 젊은 여행자들에게 인기 있는 감성 거리입니다."
+    nameKey: "district.daan.name",
+    description: "융캉제가 있어 카페와 맛집이 밀집된 감성 거리.",
+    descKey: "district.daan.desc",
   },
   "신이구": {
     name: "신이구 (Xinyi)",
-    description: "타이베이 101타워와 대형 쇼핑몰이 모여 있는 금융·상업 중심지로, 야경과 쇼핑을 동시에 즐길 수 있습니다."
+    nameKey: "district.xinyi.name",
+    description: "타이베이 101타워와 대형 쇼핑몰. 야경과 쇼핑 명소.",
+    descKey: "district.xinyi.desc",
   },
   "완화구": {
     name: "완화구 (Wanhua)",
-    description: "시먼딩이 위치해 있으며 젊은 층과 관광객이 모이는 패션·문화 거리입니다. 용산사 같은 전통 명소도 함께 있습니다."
+    nameKey: "district.wanhua.name",
+    description: "시먼딩이 위치한 패션·문화 거리. 용산사 같은 전통 명소도 함께.",
+    descKey: "district.wanhua.desc",
   },
   "중산구": {
     name: "중산구 (Zhongshan)",
-    description: "중산 카페거리와 세련된 바, 호텔이 밀집해 있어 감성 여행과 나이트라이프를 즐기기에 적합합니다."
+    nameKey: "district.zhongshan.name",
+    description: "중산 카페거리와 세련된 바·호텔. 감성 여행과 나이트라이프에 적합.",
+    descKey: "district.zhongshan.desc",
   },
   "스린구": {
     name: "스린구 (Shilin)",
-    description: "타이베이 최대 규모의 스린 야시장과 국립고궁박물원이 위치해 있어 먹거리와 문화 체험을 동시에 즐길 수 있습니다."
+    nameKey: "district.shilin.name",
+    description: "스린 야시장과 국립고궁박물원. 먹거리와 문화 체험 동시에.",
+    descKey: "district.shilin.desc",
   },
   "베이터우구": {
     name: "베이터우구 (Beitou)",
-    description: "온천으로 유명한 지역으로, 온천 호텔과 베이터우 도서관이 있어 힐링 여행에 적합합니다."
+    nameKey: "district.beitou.name",
+    description: "온천으로 유명. 온천 호텔·도서관·박물관이 있어 힐링 여행에 적합.",
+    descKey: "district.beitou.desc",
   },
   "송산구": {
     name: "송산구 (Songshan)",
-    description: "송산공항과 라오허제 야시장이 위치해 있으며, 교통이 편리하고 야시장 먹거리 탐방에 좋은 곳입니다."
+    nameKey: "district.songshan.name",
+    description: "송산공항과 라오허제 야시장. 교통 편리하고 야시장 탐방에 좋음.",
+    descKey: "district.songshan.desc",
   },
   "다퉁구": {
     name: "다퉁구 (Datong)",
-    description: "디화제가 자리해 있으며 전통시장과 한약방, 건축물이 많아 대만의 옛 정취를 느낄 수 있습니다."
+    nameKey: "district.datong.name",
+    description: "디화제가 있어 전통시장과 한약방. 대만의 정취를 느낄 수 있음.",
+    descKey: "district.datong.desc",
   },
   "네이후구": {
     name: "네이후구 (Neihu)",
-    description: "IT 기업과 주거지역이 밀집해 있으며, 대형 쇼핑몰과 호수 공원이 있어 현지인 생활을 체험할 수 있습니다."
+    nameKey: "district.neihu.name",
+    description: "IT 기업과 주거지역. 대형 쇼핑몰과 호수 공원으로 현지 생활 체험.",
+    descKey: "district.neihu.desc",
   },
   "난강구": {
     name: "난강구 (Nangang)",
-    description: "난강 전시센터와 IT 산업 단지가 위치해 있으며, 대형 콘서트와 박람회가 자주 열리는 지역입니다."
+    nameKey: "district.nangang.name",
+    description: "난강 전시센터와 IT 산업 단지. 박람회·콘서트가 자주 열리는 곳.",
+    descKey: "district.nangang.desc",
   },
   "원산구": {
     name: "원산구 (Wenshan)",
-    description: "마오콩 곤돌라와 동물원이 있어 자연과 함께하는 여행에 적합하며, 가족 단위 관광객에게 인기가 많습니다."
+    nameKey: "district.wenshan.name",
+    description: "타이베이 동물원과 마오콩 곤돌라. 가족 단위 관광객에게 인기.",
+    descKey: "district.wenshan.desc",
   },
   // 신베이시
   "단수이": {
     name: "단수이 (Tamsui)",
-    description: "신베이시에 위치한 해안 도시로, 석양이 아름다운 단수이 올드스트리트와 홍마오청이 유명합니다."
+    nameKey: "district.danshui.name",
+    description: "석양이 아름다운 해안 도시. 단수이 올드스트리트와 홍마오청이 유명.",
+    descKey: "district.danshui.desc",
   },
   "싼충구": {
     name: "싼충구 (Sanchong)",
-    description: "신베이시에 위치하며 타이베이와 인접해 있어 접근성이 좋고 현지인 맛집이 많습니다."
+    nameKey: "district.sanchong.name",
+    description: "타이베이와 인접해 접근성이 좋고 현지인 맛집이 많음.",
+    descKey: "district.sanchong.desc",
   },
 };
 

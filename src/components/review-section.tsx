@@ -9,6 +9,7 @@ import { ReviewModal } from "@/components/review-modal";
 import { AuthModal } from "@/components/auth-modal";
 import { cn } from "@/lib/utils";
 import { ReviewListSkeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/components/language-provider";
 
 interface Review {
   id: number;
@@ -39,6 +40,7 @@ interface ReviewSectionProps {
 }
 
 export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionProps) {
+  const { t, language } = useLanguage();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -90,7 +92,7 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
   // 날짜 포맷
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString("ko-KR", {
+    return date.toLocaleDateString(language === "ko" ? "ko-KR" : "en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -105,7 +107,7 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
 
   // 리뷰 삭제
   const handleDeleteReview = async (reviewId: number) => {
-    if (!confirm("리뷰를 삭제하시겠습니까?")) return;
+    if (!confirm(t("review.delete_confirm"))) return;
 
     try {
       const res = await fetch(`/api/reviews/${reviewId}`, { method: "DELETE" });
@@ -113,10 +115,10 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
       if (data.success) {
         setReviews((prev) => prev.filter((r) => r.id !== reviewId));
       } else {
-        toast.error(data.error || "삭제에 실패했습니다.");
+        toast.error(data.error || t("restaurant.delete_failed"));
       }
     } catch {
-      toast.error("삭제에 실패했습니다.");
+      toast.error(t("restaurant.delete_failed"));
     }
   };
 
@@ -148,11 +150,11 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
           {/* 헤더 */}
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold">리뷰</h3>
+              <h3 className="text-lg font-semibold">{t("review.title")}</h3>
               <div className="flex items-center gap-2 mt-1">
                 <StarDisplay rating={Math.round(parseFloat(averageRating))} size="md" />
                 <span className="font-semibold">{averageRating}</span>
-                <span className="text-muted-foreground">({reviews.length}개)</span>
+                <span className="text-muted-foreground">({t("restaurant.count_suffix", { count: reviews.length })})</span>
               </div>
             </div>
             <Button
@@ -166,7 +168,7 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
               className="gap-1"
             >
               <Plus className="w-4 h-4" />
-              게시
+              {t("review.submit")}
             </Button>
           </div>
 
@@ -175,7 +177,7 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
             <ReviewListSkeleton count={3} />
           ) : reviews.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
-              아직 리뷰가 없습니다. 첫 리뷰를 작성해보세요!
+              {t("review.no_reviews")}
             </div>
           ) : (
             <div className="space-y-4">
@@ -238,9 +240,9 @@ export function ReviewSection({ restaurantId, restaurantName }: ReviewSectionPro
                   {/* 세부 별점 */}
                   {(review.food_rating || review.service_rating || review.atmosphere_rating) && (
                     <div className="flex gap-4 text-xs text-muted-foreground mb-2">
-                      {review.food_rating && <span>음식 {review.food_rating}</span>}
-                      {review.service_rating && <span>서비스 {review.service_rating}</span>}
-                      {review.atmosphere_rating && <span>분위기 {review.atmosphere_rating}</span>}
+                      {review.food_rating && <span>{t("review.food")} {review.food_rating}</span>}
+                      {review.service_rating && <span>{t("review.service")} {review.service_rating}</span>}
+                      {review.atmosphere_rating && <span>{t("review.atmosphere")} {review.atmosphere_rating}</span>}
                     </div>
                   )}
 

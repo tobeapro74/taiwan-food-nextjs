@@ -72,6 +72,9 @@ async function migrateStaticToDb(
     created_at: new Date().toISOString(),
     building: restaurant.빌딩,
     night_market: restaurant.야시장,
+    name_en: restaurant.name_en,
+    address_en: restaurant.location_en,
+    feature_en: restaurant.feature_en,
   };
 
   await collection.insertOne(newRestaurant as CustomRestaurant);
@@ -196,8 +199,11 @@ export async function GET(request: NextRequest) {
 
       const orConditions = [
         { name: regex },
+        { name_en: regex },
         { address: regex },
+        { address_en: regex },
         { feature: regex },
+        { feature_en: regex },
         { category: regex },
       ];
 
@@ -301,6 +307,9 @@ export async function POST(request: NextRequest) {
       photos,
       website,
       google_map_url,
+      name_en,
+      address_en,
+      feature_en,
     } = body;
 
     // 필수 필드 검증
@@ -339,6 +348,9 @@ export async function POST(request: NextRequest) {
       photos,
       website,
       google_map_url,
+      name_en: name_en || undefined,
+      address_en: address_en || undefined,
+      feature_en: feature_en || undefined,
       registered_by: decoded.userId,
       registered_by_name: decoded.name,
       created_at: new Date().toISOString(),
@@ -611,6 +623,9 @@ export async function PUT(request: NextRequest) {
     if (photos !== undefined) updateFields.photos = photos;
     if (website !== undefined) updateFields.website = website;
     if (google_map_url) updateFields.google_map_url = google_map_url;
+    if (body.name_en !== undefined) updateFields.name_en = body.name_en;
+    if (body.address_en !== undefined) updateFields.address_en = body.address_en;
+    if (body.feature_en !== undefined) updateFields.feature_en = body.feature_en;
 
     // 업데이트 실행
     await collection.updateOne(

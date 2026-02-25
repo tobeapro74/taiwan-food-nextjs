@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Star, User, ExternalLink } from "lucide-react";
 import Image from "next/image";
+import { useLanguage } from "@/components/language-provider";
 
 interface GoogleReview {
   author_name: string;
@@ -30,6 +31,7 @@ const getReviewCache = (): Record<string, { reviews: GoogleReview[]; rating: num
 };
 
 export function GoogleReviews({ restaurantName }: GoogleReviewsProps) {
+  const { t } = useLanguage();
   const cache = getReviewCache();
   const [reviews, setReviews] = useState<GoogleReview[]>(cache[restaurantName]?.reviews || []);
   const [rating, setRating] = useState<number | null>(cache[restaurantName]?.rating ?? null);
@@ -104,7 +106,7 @@ export function GoogleReviews({ restaurantName }: GoogleReviewsProps) {
       <div className="space-y-3 mt-4">
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 rounded animate-shimmer" />
-          <h3 className="font-semibold">Google 리뷰</h3>
+          <h3 className="font-semibold">{t("review.google_reviews")}</h3>
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -141,14 +143,14 @@ export function GoogleReviews({ restaurantName }: GoogleReviewsProps) {
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
           </svg>
-          <h3 className="font-semibold">Google 리뷰</h3>
+          <h3 className="font-semibold">{t("review.google_reviews")}</h3>
         </div>
         {rating && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Star className="w-4 h-4 fill-accent text-accent" />
             <span className="font-medium text-foreground">{rating.toFixed(1)}</span>
             {userRatingsTotal && (
-              <span>({userRatingsTotal.toLocaleString()}개 리뷰)</span>
+              <span>({t("restaurant.reviews_count", { count: userRatingsTotal.toLocaleString() })})</span>
             )}
           </div>
         )}
@@ -215,7 +217,7 @@ export function GoogleReviews({ restaurantName }: GoogleReviewsProps) {
                       onClick={() => toggleExpand(index)}
                       className="text-primary hover:underline text-xs mt-1"
                     >
-                      {isExpanded ? "접기" : "더 보기"}
+                      {isExpanded ? t("common.fold") : t("common.more")}
                     </button>
                   )}
                 </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Eye, EyeOff, Mail, Loader2, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { initKakaoSDK, kakaoLogin } from "@/lib/kakao";
+import { useLanguage } from "@/components/language-provider";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface AuthModalProps {
 type AuthMode = "login" | "register";
 
 export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
+  const { t } = useLanguage();
   const [mode, setMode] = useState<AuthMode>("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -57,8 +59,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
   const handleKakaoLogin = async () => {
     setError("");
     initKakaoSDK();
-    // 네이티브 앱에서는 모달을 먼저 닫아야 딥링크 복귀 시 모달이 안 보임
-    // 웹에서는 페이지 이동이 일어나므로 onClose 불필요 (오히려 언마운트로 이동이 취소됨)
     const isNative = (window as any).Capacitor?.isNativePlatform?.() === true;
     if (isNative) {
       onClose();
@@ -69,13 +69,13 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
   // 인증 코드 발송
   const handleSendVerification = async () => {
     if (!email) {
-      setError("이메일을 입력해주세요.");
+      setError(t("auth.email_required"));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError("올바른 이메일 형식이 아닙니다.");
+      setError(t("auth.email_invalid"));
       return;
     }
 
@@ -92,13 +92,13 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
       const data = await res.json();
 
       if (data.success) {
-        setCodeSentMessage("인증 코드가 발송되었습니다. 이메일을 확인해주세요.");
+        setCodeSentMessage(t("auth.code_sent"));
         setCountdown(60);
       } else {
-        setError(data.error || "인증 코드 발송에 실패했습니다.");
+        setError(data.error || t("auth.code_send_failed"));
       }
     } catch {
-      setError("인증 코드 발송 중 오류가 발생했습니다.");
+      setError(t("auth.code_send_error"));
     } finally {
       setIsSendingCode(false);
     }
@@ -107,7 +107,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
   // 인증 코드 확인
   const handleVerifyCode = async () => {
     if (!verificationCode || verificationCode.length !== 6) {
-      setError("6자리 인증 코드를 입력해주세요.");
+      setError(t("auth.code_invalid"));
       return;
     }
 
@@ -126,10 +126,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
         setIsEmailVerified(true);
         setCodeSentMessage("");
       } else {
-        setError(data.error || "인증 코드가 올바르지 않습니다.");
+        setError(data.error || t("auth.code_invalid"));
       }
     } catch {
-      setError("인증 확인 중 오류가 발생했습니다.");
+      setError(t("auth.code_verify_error"));
     } finally {
       setIsVerifyingCode(false);
     }
@@ -141,24 +141,24 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
 
     if (mode === "login") {
       if (!email || !password) {
-        setError("이메일과 비밀번호를 입력해주세요.");
+        setError(t("auth.email_password_required"));
         return;
       }
     } else {
       if (!name || !email || !password) {
-        setError("모든 필드를 입력해주세요.");
+        setError(t("auth.all_fields_required"));
         return;
       }
       if (!isEmailVerified) {
-        setError("이메일 인증이 필요합니다.");
+        setError(t("auth.email_verify_required"));
         return;
       }
       if (password.length < 6) {
-        setError("비밀번호는 6자 이상이어야 합니다.");
+        setError(t("auth.password_min_length"));
         return;
       }
       if (password !== confirmPassword) {
-        setError("비밀번호가 일치하지 않습니다.");
+        setError(t("auth.password_mismatch"));
         return;
       }
     }
@@ -179,7 +179,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
           onClose();
           resetForm();
         } else {
-          setError(result.error || "로그인에 실패했습니다.");
+          setError(result.error || t("auth.login_failed"));
         }
       } else {
         const response = await fetch("/api/auth/register", {
@@ -203,15 +203,15 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
             resetForm();
           } else {
             setMode("login");
-            setError("회원가입이 완료되었습니다. 로그인해주세요.");
+            setError(t("auth.register_success"));
           }
         } else {
-          setError(result.error || "회원가입에 실패했습니다.");
+          setError(result.error || t("auth.register_failed"));
         }
       }
     } catch (err) {
       console.error("Auth error:", err);
-      setError("서버 연결에 실패했습니다.");
+      setError(t("auth.server_error"));
     } finally {
       setIsLoading(false);
     }
@@ -244,7 +244,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
         {/* 헤더 */}
         <div className="bg-card px-4 py-4 flex items-center justify-between sticky top-0 border-b border-border">
           <h2 className="text-lg font-semibold text-foreground">
-            {mode === "login" ? "로그인" : "회원가입"}
+            {mode === "login" ? t("auth.login_title") : t("auth.register_title")}
           </h2>
           <button
             onClick={handleClose}
@@ -277,13 +277,13 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
                 fill="#000000"
               />
             </svg>
-            카카오로 {mode === "login" ? "로그인" : "시작하기"}
+            {mode === "login" ? t("auth.kakao_login") : t("auth.kakao_start")}
           </button>
 
           {/* 구분선 */}
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground">또는</span>
+            <span className="text-xs text-muted-foreground">or</span>
             <div className="flex-1 h-px bg-border" />
           </div>
 
@@ -294,7 +294,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
             className="w-full flex items-center justify-center gap-1.5 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <Mail className="w-4 h-4" />
-            이메일로 {mode === "login" ? "로그인" : "회원가입"}
+            {mode === "login" ? t("auth.email_login") : t("auth.email_register")}
             {showEmailForm ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
 
@@ -312,12 +312,11 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
               {/* 이름 입력 (회원가입 시) */}
               {mode === "register" && (
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">이름</label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="이름을 입력하세요"
+                    placeholder={t("auth.name_placeholder")}
                     className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
                     autoComplete="name"
                   />
@@ -326,7 +325,6 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
 
               {/* 이메일 입력 */}
               <div>
-                <label className="block text-sm font-medium mb-1.5">이메일</label>
                 <div className="flex gap-2">
                   <input
                     type="email"
@@ -339,7 +337,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
                         setCodeSentMessage("");
                       }
                     }}
-                    placeholder="이메일을 입력하세요"
+                    placeholder={t("auth.email_placeholder")}
                     className="flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
                     autoComplete="email"
                     disabled={mode === "register" && isEmailVerified}
@@ -355,9 +353,9 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
                       {isSendingCode ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : countdown > 0 ? (
-                        `${countdown}초`
+                        `${countdown}s`
                       ) : (
-                        "인증"
+                        t("auth.verify")
                       )}
                     </Button>
                   )}
@@ -372,13 +370,12 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
               {/* 인증 코드 입력 (회원가입 시, 코드 발송 후) */}
               {mode === "register" && !isEmailVerified && codeSentMessage && (
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">인증 코드 (6자리)</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={verificationCode}
                       onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                      placeholder="인증 코드 입력"
+                      placeholder={t("auth.verify_code_placeholder")}
                       className="flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background text-center tracking-widest font-mono text-lg"
                       maxLength={6}
                     />
@@ -391,7 +388,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
                       {isVerifyingCode ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        "확인"
+                        t("common.confirm")
                       )}
                     </Button>
                   </div>
@@ -400,15 +397,12 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
 
               {/* 비밀번호 입력 */}
               <div>
-                <label className="block text-sm font-medium mb-1.5">
-                  비밀번호{mode === "register" && " (6자 이상)"}
-                </label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="비밀번호를 입력하세요"
+                    placeholder={t("auth.password_placeholder")}
                     className="w-full px-4 py-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
                     autoComplete={mode === "login" ? "current-password" : "new-password"}
                   />
@@ -425,13 +419,12 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
               {/* 비밀번호 확인 (회원가입 시) */}
               {mode === "register" && (
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">비밀번호 확인</label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="비밀번호를 다시 입력하세요"
+                      placeholder={t("auth.confirm_password_placeholder")}
                       className="w-full px-4 py-3 pr-12 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
                       autoComplete="new-password"
                     />
@@ -453,10 +446,10 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
                 className="w-full py-6 text-base"
               >
                 {isLoading
-                  ? "처리 중..."
+                  ? t("common.processing")
                   : mode === "login"
-                  ? "로그인"
-                  : "회원가입"}
+                  ? t("common.login")
+                  : t("common.register")}
               </Button>
             </form>
           )}
@@ -465,7 +458,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
           <div className="text-center text-sm text-muted-foreground">
             {mode === "login" ? (
               <>
-                계정이 없으신가요?{" "}
+                {t("auth.no_account")}{" "}
                 <button
                   type="button"
                   onClick={() => {
@@ -478,12 +471,12 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
                   }}
                   className="text-primary font-medium hover:underline"
                 >
-                  회원가입
+                  {t("common.register")}
                 </button>
               </>
             ) : (
               <>
-                이미 계정이 있으신가요?{" "}
+                {t("auth.has_account")}{" "}
                 <button
                   type="button"
                   onClick={() => {
@@ -496,7 +489,7 @@ export function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
                   }}
                   className="text-primary font-medium hover:underline"
                 >
-                  로그인
+                  {t("common.login")}
                 </button>
               </>
             )}

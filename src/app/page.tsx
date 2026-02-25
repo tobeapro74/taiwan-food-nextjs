@@ -35,9 +35,13 @@ import {
   generateStaticPlaceId,
   getAllRestaurants,
   getTimeBasedRecommendations,
+  getDisplayName,
+  getDisplayLocation,
+  getDisplayNightMarket,
 } from "@/data/taiwan-food";
 import { getRestaurantDistrict, isValidDistrict, DISTRICT_INFO } from "@/lib/district-utils";
 import { useTheme } from "@/components/theme-provider";
+import { useLanguage } from "@/components/language-provider";
 
 type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking" | "guide" | "schedule" | "ai-recommend";
 type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add" | "schedule";
@@ -53,6 +57,7 @@ interface UserInfo {
 
 export default function Home() {
   const { theme, toggleTheme } = useTheme();
+  const { t, language, toggleLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [currentView, setCurrentView] = useState<View>("home");
   const [viewHistory, setViewHistory] = useState<View[]>([]); // 네비게이션 스택
@@ -360,7 +365,7 @@ export default function Home() {
   // 지역 클릭 핸들러
   const handleDistrictSelect = useCallback((district: string, restaurants: Restaurant[]) => {
     const districtInfo = DISTRICT_INFO[district];
-    setListTitle(`${districtInfo?.name || district} 맛집`);
+    setListTitle(t("home.district_restaurants", { district: districtInfo?.name || district }));
     setListItems(restaurants);
     setViewHistory(prev => [...prev, currentView]); // 현재 화면을 스택에 push
     setCurrentView("list");
@@ -388,10 +393,10 @@ export default function Home() {
         const getPriceRangeText = (level?: number): string | undefined => {
           if (level === undefined) return undefined;
           const priceMap: Record<number, string> = {
-            1: "저렴 (NT$100 이하)",
-            2: "보통 (NT$100~300)",
-            3: "비쌈 (NT$300~600)",
-            4: "매우 비쌈 (NT$600 이상)",
+            1: t("price.cheap"),
+            2: t("price.normal"),
+            3: t("price.expensive"),
+            4: t("price.very_expensive"),
           };
           return priceMap[level];
         };
@@ -408,6 +413,9 @@ export default function Home() {
           price_level?: number;
           phone_number?: string;
           registered_by?: number;
+          name_en?: string;
+          address_en?: string;
+          feature_en?: string;
         }) => ({
           이름: item.name,
           위치: item.address,
@@ -420,6 +428,9 @@ export default function Home() {
           place_id: item.place_id,
           category: item.category,
           registered_by: item.registered_by,
+          name_en: item.name_en,
+          location_en: item.address_en,
+          feature_en: item.feature_en,
         }));
 
         // 중복 제거 (DB 맛집 우선)
@@ -427,15 +438,15 @@ export default function Home() {
         const filteredStatic = staticResults.filter(r => !dbNames.has(r.이름));
         const merged = [...dbResults, ...filteredStatic];
 
-        setListTitle(`"${query}" 검색 결과 (${merged.length}건)`);
+        setListTitle(t("home.search_results", { query, count: merged.length }));
         setListItems(merged);
         return;
       }
     } catch (error) {
-      console.error("DB 맛집 검색 오류:", error);
+      console.error("DB search error:", error);
     }
 
-    setListTitle(`"${query}" 검색 결과 (${staticResults.length}건)`);
+    setListTitle(t("home.search_results", { query, count: staticResults.length }));
     setListItems(staticResults);
   }, []);
 
@@ -481,7 +492,7 @@ export default function Home() {
       setActiveTab("tour");
       setTourSheetOpen(true);
     } else if (tab === "places") {
-      setListTitle("갈만한 곳");
+      setListTitle(t("home.places"));
       setListItems(getPlaces());
       setCurrentView("list");
       setActiveTab("places");
@@ -494,7 +505,7 @@ export default function Home() {
   // 카테고리 선택 (사용자 등록 맛집도 포함)
   const handleCategorySelect = async (categoryId: string) => {
     const category = categories.find((c) => c.id === categoryId);
-    setListTitle(categoryId === "전체" ? "전체 맛집" : `${category?.name || categoryId} 맛집`);
+    setListTitle(categoryId === "전체" ? t("restaurant.all_restaurants") : t("restaurant.category_restaurants", { category: category ? t(category.nameKey) : categoryId }));
 
     // 정적 데이터 가져오기
     let staticRestaurants = getRestaurantsByCategory(categoryId);
@@ -520,10 +531,10 @@ export default function Home() {
         const getPriceRangeText = (level?: number): string | undefined => {
           if (level === undefined) return undefined;
           const priceMap: Record<number, string> = {
-            1: "저렴 (NT$100 이하)",
-            2: "보통 (NT$100~300)",
-            3: "비쌈 (NT$300~600)",
-            4: "매우 비쌈 (NT$600 이상)",
+            1: t("price.cheap"),
+            2: t("price.normal"),
+            3: t("price.expensive"),
+            4: t("price.very_expensive"),
           };
           return priceMap[level];
         };
@@ -541,6 +552,9 @@ export default function Home() {
           price_level?: number;
           phone_number?: string;
           registered_by?: number;
+          name_en?: string;
+          address_en?: string;
+          feature_en?: string;
         }) => ({
           이름: item.name,
           위치: item.address,
@@ -554,6 +568,9 @@ export default function Home() {
           place_id: item.place_id,
           category: item.category,
           registered_by: item.registered_by,
+          name_en: item.name_en,
+          location_en: item.address_en,
+          feature_en: item.feature_en,
         }));
 
         console.log("Custom restaurants:", customRestaurants.map(r => ({ name: r.이름, place_id: r.place_id })));
@@ -576,7 +593,7 @@ export default function Home() {
   // 야시장 선택
   const handleMarketSelect = (marketId: string) => {
     const market = markets.find((m) => m.id === marketId);
-    setListTitle(marketId === "전체" ? "전체 야시장" : market?.id || marketId);
+    setListTitle(marketId === "전체" ? t("market.all") : market ? t(market.nameKey) : marketId);
     setListItems(getRestaurantsByMarket(marketId));
     setCurrentView("list");
     setActiveTab("market");
@@ -586,7 +603,7 @@ export default function Home() {
   // 도심투어 선택
   const handleTourSelect = (areaId: string) => {
     const area = tourAreas.find((a) => a.id === areaId);
-    setListTitle(areaId === "전체" ? "전체 도심투어" : `${area?.name || areaId} 맛집 & 카페`);
+    setListTitle(areaId === "전체" ? t("tour.all") : t("restaurant.tour_restaurants", { area: area ? t(area.nameKey) : areaId }));
     setListItems(getRestaurantsByTour(areaId));
     setCurrentView("list");
     setActiveTab("tour");
@@ -620,6 +637,9 @@ export default function Home() {
           category: customRestaurant.category,
           coordinates: customRestaurant.coordinates,
           registered_by: customRestaurant.registered_by,
+          name_en: customRestaurant.name_en,
+          location_en: customRestaurant.address_en,
+          feature_en: customRestaurant.feature_en,
         };
         setViewHistory(prev => [...prev, currentView]);
         setSelectedRestaurant(restaurant);
@@ -710,21 +730,21 @@ export default function Home() {
         <CategorySheet
           open={categorySheetOpen}
           onOpenChange={setCategorySheetOpen}
-          title="카테고리 선택"
+          title={t("categories.select")}
           options={categories}
           onSelect={handleCategorySelect}
         />
         <CategorySheet
           open={marketSheetOpen}
           onOpenChange={setMarketSheetOpen}
-          title="야시장 선택"
+          title={t("market.select")}
           options={markets}
           onSelect={handleMarketSelect}
         />
         <CategorySheet
           open={tourSheetOpen}
           onOpenChange={setTourSheetOpen}
-          title="도심투어 지역"
+          title={t("tour.select")}
           options={tourAreas}
           onSelect={handleTourSelect}
         />
@@ -766,14 +786,14 @@ export default function Home() {
         <CategorySheet
           open={categorySheetOpen}
           onOpenChange={setCategorySheetOpen}
-          title="카테고리 선택"
+          title={t("categories.select")}
           options={categories}
           onSelect={handleCategorySelect}
         />
         <CategorySheet
           open={marketSheetOpen}
           onOpenChange={setMarketSheetOpen}
-          title="야시장 선택"
+          title={t("market.select")}
           options={markets}
           onSelect={handleMarketSelect}
         />
@@ -796,14 +816,14 @@ export default function Home() {
         <CategorySheet
           open={categorySheetOpen}
           onOpenChange={setCategorySheetOpen}
-          title="카테고리 선택"
+          title={t("categories.select")}
           options={categories}
           onSelect={handleCategorySelect}
         />
         <CategorySheet
           open={marketSheetOpen}
           onOpenChange={setMarketSheetOpen}
-          title="야시장 선택"
+          title={t("market.select")}
           options={markets}
           onSelect={handleMarketSelect}
         />
@@ -836,14 +856,14 @@ export default function Home() {
         <CategorySheet
           open={categorySheetOpen}
           onOpenChange={setCategorySheetOpen}
-          title="카테고리 선택"
+          title={t("categories.select")}
           options={categories}
           onSelect={handleCategorySelect}
         />
         <CategorySheet
           open={marketSheetOpen}
           onOpenChange={setMarketSheetOpen}
-          title="야시장 선택"
+          title={t("market.select")}
           options={markets}
           onSelect={handleMarketSelect}
         />
@@ -867,21 +887,21 @@ export default function Home() {
         <CategorySheet
           open={categorySheetOpen}
           onOpenChange={setCategorySheetOpen}
-          title="카테고리 선택"
+          title={t("categories.select")}
           options={categories}
           onSelect={handleCategorySelect}
         />
         <CategorySheet
           open={marketSheetOpen}
           onOpenChange={setMarketSheetOpen}
-          title="야시장 선택"
+          title={t("market.select")}
           options={markets}
           onSelect={handleMarketSelect}
         />
         <CategorySheet
           open={tourSheetOpen}
           onOpenChange={setTourSheetOpen}
-          title="도심투어 지역"
+          title={t("tour.select")}
           options={tourAreas}
           onSelect={handleTourSelect}
         />
@@ -914,14 +934,14 @@ export default function Home() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <h1 className="font-semibold">📍 전체 지역별 맛집 랭킹</h1>
+              <h1 className="font-semibold">{t("home.district_ranking_title")}</h1>
             </div>
           </div>
 
           {/* 안내 문구 */}
           <div className="px-4 py-3 bg-muted/50 border-b border-border">
             <p className="text-sm text-muted-foreground">
-              타이베이 12개 구의 평균 평점 순위입니다. 지역을 클릭하면 해당 지역의 맛집을 볼 수 있어요.
+              {t("home.district_ranking_desc")}
             </p>
           </div>
 
@@ -947,7 +967,7 @@ export default function Home() {
                       {districtInfo?.description?.slice(0, 40)}...
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      {item.count}개 맛집
+                      {t("home.district_restaurants_count", { count: item.count })}
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1">
@@ -955,7 +975,7 @@ export default function Home() {
                       <span className="text-lg">⭐</span>
                       <span className="font-bold text-lg text-foreground">{item.avgRating.toFixed(2)}</span>
                     </div>
-                    <div className="text-xs text-muted-foreground">평균 평점</div>
+                    <div className="text-xs text-muted-foreground">{t("home.avg_rating")}</div>
                   </div>
                 </button>
               );
@@ -986,29 +1006,32 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🏙️</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">타이베이에 대하여</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.about_taipei")}</h2>
           </div>
           <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
             <p>
-              타이베이는 크게 <span className="font-semibold text-foreground">타이베이시(Taipei City)</span>와{" "}
-              <span className="font-semibold text-foreground">신베이시(New Taipei City)</span>로 나뉩니다.
+              {t("guide.about_taipei_desc").split('<b>').map((part: string, i: number) => {
+                if (i === 0) return part;
+                const [bold, rest] = part.split('</b>');
+                return <span key={i}><span className="font-semibold text-foreground">{bold}</span>{rest}</span>;
+              })}
             </p>
             <div className="grid gap-3">
               <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg">🏛️</span>
-                  <span className="font-semibold text-foreground">타이베이시</span>
-                  <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full">12개 구</span>
+                  <span className="font-semibold text-foreground">{t("guide.taipei_city")}</span>
+                  <span className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full">{t("guide.taipei_city_districts")}</span>
                 </div>
-                <p className="text-xs">대만의 정치·경제·문화 중심지로, 관광 명소와 맛집이 집중되어 있습니다.</p>
+                <p className="text-xs">{t("guide.taipei_city_desc")}</p>
               </div>
               <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-lg">🌿</span>
-                  <span className="font-semibold text-foreground">신베이시</span>
-                  <span className="bg-accent text-accent-foreground text-[10px] px-2 py-0.5 rounded-full">29개 구</span>
+                  <span className="font-semibold text-foreground">{t("guide.new_taipei_city")}</span>
+                  <span className="bg-accent text-accent-foreground text-[10px] px-2 py-0.5 rounded-full">{t("guide.new_taipei_districts")}</span>
                 </div>
-                <p className="text-xs">타이베이를 완전히 둘러싸고 있는 광역 특별시로, 생각보다 규모가 커요. 다양한 성격의 지역들이 모여 있어 자연·전통·근교 여행지가 풍부하고, 당일치기 코스로 인기가 높습니다.</p>
+                <p className="text-xs">{t("guide.new_taipei_desc")}</p>
               </div>
             </div>
           </div>
@@ -1018,31 +1041,31 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">📍</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">타이베이시 12개 구</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.taipei_12_districts")}</h2>
           </div>
           <div className="grid gap-2">
             {[
-              { name: "중정구", emoji: "🏛️", desc: "중정기념당과 타이베이 메인스테이션이 위치. 교통과 관광의 중심지." },
-              { name: "다안구", emoji: "☕", desc: "융캉제가 있어 카페와 맛집이 밀집된 감성 거리. 젊은 여행자들에게 인기." },
-              { name: "신이구", emoji: "🏙️", desc: "타이베이 101타워와 대형 쇼핑몰. 야경과 쇼핑 명소." },
-              { name: "완화구", emoji: "🛍️", desc: "시먼딩이 위치한 패션·문화 거리. 용산사 같은 전통 명소도 함께." },
-              { name: "중산구", emoji: "🍸", desc: "중산 카페거리와 세련된 바·호텔. 감성 여행과 나이트라이프에 적합." },
-              { name: "스린구", emoji: "🌙", desc: "스린 야시장과 국립고궁박물원. 먹거리와 문화 체험 동시에." },
-              { name: "베이터우구", emoji: "♨️", desc: "온천으로 유명. 온천 호텔·도서관·박물관이 있어 힐링 여행에 적합." },
-              { name: "송산구", emoji: "✈️", desc: "송산공항과 라오허제 야시장. 교통 편리하고 야시장 탐방에 좋음." },
-              { name: "다퉁구", emoji: "🏮", desc: "디화제가 있어 전통시장과 한약방. 대만의 정취를 느낄 수 있음." },
-              { name: "네이후구", emoji: "🏢", desc: "IT 기업과 주거지역. 대형 쇼핑몰과 호수 공원으로 현지 생활 체험." },
-              { name: "난강구", emoji: "🎪", desc: "난강 전시센터와 IT 산업 단지. 박람회·콘서트가 자주 열리는 곳." },
-              { name: "원산구", emoji: "🐼", desc: "타이베이 동물원과 마오콩 곤돌라. 가족 단위 관광객에게 인기." },
+              { key: "zhongzheng", emoji: "🏛️" },
+              { key: "daan", emoji: "☕" },
+              { key: "xinyi", emoji: "🏙️" },
+              { key: "wanhua", emoji: "🛍️" },
+              { key: "zhongshan", emoji: "🍸" },
+              { key: "shilin", emoji: "🌙" },
+              { key: "beitou", emoji: "♨️" },
+              { key: "songshan", emoji: "✈️" },
+              { key: "datong", emoji: "🏮" },
+              { key: "neihu", emoji: "🏢" },
+              { key: "nangang", emoji: "🎪" },
+              { key: "wenshan", emoji: "🐼" },
             ].map((district) => (
               <div
-                key={district.name}
+                key={district.key}
                 className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
               >
                 <span className="text-xl">{district.emoji}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-foreground text-sm">{district.name}</div>
-                  <p className="text-xs text-muted-foreground mt-0.5">{district.desc}</p>
+                  <div className="font-semibold text-foreground text-sm">{t(`district.${district.key}.name`)}</div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t(`district.${district.key}.desc`)}</p>
                 </div>
               </div>
             ))}
@@ -1053,25 +1076,25 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">✨</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">타이베이시 주요 명소</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.taipei_attractions")}</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { name: "타이베이 101", emoji: "🗼", desc: "대만의 랜드마크" },
-              { name: "중정기념당", emoji: "🏛️", desc: "대만 현대사의 상징" },
-              { name: "시먼딩", emoji: "🛍️", desc: "젊음의 패션 거리" },
-              { name: "융캉제", emoji: "🥟", desc: "딘타이펑 본점 위치" },
-              { name: "스린 야시장", emoji: "🌙", desc: "대만 최대 야시장" },
-              { name: "국립고궁박물원", emoji: "🏺", desc: "세계적 박물관" },
-              { name: "베이터우 온천", emoji: "♨️", desc: "힐링 온천 명소" },
+              { key: "taipei101", emoji: "🗼" },
+              { key: "cks_memorial", emoji: "🏛️" },
+              { key: "ximending", emoji: "🛍️" },
+              { key: "yongkang", emoji: "🥟" },
+              { key: "shilin_market", emoji: "🌙" },
+              { key: "palace_museum", emoji: "🏺" },
+              { key: "beitou_springs", emoji: "♨️" },
             ].map((spot) => (
               <div
-                key={spot.name}
+                key={spot.key}
                 className="bg-muted/50 dark:bg-muted rounded-xl p-3 border border-border"
               >
                 <div className="text-2xl mb-1">{spot.emoji}</div>
-                <div className="font-semibold text-foreground text-sm">{spot.name}</div>
-                <p className="text-xs text-muted-foreground">{spot.desc}</p>
+                <div className="font-semibold text-foreground text-sm">{t(`landmark.${spot.key}.name`)}</div>
+                <p className="text-xs text-muted-foreground">{t(`landmark.${spot.key}.desc`)}</p>
               </div>
             ))}
           </div>
@@ -1081,27 +1104,27 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🌿</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">신베이시 주요 명소</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.new_taipei_attractions")}</h2>
           </div>
           <div className="grid gap-3">
             {[
-              { name: "예류지질공원", emoji: "🪨", desc: "기암괴석과 '여왕 머리 바위'로 유명한 해안 지질 공원" },
-              { name: "지우펀 옛거리", emoji: "🏮", desc: "언덕 위 찻집과 야경이 매력적인 산간 마을" },
-              { name: "스펀 폭포", emoji: "🎈", desc: "철로 위 스카이랜턴 체험, '대만의 나이아가라' 폭포" },
-              { name: "진과스 황금박물관", emoji: "⛏️", desc: "옛 금광 마을을 테마로 한 역사문화 여행지" },
-              { name: "우라이", emoji: "🌊", desc: "원주민 문화와 온천, 폭포가 함께 있는 힐링 여행지" },
-              { name: "산샤 옛거리", emoji: "🧱", desc: "붉은 벽돌 아케이드와 전통 간식이 있는 거리" },
-              { name: "비탄 풍경구", emoji: "🚣", desc: "강변 자전거·보트 체험, 야간 조명으로 유명한 데이트 코스" },
-              { name: "산충구", emoji: "🏠", desc: "타이베이와 가까운 주거·상업 지역. 숙소 거점으로 적합" },
+              { key: "yehliu", emoji: "🪨" },
+              { key: "jiufen", emoji: "🏮" },
+              { key: "shifen", emoji: "🎈" },
+              { key: "jinguashi", emoji: "⛏️" },
+              { key: "wulai", emoji: "🌊" },
+              { key: "sanxia", emoji: "🧱" },
+              { key: "bitan", emoji: "🚣" },
+              { key: "sanchong", emoji: "🏠" },
             ].map((spot) => (
               <div
-                key={spot.name}
+                key={spot.key}
                 className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 dark:bg-muted border border-border"
               >
                 <span className="text-2xl">{spot.emoji}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-foreground text-sm">{spot.name}</div>
-                  <p className="text-xs text-muted-foreground mt-0.5">{spot.desc}</p>
+                  <div className="font-semibold text-foreground text-sm">{t(`day_trip.${spot.key}.name`)}</div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t(`day_trip.${spot.key}.desc`)}</p>
                 </div>
               </div>
             ))}
@@ -1111,73 +1134,85 @@ export default function Home() {
     );
 
     // 날씨 탭 콘텐츠
-    const WeatherContent = () => (
+    const WeatherContent = () => {
+      // Helper to render text with <b> tags as bold spans
+      const renderBoldText = (text: string) => {
+        const parts = text.split(/(<b>|<\/b>)/);
+        let isBold = false;
+        return parts.map((part, i) => {
+          if (part === "<b>") { isBold = true; return null; }
+          if (part === "</b>") { isBold = false; return null; }
+          return isBold ? <span key={i} className="font-medium text-foreground">{part}</span> : part;
+        });
+      };
+
+      return (
       <div className="space-y-6">
         {/* MZ 핵심 요약 카드 */}
         <section className="bg-card rounded-2xl p-5 shadow-card border border-border">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">⚡</span>
-            <h2 className="text-fluid-lg font-bold">MZ를 위한 핵심 요약</h2>
+            <h2 className="text-fluid-lg font-bold">{t("guide.weather_summary_title")}</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-muted/50 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground mb-1">연평균 기온</div>
-              <div className="font-bold">서울보다 따뜻</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("guide.avg_temp")}</div>
+              <div className="font-bold">{t("guide.avg_temp_val")}</div>
             </div>
             <div className="bg-muted/50 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground mb-1">겨울 체감</div>
-              <div className="font-bold">서울 봄 날씨</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("guide.winter_feel")}</div>
+              <div className="font-bold">{t("guide.winter_feel_val")}</div>
             </div>
             <div className="bg-muted/50 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground mb-1">필수 준비물</div>
-              <div className="font-bold">휴대용 우산</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("guide.must_have")}</div>
+              <div className="font-bold">{t("guide.must_have_val")}</div>
             </div>
             <div className="bg-muted/50 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground mb-1">여름 특징</div>
-              <div className="font-bold">스콜 + 태풍</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("guide.summer_feature")}</div>
+              <div className="font-bold">{t("guide.summer_feature_val")}</div>
             </div>
           </div>
-          <p className="text-xs mt-3 text-muted-foreground">1년 내내 패딩 필요 없어요! 대신 우산은 챙기세요</p>
+          <p className="text-xs mt-3 text-muted-foreground">{t("guide.weather_summary_note")}</p>
         </section>
 
         {/* 계절별 요약 카드 */}
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🌤️</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">계절별 날씨</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.seasonal_weather")}</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-muted/50 dark:bg-muted rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">🌸</span>
-                <span className="font-semibold text-foreground text-sm">봄 (3~5월)</span>
+                <span className="font-semibold text-foreground text-sm">{t("guide.spring_label")}</span>
               </div>
-              <p className="text-xs text-muted-foreground">서울 초여름 느낌</p>
-              <p className="text-xs text-foreground font-medium mt-1">16~29°C</p>
+              <p className="text-xs text-muted-foreground">{t("guide.spring_desc")}</p>
+              <p className="text-xs text-foreground font-medium mt-1">{t("guide.spring_temp")}</p>
             </div>
             <div className="bg-muted/50 dark:bg-muted rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">☀️</span>
-                <span className="font-semibold text-foreground text-sm">여름 (6~9월)</span>
+                <span className="font-semibold text-foreground text-sm">{t("guide.summer_label")}</span>
               </div>
-              <p className="text-xs text-muted-foreground">서울 한여름과 동일</p>
-              <p className="text-xs text-foreground font-medium mt-1">24~34°C</p>
+              <p className="text-xs text-muted-foreground">{t("guide.summer_desc")}</p>
+              <p className="text-xs text-foreground font-medium mt-1">{t("guide.summer_temp")}</p>
             </div>
             <div className="bg-muted/50 dark:bg-muted rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">🍂</span>
-                <span className="font-semibold text-foreground text-sm">가을 (10~11월)</span>
+                <span className="font-semibold text-foreground text-sm">{t("guide.fall_label")}</span>
               </div>
-              <p className="text-xs text-muted-foreground">서울 늦봄~초여름</p>
-              <p className="text-xs text-foreground font-medium mt-1">19~28°C</p>
+              <p className="text-xs text-muted-foreground">{t("guide.fall_desc")}</p>
+              <p className="text-xs text-foreground font-medium mt-1">{t("guide.fall_temp")}</p>
             </div>
             <div className="bg-muted/50 dark:bg-muted rounded-xl p-3 border border-border">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">❄️</span>
-                <span className="font-semibold text-foreground text-sm">겨울 (12~2월)</span>
+                <span className="font-semibold text-foreground text-sm">{t("guide.winter_label")}</span>
               </div>
-              <p className="text-xs text-muted-foreground">서울 봄 같은 날씨</p>
-              <p className="text-xs text-foreground font-medium mt-1">13~20°C</p>
+              <p className="text-xs text-muted-foreground">{t("guide.winter_desc")}</p>
+              <p className="text-xs text-foreground font-medium mt-1">{t("guide.winter_temp")}</p>
             </div>
           </div>
         </section>
@@ -1186,34 +1221,21 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">📅</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">월별 상세 비교</h2>
-            <span className="text-xs text-muted-foreground">(vs 서울)</span>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.monthly_comparison")}</h2>
+            <span className="text-xs text-muted-foreground">({t("guide.vs_seoul")})</span>
           </div>
           <div className="space-y-2">
-            {[
-              { month: "1월", temp: "13~19°C", seoul: "4월", desc: "서울보다 훨씬 따뜻, 봄 같은 겨울", color: "bg-muted/50 dark:bg-muted/70" },
-              { month: "2월", temp: "14~20°C", seoul: "4~5월", desc: "초봄~늦봄 날씨, 비 자주 옴", color: "bg-muted/50 dark:bg-muted/70" },
-              { month: "3월", temp: "16~22°C", seoul: "5월", desc: "서울의 늦봄과 유사", color: "bg-muted/50 dark:bg-muted/70" },
-              { month: "4월", temp: "19~26°C", seoul: "6월", desc: "서울 초여름 느낌", color: "bg-muted/50 dark:bg-muted/70" },
-              { month: "5월", temp: "22~29°C", seoul: "7월", desc: "본격 여름 시작, 장마철 비슷", color: "bg-muted/50 dark:bg-muted/70" },
-              { month: "6월", temp: "24~32°C", seoul: "7~8월", desc: "서울 한여름과 동일, 습도↑", color: "bg-muted/50 dark:bg-muted/70" },
-              { month: "7월", temp: "26~34°C", seoul: "8월", desc: "서울 가장 더운 시기와 같음", color: "bg-muted/50 dark:bg-muted/70" },
-              { month: "8월", temp: "26~33°C", seoul: "8월", desc: "서울 늦여름과 동일, 태풍 시즌", color: "bg-muted/50 dark:bg-muted/70" },
-              { month: "9월", temp: "24~31°C", seoul: "7월", desc: "서울보다 늦게까지 여름 지속", color: "bg-muted/50 dark:bg-muted/70" },
-              { month: "10월", temp: "22~28°C", seoul: "6월", desc: "서울 초여름 같은 가을", color: "bg-muted/50 dark:bg-muted/70" },
-              { month: "11월", temp: "19~23°C", seoul: "5월", desc: "서울 늦봄 같은 가을", color: "bg-muted/50 dark:bg-muted/70" },
-              { month: "12월", temp: "15~20°C", seoul: "4월", desc: "서울 봄 같은 겨울", color: "bg-muted/50 dark:bg-muted/70" },
-            ].map((item) => (
-              <div key={item.month} className={`flex items-center gap-3 p-3 rounded-xl ${item.color}`}>
+            {["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"].map((key) => (
+              <div key={key} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 dark:bg-muted/70">
                 <div className="w-12 text-center">
-                  <span className="font-bold text-foreground text-sm">{item.month}</span>
+                  <span className="font-bold text-foreground text-sm">{t(`weather.${key}.month`)}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-foreground">{item.temp}</span>
-                    <span className="text-[10px] text-muted-foreground">≈ 서울 {item.seoul}</span>
+                    <span className="text-xs font-medium text-foreground">{t(`weather.${key}.temp`)}</span>
+                    <span className="text-[10px] text-muted-foreground">{t("guide.seoul_equivalent", { month: t(`weather.${key}.seoul`) })}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t(`weather.${key}.desc`)}</p>
                 </div>
               </div>
             ))}
@@ -1224,55 +1246,55 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🎒</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">계절별 준비물</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.seasonal_items")}</h2>
           </div>
           <div className="space-y-3">
             <div className="flex items-start gap-3 p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <span className="text-2xl">❄️</span>
               <div className="flex-1">
-                <div className="font-medium text-foreground text-sm mb-2">겨울 (12~2월)</div>
+                <div className="font-medium text-foreground text-sm mb-2">{t("guide.winter_label")}</div>
                 <div className="flex flex-wrap gap-1.5">
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">얇은 코트</span>
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">긴팔</span>
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">우산</span>
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">가디건</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_thin_coat")}</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_long_sleeve")}</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_umbrella")}</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_cardigan")}</span>
                 </div>
               </div>
             </div>
             <div className="flex items-start gap-3 p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <span className="text-2xl">🌸</span>
               <div className="flex-1">
-                <div className="font-medium text-foreground text-sm mb-2">봄 (3~5월)</div>
+                <div className="font-medium text-foreground text-sm mb-2">{t("guide.spring_label")}</div>
                 <div className="flex flex-wrap gap-1.5">
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">반팔</span>
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">가디건</span>
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">휴대용 우산</span>
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">선크림</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_tshirt")}</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_cardigan")}</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_portable_umbrella")}</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_sunscreen")}</span>
                 </div>
               </div>
             </div>
             <div className="flex items-start gap-3 p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <span className="text-2xl">☀️</span>
               <div className="flex-1">
-                <div className="font-medium text-foreground text-sm mb-2">여름 (6~9월)</div>
+                <div className="font-medium text-foreground text-sm mb-2">{t("guide.summer_label")}</div>
                 <div className="flex flex-wrap gap-1.5">
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">시원한 옷</span>
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">모자</span>
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">선글라스</span>
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">방수 신발</span>
-                  <span className="bg-destructive/10 dark:bg-destructive/20 px-2.5 py-1 rounded-full text-xs shadow-sm font-medium">우산 필수!</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_cool_clothes")}</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_hat")}</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_sunglasses")}</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_waterproof_shoes")}</span>
+                  <span className="bg-destructive/10 dark:bg-destructive/20 px-2.5 py-1 rounded-full text-xs shadow-sm font-medium">{t("guide.item_umbrella_required")}</span>
                 </div>
               </div>
             </div>
             <div className="flex items-start gap-3 p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <span className="text-2xl">🍂</span>
               <div className="flex-1">
-                <div className="font-medium text-foreground text-sm mb-2">가을 (10~11월)</div>
+                <div className="font-medium text-foreground text-sm mb-2">{t("guide.fall_label")}</div>
                 <div className="flex flex-wrap gap-1.5">
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">레이어드</span>
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">얇은 긴팔</span>
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">모자</span>
-                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">선크림</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_layered")}</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_thin_long_sleeve")}</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_hat")}</span>
+                  <span className="bg-white dark:bg-card px-2.5 py-1 rounded-full text-xs shadow-sm">{t("guide.item_sunscreen")}</span>
                 </div>
               </div>
             </div>
@@ -1283,29 +1305,20 @@ export default function Home() {
         <section className="bg-accent/10 dark:bg-accent/15 rounded-2xl p-5 shadow-md border border-accent/20 dark:border-accent/30">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">💡</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">알아두면 좋은 팁</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.weather_tips_title")}</h2>
           </div>
           <div className="space-y-3 text-sm text-muted-foreground">
-            <div className="flex items-start gap-2">
-              <span className="text-primary">✓</span>
-              <p>타이베이는 <span className="font-medium text-foreground">1년 내내 서울보다 따뜻</span>해요. 겨울에도 패딩 필요 없어요!</p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-primary">✓</span>
-              <p>여름엔 갑자기 쏟아지는 <span className="font-medium text-foreground">스콜(소나기)</span>이 많아요. 휴대용 우산 필수!</p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-primary">✓</span>
-              <p>8~9월은 <span className="font-medium text-foreground">태풍 시즌</span>이에요. 여행 전 날씨 확인하세요.</p>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-primary">✓</span>
-              <p>실내 에어컨이 세서 <span className="font-medium text-foreground">여름에도 얇은 겉옷</span> 챙기면 좋아요.</p>
-            </div>
+            {["tip_warm", "tip_squall", "tip_typhoon", "tip_ac"].map((tipKey) => (
+              <div key={tipKey} className="flex items-start gap-2">
+                <span className="text-primary">✓</span>
+                <p>{renderBoldText(t(`guide.${tipKey}`))}</p>
+              </div>
+            ))}
           </div>
         </section>
       </div>
-    );
+      );
+    };
 
     // 교통 탭 콘텐츠
     const TransportContent = () => (
@@ -1314,47 +1327,45 @@ export default function Home() {
         <section className="bg-card rounded-2xl p-5 shadow-card border border-border">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">⚡</span>
-            <h2 className="text-fluid-lg font-bold">MZ를 위한 핵심 요약</h2>
+            <h2 className="text-fluid-lg font-bold">{t("guide.transport_summary_title")}</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-muted/50 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground mb-1">필수 준비물</div>
-              <div className="font-bold">EasyCard 하나면 끝</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("guide.must_prepare")}</div>
+              <div className="font-bold">{t("guide.must_prepare_val")}</div>
             </div>
             <div className="bg-muted/50 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground mb-1">가장 편한 이동</div>
-              <div className="font-bold">MRT 중심 이동</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("guide.best_transport")}</div>
+              <div className="font-bold">{t("guide.best_transport_val")}</div>
             </div>
             <div className="bg-muted/50 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground mb-1">비용</div>
-              <div className="font-bold">한국보다 저렴</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("guide.cost")}</div>
+              <div className="font-bold">{t("guide.cost_val")}</div>
             </div>
             <div className="bg-muted/50 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground mb-1">초보자 난이도</div>
-              <div className="font-bold">매우 쉬움</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("guide.difficulty")}</div>
+              <div className="font-bold">{t("guide.difficulty_val")}</div>
             </div>
           </div>
-          <p className="text-xs mt-3 text-muted-foreground">서울 지하철보다 단순하고, 영어 안내도 충분해요!</p>
+          <p className="text-xs mt-3 text-muted-foreground">{t("guide.transport_summary_note")}</p>
         </section>
 
         {/* 교통 시스템 개요 */}
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🚇</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">교통 시스템 개요</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.transport_overview")}</h2>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-            타이베이는 <span className="font-semibold text-foreground">MRT(지하철)</span>를 중심으로
-            버스·택시·공유자전거·공항철도가 촘촘하게 연결된 구조예요.
-            대부분의 관광지는 MRT만으로도 이동 가능합니다.
+            {t("guide.transport_overview_desc")}
           </p>
           <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border">
             <div className="flex items-center gap-2 text-primary mb-2">
               <span>💡</span>
-              <span className="font-semibold text-sm">알아두면 좋은 점</span>
+              <span className="font-semibold text-sm">{t("guide.transport_tip_label")}</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              MRT는 1996년 개통 후 꾸준히 확장되어 현재 131개 역으로 구성된 대규모 네트워크예요.
+              {t("guide.transport_overview_tip")}
             </p>
           </div>
         </section>
@@ -1363,49 +1374,49 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🚆</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">교통수단 종류</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.transport_types")}</h2>
           </div>
           <div className="space-y-3">
             {[
               {
                 emoji: "🚇",
-                name: "MRT (Taipei Metro)",
-                tag: "추천",
+                name: t("transport.mrt.name"),
+                tag: t("guide.recommend"),
                 tagColor: "bg-muted-foreground",
-                desc: "가장 빠르고 편한 이동 수단. 주요 관광지 대부분 연결",
-                detail: "운영시간: 06:00~00:00 · 중국어/영어 안내"
+                desc: t("transport.mrt.desc"),
+                detail: t("transport.mrt.detail")
               },
               {
                 emoji: "🚌",
-                name: "버스",
-                tag: "보조",
+                name: t("transport.bus.name"),
+                tag: t("guide.sub"),
                 tagColor: "bg-muted-foreground",
-                desc: "MRT가 닿지 않는 지역까지 이동 가능",
-                detail: "EasyCard로 환승 자동 처리"
+                desc: t("transport.bus.desc"),
+                detail: t("transport.bus.detail")
               },
               {
                 emoji: "✈️",
-                name: "공항 MRT",
-                tag: "공항↔시내",
+                name: t("transport.airport_mrt.name"),
+                tag: t("guide.airport_mrt"),
                 tagColor: "bg-muted-foreground",
-                desc: "타오위안 공항에서 시내까지 약 35~40분",
-                detail: "일반/급행 열차 선택 가능"
+                desc: t("transport.airport_mrt.desc"),
+                detail: t("transport.airport_mrt.detail")
               },
               {
                 emoji: "🚕",
-                name: "택시",
-                tag: "편리",
+                name: t("transport.taxi.name"),
+                tag: t("guide.convenient"),
                 tagColor: "bg-muted-foreground",
-                desc: "한국보다 저렴한 편, 야간 이동에 유용",
-                detail: "대부분 카드·EasyCard 결제 가능"
+                desc: t("transport.taxi.desc"),
+                detail: t("transport.taxi.detail")
               },
               {
                 emoji: "🚲",
-                name: "YouBike (공유자전거)",
-                tag: "단거리",
+                name: t("transport.youbike.name"),
+                tag: t("guide.short_distance"),
                 tagColor: "bg-muted-foreground",
-                desc: "MRT역 주변에 거의 항상 있음",
-                detail: "짧은 거리 이동에 최고, 첫 30분 약 5 TWD"
+                desc: t("transport.youbike.desc"),
+                detail: t("transport.youbike.detail")
               },
             ].map((item) => (
               <div
@@ -1432,24 +1443,24 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">💳</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">EasyCard (이지카드)</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.easycard_title")}</h2>
           </div>
           <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border mb-4">
             <p className="text-sm text-foreground font-medium mb-2">
-              타이베이 교통의 핵심!
+              {t("guide.easycard_desc")}
             </p>
             <p className="text-xs text-muted-foreground">
-              MRT·버스·YouBike·편의점·관광지까지 모두 결제 가능해요.
+              {t("guide.easycard_usage")}
             </p>
           </div>
 
           {/* 구매 장소 */}
           <div className="mb-4">
             <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-              <span>🏪</span> 구매 장소
+              <span>🏪</span> {t("guide.easycard_where")}
             </h3>
             <div className="flex flex-wrap gap-2">
-              {["MRT역", "공항", "7-Eleven", "FamilyMart"].map((place) => (
+              {[t("guide.easycard_place_mrt"), t("guide.easycard_place_airport"), "7-Eleven", "FamilyMart"].map((place) => (
                 <span key={place} className="bg-muted px-3 py-1.5 rounded-full text-xs text-foreground">
                   {place}
                 </span>
@@ -1460,28 +1471,28 @@ export default function Home() {
           {/* 사용 방법 */}
           <div className="mb-4">
             <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <span>📱</span> 사용 방법
+              <span>📱</span> {t("guide.easycard_how")}
             </h3>
             <div className="space-y-2">
               <div className="flex items-center gap-3 p-3 bg-muted/50 dark:bg-muted/30 rounded-xl">
                 <span className="text-xl">🚇</span>
                 <div>
-                  <div className="text-xs font-medium text-foreground">MRT</div>
-                  <div className="text-xs text-muted-foreground">개찰구에서 탭 인 → 탭 아웃</div>
+                  <div className="text-xs font-medium text-foreground">{t("transport.mrt.name")}</div>
+                  <div className="text-xs text-muted-foreground">{t("guide.easycard_mrt_how")}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 bg-muted/50 dark:bg-muted/30 rounded-xl">
                 <span className="text-xl">🚌</span>
                 <div>
-                  <div className="text-xs font-medium text-foreground">버스</div>
-                  <div className="text-xs text-muted-foreground">탑승 시 탭 + 하차 시 탭</div>
+                  <div className="text-xs font-medium text-foreground">{t("transport.bus.name")}</div>
+                  <div className="text-xs text-muted-foreground">{t("guide.easycard_bus_how")}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 bg-muted/50 dark:bg-muted/30 rounded-xl">
                 <span className="text-xl">🚲</span>
                 <div>
-                  <div className="text-xs font-medium text-foreground">YouBike</div>
-                  <div className="text-xs text-muted-foreground">단말기에 카드 태그 후 대여/반납</div>
+                  <div className="text-xs font-medium text-foreground">{t("transport.youbike.name")}</div>
+                  <div className="text-xs text-muted-foreground">{t("guide.easycard_youbike_how")}</div>
                 </div>
               </div>
             </div>
@@ -1491,10 +1502,10 @@ export default function Home() {
           <div className="bg-muted/50 rounded-xl p-3">
             <div className="flex items-center gap-2 text-sm">
               <span>💰</span>
-              <span className="font-medium text-foreground">환불</span>
+              <span className="font-medium text-foreground">{t("guide.easycard_refund")}</span>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              공항·MRT역에서 잔액 환불 가능 (소액 수수료 있음)
+              {t("guide.easycard_refund_desc")}
             </p>
           </div>
         </section>
@@ -1503,64 +1514,64 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">💰</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">비용 가이드</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.cost_guide")}</h2>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">🚇</span>
                 <div>
-                  <div className="font-medium text-foreground text-sm">MRT</div>
-                  <div className="text-xs text-muted-foreground">거리 기반 요금제</div>
+                  <div className="font-medium text-foreground text-sm">{t("transport.mrt.name")}</div>
+                  <div className="text-xs text-muted-foreground">{t("guide.cost_mrt_desc")}</div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="font-bold text-foreground">20~65 TWD</div>
-                <div className="text-xs text-muted-foreground">약 800~2,600원</div>
+                <div className="text-xs text-muted-foreground">{t("guide.cost_mrt_krw")}</div>
               </div>
             </div>
             <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">🚌</span>
                 <div>
-                  <div className="font-medium text-foreground text-sm">버스</div>
-                  <div className="text-xs text-muted-foreground">기본 요금</div>
+                  <div className="font-medium text-foreground text-sm">{t("transport.bus.name")}</div>
+                  <div className="text-xs text-muted-foreground">{t("guide.cost_bus_desc")}</div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="font-bold text-foreground">15 TWD~</div>
-                <div className="text-xs text-muted-foreground">약 600원~</div>
+                <div className="text-xs text-muted-foreground">{t("guide.cost_bus_krw")}</div>
               </div>
             </div>
             <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">✈️</span>
                 <div>
-                  <div className="font-medium text-foreground text-sm">공항 MRT</div>
-                  <div className="text-xs text-muted-foreground">일반 / 급행</div>
+                  <div className="font-medium text-foreground text-sm">{t("transport.airport_mrt.name")}</div>
+                  <div className="text-xs text-muted-foreground">{t("guide.cost_airport_desc")}</div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="font-bold text-foreground">150~160 TWD</div>
-                <div className="text-xs text-muted-foreground">약 6,000~6,400원</div>
+                <div className="text-xs text-muted-foreground">{t("guide.cost_airport_krw")}</div>
               </div>
             </div>
             <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">🚲</span>
                 <div>
-                  <div className="font-medium text-foreground text-sm">YouBike</div>
-                  <div className="text-xs text-muted-foreground">첫 30분</div>
+                  <div className="font-medium text-foreground text-sm">{t("transport.youbike.name")}</div>
+                  <div className="text-xs text-muted-foreground">{t("guide.cost_youbike_desc")}</div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="font-bold text-foreground">~5 TWD</div>
-                <div className="text-xs text-muted-foreground">약 200원</div>
+                <div className="text-xs text-muted-foreground">{t("guide.cost_youbike_krw")}</div>
               </div>
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-3 text-center">
-            💡 EasyCard 사용 시 소폭 할인 적용
+            💡 {t("guide.cost_easycard_tip")}
           </p>
         </section>
 
@@ -1568,13 +1579,13 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🔄</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">환승 시스템</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.transfer_system")}</h2>
           </div>
           <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border mb-4">
             <p className="text-sm text-foreground mb-2">
-              EasyCard로 결제하면 <span className="font-bold">환승 할인 자동 적용!</span>
+              {t("guide.transfer_auto")}
             </p>
-            <p className="text-xs text-muted-foreground">별도 설정 없이 자동으로 처리돼요.</p>
+            <p className="text-xs text-muted-foreground">{t("guide.transfer_auto_desc")}</p>
           </div>
 
           {/* 환승 플로우 */}
@@ -1583,23 +1594,23 @@ export default function Home() {
               <div className="w-12 h-12 bg-muted dark:bg-muted rounded-full flex items-center justify-center mb-1">
                 <span className="text-xl">🚇</span>
               </div>
-              <span className="text-xs text-muted-foreground">MRT</span>
+              <span className="text-xs text-muted-foreground">{t("transport.mrt.name")}</span>
             </div>
             <div className="flex flex-col items-center px-2">
-              <span className="text-primary font-bold text-xs mb-1">할인</span>
+              <span className="text-primary font-bold text-xs mb-1">{t("guide.transfer_discount")}</span>
               <span className="text-muted-foreground">↔️</span>
             </div>
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 bg-muted dark:bg-muted rounded-full flex items-center justify-center mb-1">
                 <span className="text-xl">🚌</span>
               </div>
-              <span className="text-xs text-muted-foreground">버스</span>
+              <span className="text-xs text-muted-foreground">{t("transport.bus.name")}</span>
             </div>
           </div>
 
           <div className="bg-muted/50 rounded-xl p-3 mt-3">
             <p className="text-xs text-muted-foreground text-center">
-              MRT 노선 간 환승도 직관적이고, 역 내부 안내가 잘 되어 있어 초행자도 헤매기 어려워요!
+              {t("guide.transfer_tip")}
             </p>
           </div>
         </section>
@@ -1613,46 +1624,45 @@ export default function Home() {
         <section className="bg-card rounded-2xl p-5 shadow-card border border-border">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">⚡</span>
-            <h2 className="text-fluid-lg font-bold">MZ를 위한 핵심 요약</h2>
+            <h2 className="text-fluid-lg font-bold">{t("guide.accommodation_summary_title")}</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-muted/50 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground mb-1">최적 지역</div>
-              <div className="font-bold text-sm">시먼딩·중정구</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("guide.best_area")}</div>
+              <div className="font-bold text-sm">{t("guide.best_area_val")}</div>
             </div>
             <div className="bg-muted/50 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground mb-1">예산</div>
-              <div className="font-bold text-sm">호스텔 2~4만원</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("guide.budget")}</div>
+              <div className="font-bold text-sm">{t("guide.budget_val")}</div>
             </div>
             <div className="bg-muted/50 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground mb-1">핵심 팁</div>
-              <div className="font-bold text-sm">MRT 5분 거리</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("guide.core_tip")}</div>
+              <div className="font-bold text-sm">{t("guide.core_tip_val")}</div>
             </div>
             <div className="bg-muted/50 rounded-xl p-3">
-              <div className="text-xs text-muted-foreground mb-1">분위기</div>
-              <div className="font-bold text-sm">안전·가성비 좋음</div>
+              <div className="text-xs text-muted-foreground mb-1">{t("guide.vibe")}</div>
+              <div className="font-bold text-sm">{t("guide.vibe_val")}</div>
             </div>
           </div>
-          <p className="text-xs mt-3 text-muted-foreground">주말·연휴는 미리 예약! 현지인도 많이 여행해요</p>
+          <p className="text-xs mt-3 text-muted-foreground">{t("guide.accommodation_summary_note")}</p>
         </section>
 
         {/* 숙박 분위기 */}
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">🏨</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">타이베이 숙박 분위기</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.taipei_accommodation")}</h2>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-            타이베이는 <span className="font-semibold text-foreground">가성비 좋은 호스텔</span>부터
-            감성 호텔, 온천 리조트까지 선택 폭이 넓은 도시예요.
+            {t("guide.accommodation_vibe_desc")}
           </p>
           <div className="bg-muted/50 dark:bg-muted rounded-xl p-4 border border-border">
             <div className="flex items-center gap-2 text-primary mb-2">
               <span>💡</span>
-              <span className="font-semibold text-sm">알아두세요</span>
+              <span className="font-semibold text-sm">{t("guide.accommodation_vibe_tip_title")}</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              대부분의 지역이 MRT 접근성이 좋아서 &apos;어느 역 근처냐&apos;가 숙소 퀄리티만큼 중요해요!
+              {t("guide.accommodation_vibe_tip")}
             </p>
           </div>
         </section>
@@ -1661,59 +1671,59 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">📍</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">지역별 추천</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.area_recommend")}</h2>
           </div>
           <div className="space-y-3">
             {[
               {
                 emoji: "🛍️",
-                name: "시먼딩 (Ximending)",
-                tag: "재미",
+                name: t("accommodation.ximending.name"),
+                tag: t("guide.fun"),
                 tagColor: "bg-muted-foreground",
-                vibe: "타이베이의 '홍대' 느낌",
-                pros: "쇼핑·야식·야경 최고",
-                cons: "조용한 분위기 X",
-                for: "활기찬 여행 원하는 MZ"
+                vibe: t("accommodation.ximending.vibe"),
+                pros: t("accommodation.ximending.pros"),
+                cons: t("accommodation.ximending.cons"),
+                for: t("accommodation.ximending.for")
               },
               {
                 emoji: "🚇",
-                name: "중정구 (Zhongzheng)",
-                tag: "교통",
+                name: t("accommodation.zhongzheng.name"),
+                tag: t("guide.traffic"),
                 tagColor: "bg-muted-foreground",
-                vibe: "타이베이 메인역 중심",
-                pros: "공항MRT·고속철·지하철 연결",
-                cons: "관광지 감성 약함",
-                for: "첫 방문, 일정 짜기 편함"
+                vibe: t("accommodation.zhongzheng.vibe"),
+                pros: t("accommodation.zhongzheng.pros"),
+                cons: t("accommodation.zhongzheng.cons"),
+                for: t("accommodation.zhongzheng.for")
               },
               {
                 emoji: "🏙️",
-                name: "신이 (Xinyi)",
-                tag: "세련",
+                name: t("accommodation.xinyi.name"),
+                tag: t("guide.stylish"),
                 tagColor: "bg-muted-foreground",
-                vibe: "타이베이 101 주변",
-                pros: "깔끔·안전·고급 쇼핑몰",
-                cons: "가격대 높은 편",
-                for: "세련된 분위기 원하는 MZ"
+                vibe: t("accommodation.xinyi.vibe"),
+                pros: t("accommodation.xinyi.pros"),
+                cons: t("accommodation.xinyi.cons"),
+                for: t("accommodation.xinyi.for")
               },
               {
                 emoji: "☕",
-                name: "중산 (Zhongshan)",
-                tag: "감성",
+                name: t("accommodation.zhongshan.name"),
+                tag: t("guide.mood"),
                 tagColor: "bg-muted-foreground",
-                vibe: "카페·바 밀집 지역",
-                pros: "힙한 분위기, 조용+편리",
-                cons: "관광지 접근성 중간",
-                for: "감성 카페 좋아하는 MZ"
+                vibe: t("accommodation.zhongshan.vibe"),
+                pros: t("accommodation.zhongshan.pros"),
+                cons: t("accommodation.zhongshan.cons"),
+                for: t("accommodation.zhongshan.for")
               },
               {
                 emoji: "♨️",
-                name: "베이터우 (Beitou)",
-                tag: "힐링",
+                name: t("accommodation.beitou.name"),
+                tag: t("guide.healing"),
                 tagColor: "bg-muted-foreground",
-                vibe: "온천 호텔·리조트 밀집",
-                pros: "조용하고 자연친화적",
-                cons: "시내 관광에는 비효율적",
-                for: "휴식 중심 여행"
+                vibe: t("accommodation.beitou.vibe"),
+                pros: t("accommodation.beitou.pros"),
+                cons: t("accommodation.beitou.cons"),
+                for: t("accommodation.beitou.for")
               },
             ].map((area) => (
               <div
@@ -1748,65 +1758,65 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">💰</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">숙소 유형 & 예산</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.accommodation_types")}</h2>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">🎒</span>
                 <div>
-                  <div className="font-medium text-foreground text-sm">호스텔</div>
-                  <div className="text-xs text-muted-foreground">깔끔·가성비·공용 공간</div>
+                  <div className="font-medium text-foreground text-sm">{t("guide.hostel")}</div>
+                  <div className="text-xs text-muted-foreground">{t("guide.hostel_desc")}</div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="font-bold text-foreground">20~40 USD</div>
-                <div className="text-xs text-muted-foreground">약 2~5만원</div>
+                <div className="text-xs text-muted-foreground">{t("guide.hostel_krw")}</div>
               </div>
             </div>
             <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">📸</span>
                 <div>
-                  <div className="font-medium text-foreground text-sm">부티크 호텔</div>
-                  <div className="text-xs text-muted-foreground">감성·사진 맛집</div>
+                  <div className="font-medium text-foreground text-sm">{t("guide.boutique")}</div>
+                  <div className="text-xs text-muted-foreground">{t("guide.boutique_desc")}</div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="font-bold text-foreground">60~120 USD</div>
-                <div className="text-xs text-muted-foreground">약 8~16만원</div>
+                <div className="text-xs text-muted-foreground">{t("guide.boutique_krw")}</div>
               </div>
             </div>
             <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">🏢</span>
                 <div>
-                  <div className="font-medium text-foreground text-sm">비즈니스 호텔</div>
-                  <div className="text-xs text-muted-foreground">깔끔·실용·교통 편리</div>
+                  <div className="font-medium text-foreground text-sm">{t("guide.business")}</div>
+                  <div className="text-xs text-muted-foreground">{t("guide.business_desc")}</div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="font-bold text-foreground">80~150 USD</div>
-                <div className="text-xs text-muted-foreground">약 10~20만원</div>
+                <div className="text-xs text-muted-foreground">{t("guide.business_krw")}</div>
               </div>
             </div>
             <div className="flex items-center justify-between p-4 bg-muted/50 dark:bg-muted rounded-xl border border-border">
               <div className="flex items-center gap-3">
                 <span className="text-xl">♨️</span>
                 <div>
-                  <div className="font-medium text-foreground text-sm">온천 리조트</div>
-                  <div className="text-xs text-muted-foreground">힐링·프라이빗</div>
+                  <div className="font-medium text-foreground text-sm">{t("guide.hot_spring")}</div>
+                  <div className="text-xs text-muted-foreground">{t("guide.hot_spring_desc")}</div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="font-bold text-foreground">150~300 USD</div>
-                <div className="text-xs text-muted-foreground">약 20~40만원</div>
+                <div className="text-xs text-muted-foreground">{t("guide.hot_spring_krw")}</div>
               </div>
             </div>
           </div>
           <div className="bg-muted/50 dark:bg-muted rounded-xl p-3 mt-4 border border-border">
             <p className="text-xs text-muted-foreground text-center">
-              💡 타이베이는 호스텔 퀄리티가 특히 좋아서 가성비 숙소도 만족도 높아요!
+              💡 {t("guide.hostel_quality_tip")}
             </p>
           </div>
         </section>
@@ -1815,7 +1825,7 @@ export default function Home() {
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-2xl">✨</span>
-            <h2 className="text-fluid-lg font-bold text-foreground">숙소 고르는 팁</h2>
+            <h2 className="text-fluid-lg font-bold text-foreground">{t("guide.accommodation_tips")}</h2>
           </div>
           <div className="space-y-3">
             <div className="flex items-start gap-3 p-3 bg-muted/50 dark:bg-muted rounded-xl">
@@ -1823,9 +1833,9 @@ export default function Home() {
                 <span className="text-white text-sm font-bold">1</span>
               </div>
               <div>
-                <div className="font-medium text-foreground text-sm">MRT역 도보 5분 이내</div>
+                <div className="font-medium text-foreground text-sm">{t("guide.tip_mrt_5min")}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  타이베이는 MRT 중심 도시! 역과의 거리 = 여행 편의성
+                  {t("guide.tip_mrt_5min_desc")}
                 </p>
               </div>
             </div>
@@ -1834,9 +1844,9 @@ export default function Home() {
                 <span className="text-white text-sm font-bold">2</span>
               </div>
               <div>
-                <div className="font-medium text-foreground text-sm">시먼딩 or 중정구 베이스</div>
+                <div className="font-medium text-foreground text-sm">{t("guide.tip_ximending_base")}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  첫 방문이라면 가장 스트레스 없는 선택!
+                  {t("guide.tip_ximending_base_desc")}
                 </p>
               </div>
             </div>
@@ -1845,9 +1855,9 @@ export default function Home() {
                 <span className="text-white text-sm font-bold">3</span>
               </div>
               <div>
-                <div className="font-medium text-foreground text-sm">야시장·카페 동선 고려</div>
+                <div className="font-medium text-foreground text-sm">{t("guide.tip_nightmarket")}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  타이베이는 밤이 더 재밌는 도시! 숙소 주변 상권 중요
+                  {t("guide.tip_nightmarket_desc")}
                 </p>
               </div>
             </div>
@@ -1856,9 +1866,9 @@ export default function Home() {
                 <span className="text-white text-sm font-bold">4</span>
               </div>
               <div>
-                <div className="font-medium text-foreground text-sm">주말·연휴는 미리 예약</div>
+                <div className="font-medium text-foreground text-sm">{t("guide.tip_early_booking")}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  현지 여행객도 많아 가격이 오르고 방이 빨리 차요
+                  {t("guide.tip_early_booking_desc")}
                 </p>
               </div>
             </div>
@@ -1868,10 +1878,10 @@ export default function Home() {
     );
 
     const guideTabs = [
-      { id: "overview" as GuideTabType, label: "개요", emoji: "🏙️" },
-      { id: "weather" as GuideTabType, label: "날씨", emoji: "🌤️" },
-      { id: "transport" as GuideTabType, label: "교통", emoji: "🚇" },
-      { id: "accommodation" as GuideTabType, label: "숙박", emoji: "🏨" },
+      { id: "overview" as GuideTabType, label: t("guide.tab_overview"), emoji: "🏙️" },
+      { id: "weather" as GuideTabType, label: t("guide.tab_weather"), emoji: "🌤️" },
+      { id: "transport" as GuideTabType, label: t("guide.tab_transport"), emoji: "🚇" },
+      { id: "accommodation" as GuideTabType, label: t("guide.tab_accommodation"), emoji: "🏨" },
     ];
 
     return (
@@ -1888,8 +1898,8 @@ export default function Home() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1 className="font-bold text-foreground text-lg">📖 타이베이 여행 가이드</h1>
-                <p className="text-muted-foreground text-xs">대만 타이베이 완벽 정리</p>
+                <h1 className="font-bold text-foreground text-lg">{t("guide.title")}</h1>
+                <p className="text-muted-foreground text-xs">{t("guide.subtitle")}</p>
               </div>
             </div>
 
@@ -1922,7 +1932,7 @@ export default function Home() {
             {/* 하단 안내 */}
             <div className="text-center py-6">
               <p className="text-xs text-muted-foreground">
-                🧳 즐거운 타이베이 여행 되세요!
+                {t("guide.footer")}
               </p>
             </div>
           </div>
@@ -1956,21 +1966,21 @@ export default function Home() {
         <CategorySheet
           open={categorySheetOpen}
           onOpenChange={setCategorySheetOpen}
-          title="카테고리 선택"
+          title={t("categories.select")}
           options={categories}
           onSelect={handleCategorySelect}
         />
         <CategorySheet
           open={marketSheetOpen}
           onOpenChange={setMarketSheetOpen}
-          title="야시장 선택"
+          title={t("market.select")}
           options={markets}
           onSelect={handleMarketSelect}
         />
         <CategorySheet
           open={tourSheetOpen}
           onOpenChange={setTourSheetOpen}
-          title="도심투어 지역"
+          title={t("tour.select")}
           options={tourAreas}
           onSelect={handleTourSelect}
         />
@@ -2020,23 +2030,32 @@ export default function Home() {
           style={pullDistance > 0 ? { transform: `translateY(${pullDistance}px)` } : undefined}
         >
           <div className="px-4 py-4 flex items-center justify-between">
-            <button
-              onClick={toggleTheme}
-              className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground hover:bg-muted transition-all"
-              title={theme === "dark" ? "라이트 모드" : "다크 모드"}
-            >
-              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={toggleTheme}
+                className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground hover:bg-muted transition-all"
+                title={theme === "dark" ? t("theme.light") : t("theme.dark")}
+              >
+                {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+              <button
+                onClick={toggleLanguage}
+                className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground hover:bg-muted transition-all text-xs font-bold"
+                title={language === "ko" ? "English" : "한국어"}
+              >
+                {language === "ko" ? "EN" : "KO"}
+              </button>
+            </div>
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🍜</span>
                 <h1 className="text-fluid-xl font-bold text-foreground tracking-wide">
-                  대만맛집
+                  {t("home.app_title")}
                 </h1>
                 <span className="text-2xl">🏯</span>
               </div>
               <span className="text-xs text-muted-foreground font-medium tracking-widest mt-0.5">
-                TAIPEI FOOD GUIDE
+                {t("home.app_subtitle")}
               </span>
             </div>
             {/* 로그인/사용자 버튼 */}
@@ -2053,7 +2072,7 @@ export default function Home() {
                 {userMenuOpen && (
                   <div className="absolute right-0 top-12 bg-card rounded-lg shadow-xl border border-border min-w-[160px] py-1 z-[100]">
                     <div className="px-3 py-2 border-b border-border">
-                      <p className="text-sm font-medium text-foreground">{user.name}님</p>
+                      <p className="text-sm font-medium text-foreground">{t("home.user_greeting", { name: user.name })}</p>
                     </div>
                     <button
                       onClick={() => {
@@ -2063,7 +2082,7 @@ export default function Home() {
                       className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2"
                     >
                       <History className="w-4 h-4" />
-                      등록 히스토리
+                      {t("auth.history")}
                     </button>
                     {user?.has_password !== false && (
                       <button
@@ -2074,7 +2093,7 @@ export default function Home() {
                         className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2"
                       >
                         <Key className="w-4 h-4" />
-                        비밀번호 변경
+                        {t("auth.change_password")}
                       </button>
                     )}
                     <button
@@ -2085,7 +2104,7 @@ export default function Home() {
                       className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2"
                     >
                       <LogOut className="w-4 h-4" />
-                      로그아웃
+                      {t("common.logout")}
                     </button>
                     <div className="border-t border-border my-1" />
                     <button
@@ -2096,7 +2115,7 @@ export default function Home() {
                       className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2 text-destructive"
                     >
                       <UserMinus className="w-4 h-4" />
-                      회원탈퇴
+                      {t("auth.delete_account")}
                     </button>
                   </div>
                 )}
@@ -2105,7 +2124,7 @@ export default function Home() {
               <button
                 onClick={() => setAuthModalOpen(true)}
                 className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground hover:bg-muted transition-all"
-                title="로그인"
+                title={t("common.login")}
               >
                 <User className="w-5 h-5" />
               </button>
@@ -2135,7 +2154,7 @@ export default function Home() {
                     setShowSuggestions(false);
                   }
                 }}
-                placeholder="식당, 음식, 야시장, 지역 검색..."
+                placeholder={t("search.placeholder")}
                 className="flex-1 bg-transparent border-none outline-none py-3 px-3 text-foreground placeholder:text-muted-foreground"
               />
               {searchQuery && (
@@ -2161,15 +2180,15 @@ export default function Home() {
                       <MapPin className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-foreground truncate">{item.이름}</div>
+                      <div className="font-medium text-foreground truncate">{getDisplayName(item, language)}</div>
                       <div className="text-xs text-muted-foreground truncate">
-                        {item.위치}
-                        {item.야시장 && ` · ${item.야시장}`}
+                        {getDisplayLocation(item, language)}
+                        {item.야시장 && ` · ${getDisplayNightMarket(item.야시장, language)}`}
                       </div>
                     </div>
                     {item.카테고리 && (
                       <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground flex-shrink-0">
-                        {item.카테고리}
+                        {(() => { const cat = categories.find(c => c.id === item.카테고리); return cat ? t(cat.nameKey) : item.카테고리; })()}
                       </span>
                     )}
                   </button>
@@ -2179,7 +2198,7 @@ export default function Home() {
                     onClick={() => handleSearch(searchQuery)}
                     className="w-full px-4 py-3 text-center text-primary font-medium hover:bg-muted/50 transition-colors"
                   >
-                    "{searchQuery}" 전체 검색 결과 보기
+                    {t("home.search_view_all", { query: searchQuery })}
                   </button>
                 )}
               </div>
@@ -2192,7 +2211,7 @@ export default function Home() {
               <div>
                 <h2 className="text-foreground font-semibold text-base flex items-center gap-2 mb-3">
                   <span className="text-xl">{timeRecommendation.emoji}</span>
-                  {timeRecommendation.greeting}
+                  {t(`time_greeting.${timeRecommendation.timeSlot}`)}
                 </h2>
                 <ScrollArea className="w-full">
                   <div className="flex gap-3 pb-2">
@@ -2225,8 +2244,8 @@ export default function Home() {
               className="rounded-2xl bg-card border border-border shadow-card p-4 text-left active:scale-[0.98] transition-transform"
             >
               <span className="text-2xl">📖</span>
-              <h3 className="text-foreground font-bold text-sm mt-2">여행 가이드</h3>
-              <p className="text-muted-foreground text-[10px] mt-0.5">12구 완벽 정리</p>
+              <h3 className="text-foreground font-bold text-sm mt-2">{t("home.travel_guide")}</h3>
+              <p className="text-muted-foreground text-[10px] mt-0.5">{t("home.travel_guide_desc")}</p>
             </button>
 
             {/* 화장실 찾기 */}
@@ -2239,8 +2258,8 @@ export default function Home() {
               className="rounded-2xl bg-card border border-border shadow-card p-4 text-left active:scale-[0.98] transition-transform"
             >
               <span className="text-2xl">🚽</span>
-              <h3 className="text-foreground font-bold text-sm mt-2">화장실 찾기</h3>
-              <p className="text-muted-foreground text-[10px] mt-0.5">7-ELEVEN 안내</p>
+              <h3 className="text-foreground font-bold text-sm mt-2">{t("home.toilet_finder")}</h3>
+              <p className="text-muted-foreground text-[10px] mt-0.5">{t("home.toilet_finder_desc")}</p>
             </button>
 
             {/* AI 맛집 추천 */}
@@ -2259,8 +2278,8 @@ export default function Home() {
               <div className="relative z-10 flex items-center gap-3">
                 <span className="text-3xl">🤖</span>
                 <div>
-                  <h3 className="text-white font-bold text-sm">AI 맛집 추천</h3>
-                  <p className="text-white/80 text-[10px] mt-0.5">취향에 맞는 맛집을 AI가 골라드려요</p>
+                  <h3 className="text-white font-bold text-sm">{t("home.ai_recommend")}</h3>
+                  <p className="text-white/80 text-[10px] mt-0.5">{t("home.ai_recommend_desc")}</p>
                 </div>
               </div>
             </button>
@@ -2268,7 +2287,7 @@ export default function Home() {
 
           {/* 카테고리 그리드 */}
           <section className="bg-card rounded-2xl p-4 shadow-card">
-            <h2 className="text-fluid-base font-semibold mb-3 text-foreground">카테고리</h2>
+            <h2 className="text-fluid-base font-semibold mb-3 text-foreground">{t("home.category_title")}</h2>
             <div className="grid grid-cols-3 gap-2">
               {categories.slice(0, 6).map((category) => (
                 <Button
@@ -2278,7 +2297,7 @@ export default function Home() {
                   onClick={() => handleCategorySelect(category.id)}
                 >
                   <span className="text-xl mb-1">{category.icon}</span>
-                  <span className="text-xs">{category.name}</span>
+                  <span className="text-xs">{t(category.nameKey)}</span>
                 </Button>
               ))}
             </div>
@@ -2290,14 +2309,14 @@ export default function Home() {
                 }}
                 className="w-full mt-3 text-xs text-primary font-medium hover:underline"
               >
-                전체 카테고리 보기 →
+                {t("home.view_all_categories")}
               </button>
             )}
           </section>
 
           {/* 인기 맛집 */}
           <section className="bg-card rounded-xl p-4 shadow-sm">
-            <h2 className="text-fluid-base font-semibold mb-3 text-foreground">🔥 인기 맛집</h2>
+            <h2 className="text-fluid-base font-semibold mb-3 text-foreground">{t("home.popular_restaurants")}</h2>
             <ScrollArea className="w-full">
               <div className="flex gap-3 pb-2">
                 {popularRestaurants.map((restaurant, index) => (
@@ -2319,7 +2338,7 @@ export default function Home() {
           {districtRanking.length > 0 && (
             <section className="bg-card rounded-xl p-4 shadow-sm">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-fluid-base font-semibold text-foreground">📍 지역별 맛집 랭킹</h2>
+                <h2 className="text-fluid-base font-semibold text-foreground">{t("home.district_ranking_title")}</h2>
                 <button
                   onClick={() => {
                     setCurrentView("district-ranking");
@@ -2328,7 +2347,7 @@ export default function Home() {
                   }}
                   className="text-xs text-primary hover:underline"
                 >
-                  더보기
+                  {t("common.more")}
                 </button>
               </div>
               <div className="space-y-2">
@@ -2349,7 +2368,7 @@ export default function Home() {
                           {districtInfo?.name || item.district}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {item.count}개 맛집
+                          {t("home.district_restaurants_count", { count: item.count })}
                         </div>
                       </div>
                       <div className="flex items-center gap-1 text-accent">
@@ -2365,7 +2384,7 @@ export default function Home() {
 
           {/* 야시장별 맛집 */}
           <section className="bg-card rounded-xl p-4 shadow-sm">
-            <h2 className="text-fluid-base font-semibold mb-3 text-foreground">🌙 야시장별 맛집</h2>
+            <h2 className="text-fluid-base font-semibold mb-3 text-foreground">{t("home.night_market_section")}</h2>
             <ScrollArea className="w-full mb-3">
               <div className="flex gap-2 pb-2">
                 {markets.map((market) => (
@@ -2376,7 +2395,7 @@ export default function Home() {
                     className="rounded-full transition-all hover:scale-[1.05] active:scale-[0.95]"
                     onClick={() => setSelectedMarket(market.id)}
                   >
-                    {market.name}
+                    {t(market.nameKey)}
                   </Button>
                 ))}
               </div>
@@ -2394,7 +2413,7 @@ export default function Home() {
                 ))
               ) : (
                 <p className="text-center text-muted-foreground py-8">
-                  등록된 맛집이 없습니다.
+                  {t("search.no_results")}
                 </p>
               )}
             </div>
@@ -2408,21 +2427,21 @@ export default function Home() {
       <CategorySheet
         open={categorySheetOpen}
         onOpenChange={setCategorySheetOpen}
-        title="카테고리 선택"
+        title={t("categories.select")}
         options={categories}
         onSelect={handleCategorySelect}
       />
       <CategorySheet
         open={marketSheetOpen}
         onOpenChange={setMarketSheetOpen}
-        title="야시장 선택"
+        title={t("market.select")}
         options={markets}
         onSelect={handleMarketSelect}
       />
       <CategorySheet
         open={tourSheetOpen}
         onOpenChange={setTourSheetOpen}
-        title="도심투어 지역"
+        title={t("tour.select")}
         options={tourAreas}
         onSelect={handleTourSelect}
       />

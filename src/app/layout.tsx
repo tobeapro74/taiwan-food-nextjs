@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { LanguageProvider } from "@/components/language-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -67,10 +68,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}
       >
         <ThemeProvider>
-          <div className="max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-7xl mx-auto min-h-screen relative">
-            {children}
-          </div>
-          <Toaster position="top-center" richColors />
+          <LanguageProvider>
+            <div className="max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-7xl mx-auto min-h-screen relative">
+              {children}
+            </div>
+            <Toaster position="top-center" richColors />
+          </LanguageProvider>
         </ThemeProvider>
         <Analytics />
       </body>

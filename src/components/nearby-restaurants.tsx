@@ -4,8 +4,9 @@ import { useState, useMemo, useEffect } from "react";
 import { MapPin, Navigation, ChevronDown, ArrowLeft, Loader2, Search, X, Star } from "lucide-react";
 import { useUserLocation, getMockLocationList } from "@/hooks/useUserLocation";
 import { filterByRadius, RADIUS_OPTIONS, MOCK_LOCATIONS } from "@/lib/geo-utils";
-import { taiwanFoodMap, Restaurant } from "@/data/taiwan-food";
+import { taiwanFoodMap, Restaurant, categories as foodCategories, getDisplayName, getDisplayLocation, getDisplayFeature } from "@/data/taiwan-food";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/components/language-provider";
 
 // 사용자 등록 맛집 타입
 interface CustomRestaurant {
@@ -18,6 +19,9 @@ interface CustomRestaurant {
   google_rating?: number;
   google_reviews_count?: number;
   registered_by?: number;
+  name_en?: string;
+  address_en?: string;
+  feature_en?: string;
 }
 
 export interface NearbyState {
@@ -38,6 +42,7 @@ interface NearbyRestaurantsProps {
  * 맛집알리미 - 주변 맛집 찾기 컴포넌트
  */
 export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onStateChange }: NearbyRestaurantsProps) {
+  const { t } = useLanguage();
   const {
     coordinates,
     locationName,
@@ -84,7 +89,6 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
         const res = await fetch("/api/custom-restaurants");
         const data = await res.json();
         if (data.success && data.data) {
-          // CustomRestaurant를 Restaurant 형식으로 변환
           const converted: Restaurant[] = data.data.map((r: CustomRestaurant) => ({
             이름: r.name,
             위치: r.address,
@@ -95,6 +99,9 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
             place_id: r.place_id,
             category: r.category,
             registered_by: r.registered_by,
+            name_en: r.name_en,
+            location_en: r.address_en,
+            feature_en: r.feature_en,
           }));
           setCustomRestaurants(converted);
         }
@@ -108,7 +115,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
     fetchCustomRestaurants();
   }, []);
 
-  // 모든 맛집 데이터를 하나의 배열로 합침 (정적 데이터 + 사용자 등록 맛집)
+  // 모든 맛집 데이터를 하나의 배열로 합침
   const allRestaurants = useMemo(() => {
     const categories = ["면류", "만두", "밥류", "탕류", "디저트", "길거리음식", "카페", "까르푸"] as const;
     const restaurants: Restaurant[] = [];
@@ -120,7 +127,6 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
       }
     });
 
-    // 사용자 등록 맛집 추가
     restaurants.push(...customRestaurants);
 
     return restaurants;
@@ -128,7 +134,6 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
 
   const [showOutsideTaiwanNotice, setShowOutsideTaiwanNotice] = useState(false);
 
-  // 대만 영역 확인 (위도 21.9~25.4, 경도 119.3~122.1)
   const isInTaiwan = useMemo(() => {
     if (!coordinates) return false;
     return (
@@ -137,7 +142,6 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
     );
   }, [coordinates]);
 
-  // 대만 밖 위치 감지 또는 GPS 실패 시 자동으로 시먼딩으로 전환 + 알림 표시
   useEffect(() => {
     if (coordinates && !isInTaiwan && !isMockLocation) {
       const defaultLocation = MOCK_LOCATIONS["시먼딩"];
@@ -148,17 +152,14 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
     }
   }, [coordinates, isInTaiwan, isMockLocation, setMockLocation]);
 
-  // GPS 실패로 기본 위치(시먼딩)로 폴백된 경우 안내 모달 표시
   useEffect(() => {
     if (gpsFailed) {
       setShowOutsideTaiwanNotice(true);
     }
   }, [gpsFailed]);
 
-  // 주변 맛집 필터링
   const nearbyRestaurants = useMemo(() => {
     if (!coordinates) return [];
-
     const filtered = filterByRadius(allRestaurants, coordinates, selectedRadius);
     return filtered;
   }, [allRestaurants, coordinates, selectedRadius]);
@@ -173,17 +174,16 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
               <span className="text-4xl">📍</span>
             </div>
             <h3 className="text-lg font-bold text-center text-foreground mb-3">
-              대만 외 지역 감지
+              {t("nearby.outside_taiwan_title")}
             </h3>
-            <p className="text-sm text-muted-foreground text-center leading-relaxed mb-5">
-              이 서비스는 대만 타이베이 내에서 이용 가능합니다.
-              현재 대만 외 지역에 계시므로, 시먼딩(西門町) 기준의 샘플 데이터를 보여드립니다.
+            <p className="text-sm text-muted-foreground text-center leading-relaxed mb-5 whitespace-pre-line">
+              {t("nearby.outside_taiwan_desc")}
             </p>
             <button
               onClick={() => setShowOutsideTaiwanNotice(false)}
               className="w-full py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
             >
-              확인
+              {t("common.confirm")}
             </button>
           </div>
         </div>
@@ -199,9 +199,9 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-lg font-bold">맛집알리미</h1>
+            <h1 className="text-lg font-bold">{t("nearby.title")}</h1>
             <p className="text-sm text-muted-foreground">
-              주변 맛집을 찾아보세요
+              {t("nearby.subtitle")}
             </p>
           </div>
         </div>
@@ -213,11 +213,11 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
             <span className="font-medium">
-              {locationName || "위치를 선택하세요"}
+              {locationName || t("nearby.select_location")}
             </span>
             {isMockLocation && (
               <span className="text-xs bg-accent/10 dark:bg-accent/20 text-accent-foreground px-2 py-0.5 rounded">
-                테스트
+                {t("common.test")}
               </span>
             )}
           </div>
@@ -225,7 +225,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
             onClick={() => setShowLocationPicker(!showLocationPicker)}
             className="flex items-center gap-1 text-sm text-primary hover:text-primary/80"
           >
-            위치 변경
+            {t("nearby.change_location")}
             <ChevronDown className={`w-4 h-4 transition-transform ${showLocationPicker ? "rotate-180" : ""}`} />
           </button>
         </div>
@@ -248,14 +248,14 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
                 ) : (
                   <Navigation className="w-4 h-4" />
                 )}
-                현재 위치 사용
+                {t("nearby.use_current")}
               </button>
             </div>
 
             {/* 주소 검색 입력창 */}
             <div className="mb-3">
               <div className="text-xs text-muted-foreground mb-2">
-                또는 주소로 검색:
+                {t("nearby.search_address")}
               </div>
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -268,7 +268,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
                         searchAddress(addressInput);
                       }
                     }}
-                    placeholder="예: 시먼딩, 타이베이역, 西門町..."
+                    placeholder={t("nearby.address_placeholder")}
                     className="w-full px-3 py-2 pr-8 text-sm border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   {addressInput && (
@@ -301,7 +301,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
             {searchResults.length > 0 && (
               <div className="mb-3">
                 <div className="text-xs text-muted-foreground mb-2">
-                  검색 결과:
+                  {t("nearby.search_results")}
                 </div>
                 <div className="space-y-1 max-h-40 overflow-y-auto">
                   {searchResults.map((result, index) => (
@@ -331,25 +331,25 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
                 className="text-xs text-muted-foreground mb-2 flex items-center gap-1 hover:text-primary"
               >
                 <ChevronDown className={`w-3 h-3 transition-transform ${showManualInput ? "rotate-180" : ""}`} />
-                직접 좌표 입력 (GPS 좌표)
+                {t("nearby.manual_coords")}
               </button>
 
               {showManualInput && (
                 <div className="p-3 bg-card rounded-lg border border-border">
                   <div className="space-y-2">
                     <div>
-                      <label className="text-xs text-muted-foreground">위치 이름 (선택)</label>
+                      <label className="text-xs text-muted-foreground">{t("nearby.location_name")}</label>
                       <input
                         type="text"
                         value={manualName}
                         onChange={(e) => setManualName(e.target.value)}
-                        placeholder="예: 내 호텔, 현재 위치"
+                        placeholder={t("nearby.location_name_placeholder")}
                         className="w-full px-3 py-1.5 text-sm border border-border rounded bg-card focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-xs text-muted-foreground">위도 (Lat)</label>
+                        <label className="text-xs text-muted-foreground">{t("nearby.latitude")}</label>
                         <input
                           type="text"
                           value={manualLat}
@@ -359,7 +359,7 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-muted-foreground">경도 (Lng)</label>
+                        <label className="text-xs text-muted-foreground">{t("nearby.longitude")}</label>
                         <input
                           type="text"
                           value={manualLng}
@@ -385,18 +385,18 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
                       disabled={!manualLat || !manualLng || isNaN(parseFloat(manualLat)) || isNaN(parseFloat(manualLng))}
                       className="w-full px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
                     >
-                      이 좌표로 설정
+                      {t("nearby.set_coords")}
                     </button>
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground/70">
-                    Tip: 구글맵에서 위치를 길게 누르면 좌표를 복사할 수 있어요
+                    {t("common.tip")}: {t("nearby.coords_tip")}
                   </div>
                 </div>
               )}
             </div>
 
             <div className="text-xs text-muted-foreground mb-2">
-              또는 테스트 위치 선택:
+              {t("nearby.test_locations")}
             </div>
             <div className="grid grid-cols-2 gap-2">
               {mockLocations.map((location) => (
@@ -429,7 +429,9 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
         {/* 반경 선택 */}
         {coordinates && (
           <div className="mt-3">
-            <div className="text-sm text-muted-foreground mb-2">검색 반경</div>
+            <div className="text-sm text-muted-foreground mb-2">
+              {t("nearby.search_radius")}
+            </div>
             <div className="flex gap-2">
               {RADIUS_OPTIONS.map((option) => (
                 <button
@@ -455,10 +457,10 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
           <div className="flex flex-col items-center justify-center h-full text-center">
             <MapPin className="w-12 h-12 text-muted-foreground/40 mb-4" />
             <p className="text-muted-foreground mb-2">
-              위치를 선택하면 주변 맛집을 찾아드려요
+              {t("nearby.select_location_guide")}
             </p>
             <p className="text-sm text-muted-foreground/70">
-              위 버튼을 눌러 위치를 설정해주세요
+              {t("nearby.set_location_guide")}
             </p>
           </div>
         ) : isLoadingCustom ? (
@@ -482,20 +484,19 @@ export function NearbyRestaurants({ onSelectRestaurant, onBack, savedState, onSt
           <div className="flex flex-col items-center justify-center h-full text-center">
             <MapPin className="w-12 h-12 text-muted-foreground/40 mb-4" />
             <p className="text-muted-foreground mb-2">
-              {selectedRadius >= 1000 ? `${selectedRadius / 1000}km` : `${selectedRadius}m`} 이내에 맛집이 없습니다
+              {t("nearby.no_restaurants_within", { radius: selectedRadius >= 1000 ? `${selectedRadius / 1000}km` : `${selectedRadius}m` })}
             </p>
             <p className="text-sm text-muted-foreground/70">
-              검색 반경을 늘려보세요
+              {t("nearby.try_increase_radius")}
             </p>
           </div>
         ) : (
           <>
             <div className="text-sm text-muted-foreground mb-3">
-              {selectedRadius >= 1000 ? `${selectedRadius / 1000}km` : `${selectedRadius}m`} 이내{" "}
+              {t("nearby.within_radius", { radius: selectedRadius >= 1000 ? `${selectedRadius / 1000}km` : `${selectedRadius}m` })}
               <span className="font-medium text-foreground/70">
-                {nearbyRestaurants.length}개
+                {t("nearby.restaurant_count", { count: nearbyRestaurants.length })}
               </span>
-              의 맛집
             </div>
             <div className="space-y-3">
               {nearbyRestaurants.map((item, index) => (
@@ -521,7 +522,13 @@ interface NearbyRestaurantCardProps {
 }
 
 function NearbyRestaurantCard({ restaurant, distance, onSelect }: NearbyRestaurantCardProps) {
+  const { t, language } = useLanguage();
   const isCustom = !!restaurant.place_id;
+
+  const getCategoryLabel = (categoryId: string) => {
+    const cat = foodCategories.find(c => c.id === categoryId);
+    return cat ? t(cat.nameKey) : categoryId;
+  };
 
   return (
     <button
@@ -530,10 +537,10 @@ function NearbyRestaurantCard({ restaurant, distance, onSelect }: NearbyRestaura
     >
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <h3 className="font-bold text-foreground truncate">{restaurant.이름}</h3>
-          {isCustom && (
+          <h3 className="font-bold text-foreground truncate">{getDisplayName(restaurant, language)}</h3>
+          {isCustom && restaurant.category && (
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">
-              {restaurant.category}
+              {getCategoryLabel(restaurant.category)}
             </Badge>
           )}
         </div>
@@ -541,15 +548,15 @@ function NearbyRestaurantCard({ restaurant, distance, onSelect }: NearbyRestaura
           {distance}
         </span>
       </div>
-      {restaurant.특징 && (
+      {(restaurant.특징 || restaurant.feature_en) && (
         <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-          {restaurant.특징}
+          {getDisplayFeature(restaurant, language)}
         </p>
       )}
       <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
         <span className="flex items-center gap-1">
           <MapPin className="w-3 h-3" />
-          <span className="truncate max-w-[150px]">{restaurant.위치}</span>
+          <span className="truncate max-w-[150px]">{getDisplayLocation(restaurant, language)}</span>
         </span>
         {restaurant.평점 && (
           <span className="flex items-center gap-1">

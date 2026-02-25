@@ -97,6 +97,10 @@ export interface CustomRestaurant {
   registered_by_name: string; // 등록한 사용자 이름
   created_at: string;
   updated_at?: string;
+  // 영문 필드 (다국어 지원)
+  name_en?: string; // 영문 이름
+  address_en?: string; // 영문 주소
+  feature_en?: string; // 영문 특징
   // 정적 데이터 마이그레이션용 추가 필드
   building?: string; // 빌딩명
   night_market?: string; // 야시장

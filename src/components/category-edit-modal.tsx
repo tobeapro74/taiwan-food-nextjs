@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { categories } from "@/data/taiwan-food";
+import { useLanguage } from "@/components/language-provider";
 
 interface CategoryEditModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export function CategoryEditModal({
   restaurantName,
   onSuccess,
 }: CategoryEditModalProps) {
+  const { t } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState(currentCategory);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -68,10 +70,10 @@ export function CategoryEditModal({
         onSuccess(selectedCategory);
         onClose();
       } else {
-        setError(data.error || "카테고리 수정에 실패했습니다.");
+        setError(data.error || t("edit_restaurant.category_update_failed"));
       }
     } catch {
-      setError("서버 연결에 실패했습니다.");
+      setError(t("auth.server_error"));
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +85,7 @@ export function CategoryEditModal({
         {/* 헤더 */}
         <div className="bg-card px-4 py-4 flex items-center justify-between border-b border-border">
           <h2 className="text-lg font-semibold text-foreground">
-            카테고리 수정
+            {t("edit_restaurant.category_title")}
           </h2>
           <button
             onClick={onClose}
@@ -96,8 +98,7 @@ export function CategoryEditModal({
         {/* 내용 */}
         <div className="p-5 space-y-4">
           <p className="text-sm text-muted-foreground text-center">
-            <span className="font-medium text-foreground">{restaurantName}</span>의
-            카테고리를 선택해주세요.
+            {t("edit_restaurant.select_category", { name: restaurantName })}
           </p>
 
           {/* 에러 메시지 */}
@@ -121,7 +122,7 @@ export function CategoryEditModal({
               >
                 <span className="flex items-center gap-2">
                   <span>{cat.icon}</span>
-                  <span className="font-medium">{cat.name}</span>
+                  <span className="font-medium">{t(cat.nameKey)}</span>
                 </span>
                 {selectedCategory === cat.id && (
                   <Check className="w-4 h-4" />
@@ -138,7 +139,7 @@ export function CategoryEditModal({
               className="flex-1"
               disabled={isLoading}
             >
-              취소
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -148,7 +149,7 @@ export function CategoryEditModal({
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                "수정"
+                t("edit_restaurant.update")
               )}
             </Button>
           </div>

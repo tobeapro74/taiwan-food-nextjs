@@ -94,6 +94,21 @@ export async function POST(request: NextRequest) {
 
     const place: PlaceDetails = detailsData.result;
 
+    // 영문 이름/주소 조회 (Basic 필드만 - 비용 최소화)
+    let name_en: string | undefined;
+    let address_en: string | undefined;
+    try {
+      const enUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${targetPlaceId}&fields=name,formatted_address&language=en&key=${apiKey}`;
+      const enResponse = await fetch(enUrl);
+      const enData = await enResponse.json();
+      if (enData.status === "OK" && enData.result) {
+        name_en = enData.result.name;
+        address_en = enData.result.formatted_address;
+      }
+    } catch {
+      // 영문 조회 실패해도 무시 - 한국어만 사용
+    }
+
     // 사진 URL 생성 (최대 3장)
     const photoUrls: string[] = [];
     if (place.photos && place.photos.length > 0) {
@@ -152,6 +167,8 @@ export async function POST(request: NextRequest) {
         photos: photoUrls,
         suggested_category: suggestedCategory,
         types: place.types,
+        name_en,
+        address_en,
       },
     });
   } catch (error) {

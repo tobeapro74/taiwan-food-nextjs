@@ -20,6 +20,7 @@ import {
   TAIPEI_DISTRICT_OPTIONS,
 } from "@/lib/schedule-types";
 import { ScheduleResult } from "./schedule-result";
+import { useLanguage } from "@/components/language-provider";
 
 interface User {
   id: number;
@@ -52,6 +53,8 @@ const initialAgeGenderCounts: AgeGenderCount[] = DETAILED_AGE_OPTIONS.map((opt) 
 }));
 
 export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "create" }: ScheduleMainProps) {
+  const { t, language } = useLanguage();
+
   // 뷰 모드: "create" | "list" | "view"
   const [viewMode, setViewMode] = useState<"create" | "list" | "view">(initialViewMode);
 
@@ -306,21 +309,21 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
   // 일정 생성
   const handleGenerate = async () => {
     if (totalTravelers === 0) {
-      setError("여행 인원을 1명 이상 입력해주세요.");
+      setError(t("schedule.error_no_travelers"));
       return;
     }
     if (preferences.length === 0) {
-      setError("취향을 1개 이상 선택해주세요.");
+      setError(t("schedule.error_no_preferences"));
       return;
     }
     if (purposes.length === 0) {
-      setError("여행 목적을 1개 이상 선택해주세요.");
+      setError(t("schedule.error_no_purposes"));
       return;
     }
 
     setIsLoading(true);
     setError(null);
-    setLoadingStep("여행자 정보 분석 중...");
+    setLoadingStep(t("schedule.loading_analyzing"));
 
     try {
       // 숙소 정보 구성
@@ -343,7 +346,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
         accommodation,
       };
 
-      setLoadingStep("AI가 맞춤 일정을 생성 중...");
+      setLoadingStep(t("schedule.loading_generating"));
 
       const response = await fetch("/api/schedule-generate", {
         method: "POST",
@@ -354,10 +357,10 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.error || "일정 생성에 실패했습니다.");
+        throw new Error(data.error || t("schedule.loading_error"));
       }
 
-      setLoadingStep("일정 완성!");
+      setLoadingStep(t("schedule.loading_complete"));
 
       const newSchedule: TravelSchedule = {
         id: `schedule_${Date.now()}`,
@@ -371,7 +374,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
       setSchedule(newSchedule);
     } catch (err) {
       console.error("Schedule generation error:", err);
-      setError(err instanceof Error ? err.message : "일정 생성 중 오류가 발생했습니다.");
+      setError(err instanceof Error ? err.message : t("schedule.loading_generic_error"));
     } finally {
       setIsLoading(false);
     }
@@ -399,8 +402,8 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="font-bold text-white text-lg">나만의 타이베이 일정</h1>
-              <p className="text-white/80 text-xs">AI가 맞춤 일정을 만들어드려요</p>
+              <h1 className="font-bold text-white text-lg">{t("schedule.header_title")}</h1>
+              <p className="text-white/80 text-xs">{t("schedule.header_subtitle")}</p>
             </div>
           </div>
         </div>
@@ -408,17 +411,16 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
           <div className="w-20 h-20 bg-gradient-to-r from-primary to-primary/85 rounded-full flex items-center justify-center mb-6">
             <LogIn className="w-10 h-10 text-white" />
           </div>
-          <h2 className="text-xl font-bold text-foreground mb-2">로그인이 필요합니다</h2>
-          <p className="text-sm text-muted-foreground mb-6 text-center">
-            AI 일정 생성 기능은 회원만 이용 가능합니다.<br />
-            로그인하시면 일정을 저장하고 언제든 다시 볼 수 있어요.
+          <h2 className="text-xl font-bold text-foreground mb-2">{t("schedule.login_required_title")}</h2>
+          <p className="text-sm text-muted-foreground mb-6 text-center whitespace-pre-line">
+            {t("schedule.login_required_desc")}
           </p>
           <Button
             onClick={onLoginClick}
             className="bg-gradient-to-r from-primary to-primary/85 text-white px-8 py-3 rounded-xl"
           >
             <LogIn className="w-4 h-4 mr-2" />
-            로그인 / 회원가입
+            {t("schedule.login_signup")}
           </Button>
         </div>
       </div>
@@ -431,7 +433,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
       <div className="min-h-screen pb-20 bg-gradient-to-b from-primary/5 to-background dark:from-background dark:to-background">
         <div className="flex flex-col items-center justify-center min-h-[60vh] p-8">
           <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-sm text-muted-foreground">일정을 불러오는 중...</p>
+          <p className="text-sm text-muted-foreground">{t("schedule.loading_schedules")}</p>
         </div>
       </div>
     );
@@ -462,8 +464,8 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1 className="font-bold text-white text-lg">저장된 일정</h1>
-                <p className="text-white/80 text-xs">{savedSchedules.length}개의 일정</p>
+                <h1 className="font-bold text-white text-lg">{t("schedule.saved_schedules")}</h1>
+                <p className="text-white/80 text-xs">{t("schedule.schedule_count", { count: savedSchedules.length })}</p>
               </div>
             </div>
             <Button
@@ -472,7 +474,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
               className="h-11 px-4 rounded-full bg-white/20 hover:bg-white/30 text-white text-sm font-medium"
             >
               <Plus className="h-4 w-4 mr-1" />
-              일정 만들기
+              {t("schedule.create_schedule")}
             </Button>
           </div>
         </div>
@@ -485,12 +487,12 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
           ) : savedSchedules.length === 0 ? (
             <div className="text-center py-10">
               <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">저장된 일정이 없습니다</p>
+              <p className="text-muted-foreground">{t("schedule.no_saved_schedules")}</p>
               <Button
                 onClick={() => setViewMode("create")}
                 className="mt-4 bg-primary text-white"
               >
-                새 일정 만들기
+                {t("schedule.create_new_schedule")}
               </Button>
             </div>
           ) : (
@@ -506,11 +508,11 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                   >
                     <h3 className="font-semibold text-foreground">{item.title}</h3>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {item.days}일 · {formatAgeGenderSummary(item.ageGenderBreakdown, item.travelers)}
+                      {t("schedule.days_with_unit", { days: item.days })} · {formatAgeGenderSummary(item.ageGenderBreakdown, item.travelers, t)}
                       {item.accommodation && ` · ${item.accommodation}`}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(item.savedAt).toLocaleDateString("ko-KR")}
+                      {new Date(item.savedAt).toLocaleDateString(language === "ko" ? "ko-KR" : "en-US")}
                     </p>
                   </div>
                   <Button
@@ -531,10 +533,10 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
         <ConfirmDialog
           open={confirmDeleteId !== null}
           onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}
-          title="일정 삭제"
-          description="이 일정을 삭제하시겠습니까?"
-          confirmLabel="삭제"
-          cancelLabel="취소"
+          title={t("schedule.delete_schedule_title")}
+          description={t("schedule.delete_schedule_desc")}
+          confirmLabel={t("common.delete")}
+          cancelLabel={t("common.cancel")}
           variant="destructive"
           onConfirm={() => {
             if (confirmDeleteId) executeDelete(confirmDeleteId);
@@ -557,7 +559,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
           <div className="w-20 h-20 bg-gradient-to-r from-primary to-primary/85 rounded-full flex items-center justify-center mb-6 animate-pulse">
             <Sparkles className="w-10 h-10 text-white" />
           </div>
-          <h2 className="text-xl font-bold text-foreground mb-2">여행 일정을 만들고 있어요</h2>
+          <h2 className="text-xl font-bold text-foreground mb-2">{t("schedule.loading_title")}</h2>
           <p className="text-sm text-muted-foreground mb-6">{loadingStep}</p>
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -579,8 +581,8 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="font-bold text-white text-lg">나만의 타이베이 일정</h1>
-            <p className="text-white/80 text-xs">AI가 맞춤 일정을 만들어드려요</p>
+            <h1 className="font-bold text-white text-lg">{t("schedule.header_title")}</h1>
+            <p className="text-white/80 text-xs">{t("schedule.header_subtitle")}</p>
           </div>
         </div>
       </div>
@@ -596,7 +598,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
         {/* 여행 일수 */}
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <span>📅</span> 여행 일수
+            <span>📅</span> {t("schedule.days_label")}
           </h2>
           <div className="flex items-center justify-center gap-4">
             <button
@@ -607,7 +609,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
             </button>
             <div className="text-center">
               <span className="text-4xl font-bold text-primary">{days}</span>
-              <span className="text-lg text-muted-foreground ml-1">일</span>
+              <span className="text-lg text-muted-foreground ml-1">{t("schedule.days_unit")}</span>
             </div>
             <button
               onClick={() => setDays(Math.min(14, days + 1))}
@@ -621,12 +623,12 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
         {/* 입국/출국 시간 */}
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Plane className="w-4 h-4" /> 항공편 시간대
+            <Plane className="w-4 h-4" /> {t("schedule.flight_time")}
           </h2>
 
           {/* 입국 시간 */}
           <div className="mb-4">
-            <p className="text-xs text-muted-foreground mb-2">🛬 입국 (Day 1)</p>
+            <p className="text-xs text-muted-foreground mb-2">{t("schedule.arrival_label")}</p>
             <div className="flex flex-wrap gap-2">
               {FLIGHT_TIME_OPTIONS.map((opt) => (
                 <button
@@ -638,7 +640,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                       : "bg-muted text-foreground hover:bg-muted/80"
                   }`}
                 >
-                  <div>{opt.label}</div>
+                  <div>{t(opt.labelKey)}</div>
                   <div className="text-[10px] opacity-70">{opt.description}</div>
                 </button>
               ))}
@@ -647,7 +649,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
 
           {/* 출국 시간 */}
           <div>
-            <p className="text-xs text-muted-foreground mb-2">🛫 출국 (Day {days})</p>
+            <p className="text-xs text-muted-foreground mb-2">{t("schedule.departure_label", { day: days })}</p>
             <div className="flex flex-wrap gap-2">
               {FLIGHT_TIME_OPTIONS.map((opt) => (
                 <button
@@ -659,7 +661,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                       : "bg-muted text-foreground hover:bg-muted/80"
                   }`}
                 >
-                  <div>{opt.label}</div>
+                  <div>{t(opt.labelKey)}</div>
                   <div className="text-[10px] opacity-70">{opt.description}</div>
                 </button>
               ))}
@@ -670,13 +672,13 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
         {/* 숙소 위치 */}
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <h2 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
-            <Hotel className="w-4 h-4" /> 숙소 위치
+            <Hotel className="w-4 h-4" /> {t("schedule.accommodation_title")}
           </h2>
-          <p className="text-xs text-muted-foreground mb-4">숙소명을 검색하면 자동으로 지역이 선택됩니다</p>
+          <p className="text-xs text-muted-foreground mb-4">{t("schedule.accommodation_desc")}</p>
 
           {/* 숙소명 검색 */}
           <div className="mb-4 relative">
-            <label className="text-xs text-muted-foreground mb-1 block">숙소명 검색</label>
+            <label className="text-xs text-muted-foreground mb-1 block">{t("schedule.hotel_search_label")}</label>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -692,7 +694,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                     searchHotel();
                   }
                 }}
-                placeholder="예: Check Inn, 시저파크, W Hotel 등"
+                placeholder={t("schedule.hotel_search_placeholder")}
                 className="flex-1 px-3 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <button
@@ -705,7 +707,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                 ) : (
                   <Search className="w-4 h-4" />
                 )}
-                검색
+                {t("common.search")}
               </button>
             </div>
 
@@ -714,7 +716,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
               <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white dark:bg-card border rounded-lg shadow-lg max-h-60 overflow-y-auto">
                 {hotelSearchResults.length === 0 ? (
                   <div className="p-3 text-sm text-muted-foreground text-center">
-                    검색 결과가 없습니다. 직접 지역을 선택해주세요.
+                    {t("schedule.no_search_results")}
                   </div>
                 ) : (
                   hotelSearchResults.map((hotel, idx) => (
@@ -727,7 +729,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                       <div className="text-xs text-muted-foreground mt-0.5">{hotel.address}</div>
                       <div className="text-xs text-primary mt-1 flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
-                        {hotel.districtLabel} 지역
+                        {t("schedule.district_area", { district: hotel.districtLabel })}
                       </div>
                     </button>
                   ))
@@ -752,7 +754,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
           {/* 지역 선택 (직접 선택 또는 검색 결과로 자동 선택) */}
           <div>
             <label className="text-xs text-muted-foreground mb-2 block flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> 숙소 지역 {selectedHotelAddress ? "(자동 선택됨)" : "(직접 선택)"}
+              <MapPin className="w-3 h-3" /> {t("schedule.district_label")} {selectedHotelAddress ? t("schedule.district_auto") : t("schedule.district_manual")}
             </label>
             <div className="grid grid-cols-3 gap-2">
               {TAIPEI_DISTRICT_OPTIONS.map((district) => (
@@ -770,8 +772,8 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                       : "bg-muted text-foreground hover:bg-muted/80"
                   }`}
                 >
-                  <div className="font-semibold">{district.label}</div>
-                  <div className="text-[10px] opacity-70 truncate">{district.description}</div>
+                  <div className="font-semibold">{t(district.labelKey)}</div>
+                  <div className="text-[10px] opacity-70 truncate">{t(district.descKey)}</div>
                 </button>
               ))}
             </div>
@@ -781,7 +783,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
           {accommodationDistrict && accommodationDistrict !== "other" && (
             <div className="mt-3 p-3 bg-primary/5 dark:bg-primary/10 rounded-lg">
               <p className="text-xs text-primary">
-                📍 인근 명소: {TAIPEI_DISTRICT_OPTIONS.find(d => d.id === accommodationDistrict)?.nearbyAttractions.join(", ")}
+                📍 {t("schedule.nearby_attractions")}: {TAIPEI_DISTRICT_OPTIONS.find(d => d.id === accommodationDistrict)?.nearbyAttractions.join(", ")}
               </p>
             </div>
           )}
@@ -790,17 +792,17 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
         {/* 여행 인원 (연령대별) */}
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <h2 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
-            <Users className="w-4 h-4" /> 여행 인원
+            <Users className="w-4 h-4" /> {t("schedule.travelers_title")}
           </h2>
-          <p className="text-xs text-muted-foreground mb-4">연령대별로 남/녀 인원을 입력해주세요</p>
+          <p className="text-xs text-muted-foreground mb-4">{t("schedule.travelers_desc")}</p>
 
           {/* 인원 입력 테이블 */}
           <div className="space-y-2">
             {/* 헤더 */}
             <div className="grid grid-cols-[1fr_80px_80px] gap-2 text-xs text-muted-foreground text-center pb-1 border-b">
-              <div className="text-left">연령대</div>
-              <div>👨 남성</div>
-              <div>👩 여성</div>
+              <div className="text-left">{t("schedule.age_group_header")}</div>
+              <div>{t("schedule.male_header")}</div>
+              <div>{t("schedule.female_header")}</div>
             </div>
 
             {/* 연령대별 입력 */}
@@ -808,7 +810,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
               const count = ageGenderCounts.find((c) => c.ageGroup === opt.id)!;
               return (
                 <div key={opt.id} className="grid grid-cols-[1fr_80px_80px] gap-2 items-center py-1">
-                  <div className="text-sm font-medium">{opt.label}</div>
+                  <div className="text-sm font-medium">{t(opt.labelKey)}</div>
 
                   {/* 남성 카운터 */}
                   <div className="flex items-center justify-center gap-1">
@@ -852,11 +854,11 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
 
           {/* 총 인원 표시 */}
           <div className="mt-4 pt-3 border-t flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">총 인원</span>
+            <span className="text-sm text-muted-foreground">{t("schedule.total_travelers")}</span>
             <div className="flex items-center gap-3">
-              <span className="text-primary text-sm">👨 {totalMale}명</span>
-              <span className="text-accent-foreground text-sm">👩 {totalFemale}명</span>
-              <span className="font-bold text-lg text-primary">{totalTravelers}명</span>
+              <span className="text-primary text-sm">👨 {t("schedule.count_suffix", { count: totalMale })}</span>
+              <span className="text-accent-foreground text-sm">👩 {t("schedule.count_suffix", { count: totalFemale })}</span>
+              <span className="font-bold text-lg text-primary">{t("schedule.count_suffix", { count: totalTravelers })}</span>
             </div>
           </div>
         </section>
@@ -864,7 +866,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
         {/* 취향 (복수 선택) */}
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <span>💝</span> 취향 <span className="text-xs text-muted-foreground">(복수 선택)</span>
+            <span>💝</span> {t("schedule.preference_title")} <span className="text-xs text-muted-foreground">{t("schedule.multi_select")}</span>
           </h2>
           <div className="grid grid-cols-3 gap-2">
             {PREFERENCE_OPTIONS.map((opt) => (
@@ -878,7 +880,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                 }`}
               >
                 <span className="text-lg">{opt.icon}</span>
-                <span className="text-xs">{opt.label}</span>
+                <span className="text-xs">{t(opt.labelKey)}</span>
               </button>
             ))}
           </div>
@@ -887,7 +889,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
         {/* 여행 목적 (복수 선택) */}
         <section className="bg-white dark:bg-card rounded-2xl p-5 shadow-md">
           <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <span>🎯</span> 여행 목적 <span className="text-xs text-muted-foreground">(복수 선택)</span>
+            <span>🎯</span> {t("schedule.purpose_title")} <span className="text-xs text-muted-foreground">{t("schedule.multi_select")}</span>
           </h2>
           <div className="grid grid-cols-2 gap-2">
             {PURPOSE_OPTIONS.map((opt) => (
@@ -901,7 +903,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                 }`}
               >
                 <span>{opt.icon}</span>
-                <span className="text-sm">{opt.label}</span>
+                <span className="text-sm">{t(opt.labelKey)}</span>
               </button>
             ))}
           </div>
@@ -914,7 +916,7 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
           className="w-full py-4 bg-gradient-to-r from-primary to-primary/85 text-white font-bold rounded-2xl shadow-lg hover:from-primary/90 hover:to-primary/80 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Sparkles className="w-5 h-5" />
-          AI 일정 생성하기
+          {t("schedule.generate_button")}
         </button>
 
         {/* 저장된 일정 보기 버튼 */}
@@ -923,13 +925,13 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
           className="w-full py-3 bg-white dark:bg-card border-2 border-primary/20 dark:border-primary/30 text-primary font-medium rounded-2xl hover:bg-primary/5 dark:hover:bg-primary/10 transition-all flex items-center justify-center gap-2"
         >
           <List className="w-4 h-4" />
-          저장된 일정 보기
+          {t("schedule.view_saved_list")}
         </button>
 
         {/* 안내 */}
         <div className="text-center text-xs text-muted-foreground pb-4">
-          <p>AI가 연령대별 취향을 고려하여</p>
-          <p>모두가 만족할 최적의 일정을 만들어드려요</p>
+          <p>{t("schedule.guide_line1")}</p>
+          <p>{t("schedule.guide_line2")}</p>
         </div>
       </div>
 
@@ -937,8 +939,8 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
       <ConfirmDialog
         open={confirmNavOpen}
         onOpenChange={setConfirmNavOpen}
-        title="작성 중인 일정이 있습니다"
-        description={"목록으로 이동하면 작성 내용이\n저장되지 않습니다.\n이동하시겠습니까?"}
+        title={t("schedule.nav_confirm_title")}
+        description={t("schedule.nav_confirm_desc")}
         onConfirm={() => {
           loadSavedSchedules();
           setViewMode("list");
@@ -950,22 +952,22 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
 
 // 연령대별 남녀 구성 요약 텍스트 생성
 // 예: "40대여(2)+60대여(1)" 또는 "20대남(1)+20대여(2)"
-function formatAgeGenderSummary(breakdown?: AgeGenderCount[], totalFallback?: number): string {
+function formatAgeGenderSummary(breakdown?: AgeGenderCount[], totalFallback?: number, t?: (key: string, params?: Record<string, string | number>) => string): string {
   if (!breakdown || breakdown.length === 0) {
-    return `${totalFallback || 0}명`;
+    return t ? t("schedule.count_suffix", { count: totalFallback || 0 }) : `${totalFallback || 0}명`;
   }
 
-  const AGE_LABELS: Record<string, string> = {
-    "10s": "10대", "20s": "20대", "30s": "30대",
-    "40s": "40대", "50s": "50대", "60s_plus": "60대",
+  const AGE_KEY_MAP: Record<string, string> = {
+    "10s": "schedule.age_10s", "20s": "schedule.age_20s", "30s": "schedule.age_30s",
+    "40s": "schedule.age_40s", "50s": "schedule.age_50s", "60s_plus": "schedule.age_60s",
   };
 
   const parts: string[] = [];
   for (const g of breakdown) {
-    const label = AGE_LABELS[g.ageGroup] || g.ageGroup;
-    if (g.male > 0) parts.push(`${label}남(${g.male})`);
-    if (g.female > 0) parts.push(`${label}여(${g.female})`);
+    const label = t ? t(AGE_KEY_MAP[g.ageGroup] || g.ageGroup) : g.ageGroup;
+    if (g.male > 0) parts.push(t ? t("schedule.age_summary_male", { label, count: g.male }) : `${label}남(${g.male})`);
+    if (g.female > 0) parts.push(t ? t("schedule.age_summary_female", { label, count: g.female }) : `${label}여(${g.female})`);
   }
 
-  return parts.length > 0 ? parts.join("+") : `${totalFallback || 0}명`;
+  return parts.length > 0 ? parts.join("+") : (t ? t("schedule.count_suffix", { count: totalFallback || 0 }) : `${totalFallback || 0}명`);
 }

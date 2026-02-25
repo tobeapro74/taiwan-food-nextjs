@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, AlertTriangle, Loader2 } from "lucide-react";
+import { useLanguage } from "@/components/language-provider";
 
 interface DeleteAccountModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export function DeleteAccountModal({
   onSuccess,
   isKakaoUser = false,
 }: DeleteAccountModalProps) {
+  const { t } = useLanguage();
   const [password, setPassword] = useState("");
   const [confirmText, setConfirmText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -42,13 +44,13 @@ export function DeleteAccountModal({
     e.preventDefault();
     setError("");
 
-    if (confirmText !== "회원탈퇴") {
-      setError("'회원탈퇴'를 정확히 입력해주세요.");
+    if (confirmText !== t("delete_account.confirm_text")) {
+      setError(t("delete_account.enter_confirm"));
       return;
     }
 
     if (!isKakaoUser && !password) {
-      setError("비밀번호를 입력해주세요.");
+      setError(t("delete_account.password_required"));
       return;
     }
 
@@ -64,14 +66,14 @@ export function DeleteAccountModal({
       const data = await res.json();
 
       if (data.success) {
-        toast.success("회원탈퇴를 완료했습니다. 이용해 주셔서 감사합니다.");
+        toast.success(t("delete_account.success"));
         onSuccess();
         onClose();
       } else {
-        setError(data.error || "회원탈퇴에 실패했습니다.");
+        setError(data.error || t("delete_account.failed"));
       }
     } catch {
-      setError("회원탈퇴 중 오류가 발생했습니다.");
+      setError(t("delete_account.error"));
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +97,7 @@ export function DeleteAccountModal({
         <div className="flex items-center justify-between p-4 border-b border-border bg-destructive/10">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-destructive" />
-            <h2 className="text-lg font-semibold text-destructive">회원탈퇴</h2>
+            <h2 className="text-lg font-semibold text-destructive">{t("delete_account.title")}</h2>
           </div>
           <button
             onClick={handleClose}
@@ -108,23 +110,23 @@ export function DeleteAccountModal({
         {/* 내용 */}
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-sm">
-            <p className="font-medium text-destructive mb-2">주의사항</p>
+            <p className="font-medium text-destructive mb-2">{t("delete_account.warning")}</p>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>탈퇴 시 모든 데이터가 삭제됩니다.</li>
-              <li>삭제된 데이터는 복구할 수 없습니다.</li>
-              <li>작성한 리뷰는 유지될 수 있습니다.</li>
+              <li>{t("delete_account.warning_1")}</li>
+              <li>{t("delete_account.warning_2")}</li>
+              <li>{t("delete_account.warning_3")}</li>
             </ul>
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1">
-              탈퇴 확인 (아래에 &apos;회원탈퇴&apos;를 입력해주세요)
+              {t("delete_account.confirm_label", { text: t("delete_account.confirm_text") })}
             </label>
             <Input
               type="text"
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="회원탈퇴"
+              placeholder={t("delete_account.confirm_text")}
               className="w-full"
             />
           </div>
@@ -132,13 +134,13 @@ export function DeleteAccountModal({
           {!isKakaoUser && (
             <div>
               <label className="block text-sm font-medium mb-1">
-                비밀번호 확인
+                {t("delete_account.password_label")}
               </label>
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="비밀번호를 입력하세요"
+                placeholder={t("auth.password_placeholder")}
                 className="w-full"
               />
             </div>
@@ -156,21 +158,21 @@ export function DeleteAccountModal({
               className="flex-1"
               disabled={isLoading}
             >
-              취소
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
               variant="destructive"
               className="flex-1"
-              disabled={isLoading || confirmText !== "회원탈퇴"}
+              disabled={isLoading || confirmText !== t("delete_account.confirm_text")}
             >
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  처리중...
+                  {t("common.processing")}
                 </>
               ) : (
-                "회원탈퇴"
+                t("delete_account.title")
               )}
             </Button>
           </div>

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Star, MapPin, X } from "lucide-react";
-import { Restaurant, getUnsplashImage } from "@/data/taiwan-food";
+import { Restaurant, getUnsplashImage, getDisplayName, getDisplayLocation, getDisplayFeature } from "@/data/taiwan-food";
+import { useLanguage } from "@/components/language-provider";
 import Image from "next/image";
 
 // 이미지 캐시 공유 (restaurant-card와 동일)
@@ -15,6 +16,7 @@ interface PeekPreviewProps {
 }
 
 export function PeekPreview({ restaurant, onClose, onViewDetail }: PeekPreviewProps) {
+  const { t, language } = useLanguage();
   const [imageUrl, setImageUrl] = useState<string>(imageCache[restaurant.이름] || "");
   const [imageLoaded, setImageLoaded] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -88,7 +90,7 @@ export function PeekPreview({ restaurant, onClose, onViewDetail }: PeekPreviewPr
           {imageUrl && (
             <Image
               src={imageUrl}
-              alt={restaurant.이름}
+              alt={getDisplayName(restaurant, language)}
               fill
               className={`object-cover transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
               sizes="350px"
@@ -99,7 +101,7 @@ export function PeekPreview({ restaurant, onClose, onViewDetail }: PeekPreviewPr
           {/* 그래디언트 오버레이 */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           <div className="absolute bottom-3 left-4 right-4">
-            <h3 className="text-white font-bold text-lg drop-shadow-md">{restaurant.이름}</h3>
+            <h3 className="text-white font-bold text-lg drop-shadow-md">{getDisplayName(restaurant, language)}</h3>
           </div>
         </div>
 
@@ -114,7 +116,7 @@ export function PeekPreview({ restaurant, onClose, onViewDetail }: PeekPreviewPr
             )}
             {restaurant.리뷰수 && (
               <span className="text-xs text-muted-foreground">
-                리뷰 {restaurant.리뷰수 >= 1000 ? `${(restaurant.리뷰수 / 1000).toFixed(1)}K` : restaurant.리뷰수}
+                {t("restaurant.reviews")} {restaurant.리뷰수 >= 1000 ? `${(restaurant.리뷰수 / 1000).toFixed(1)}K` : restaurant.리뷰수}
               </span>
             )}
             {restaurant.가격대 && (
@@ -125,11 +127,11 @@ export function PeekPreview({ restaurant, onClose, onViewDetail }: PeekPreviewPr
           {restaurant.위치 && (
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="truncate">{restaurant.위치}</span>
+              <span className="truncate">{getDisplayLocation(restaurant, language)}</span>
             </div>
           )}
 
-          <p className="text-sm text-muted-foreground line-clamp-2">{restaurant.특징}</p>
+          <p className="text-sm text-muted-foreground line-clamp-2">{getDisplayFeature(restaurant, language)}</p>
 
           {/* 상세보기 버튼 */}
           <button
@@ -139,7 +141,7 @@ export function PeekPreview({ restaurant, onClose, onViewDetail }: PeekPreviewPr
             }}
             className="w-full py-2.5 rounded-xl bg-primary text-white font-medium text-sm transition-all active:scale-[0.98] hover:bg-primary/90"
           >
-            상세보기
+            {t("restaurant.view_detail")}
           </button>
         </div>
       </div>

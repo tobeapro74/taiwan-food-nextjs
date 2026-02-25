@@ -73,6 +73,32 @@ export function useLongPress({
     [clear, onClick]
   );
 
+  const onMouseDown = useCallback(() => {
+    longPressTriggered.current = false;
+    startPos.current = { x: 0, y: 0 };
+
+    timerRef.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      onLongPress();
+    }, delay);
+  }, [onLongPress, delay]);
+
+  const onMouseUp = useCallback(() => {
+    clear();
+    if (longPressTriggered.current) {
+      longPressTriggered.current = false;
+      return;
+    }
+    if (startPos.current && onClick) {
+      onClick();
+    }
+    startPos.current = null;
+  }, [clear, onClick]);
+
+  const onMouseLeave = useCallback(() => {
+    clear();
+  }, [clear]);
+
   const onContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault(); // iOS 기본 컨텍스트 메뉴 방지
   }, []);
@@ -81,6 +107,9 @@ export function useLongPress({
     onTouchStart,
     onTouchMove,
     onTouchEnd,
+    onMouseDown,
+    onMouseUp,
+    onMouseLeave,
     onContextMenu,
   };
 }

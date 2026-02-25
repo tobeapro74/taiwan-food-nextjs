@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { RestaurantCard } from "@/components/restaurant-card";
 import { Restaurant } from "@/data/taiwan-food";
 import { useHaptic } from "@/hooks/useHaptic";
+import { useLanguage } from "@/components/language-provider";
 import { toast } from "sonner";
 
 interface RecommendationResult {
@@ -29,37 +30,36 @@ interface AIRecommendProps {
   onStateChange?: (state: RecommendState) => void;
 }
 
-const presets = [
-  { label: "매운 음식 🌶️", query: "매운 음식이 먹고 싶어요" },
-  { label: "가성비 👍", query: "가격 대비 양이 많은 가성비 좋은 맛집" },
-  { label: "데이트 💕", query: "분위기 좋은 데이트 맛집" },
-  { label: "혼밥 🍜", query: "혼자서 편하게 먹을 수 있는 맛집" },
-  { label: "야시장 🌃", query: "야시장에서 꼭 먹어봐야 할 음식" },
-  { label: "디저트 🍧", query: "달콤한 디저트와 음료" },
-  { label: "현지 로컬 🏠", query: "관광객보다 현지인이 더 많이 가는 로컬 맛집" },
-  { label: "면 요리 🍝", query: "맛있는 면 요리 전문점" },
-];
-
-// 프리셋 쿼리 Set (프리셋 여부 판별용)
-const PRESET_QUERY_SET = new Set(presets.map(p => p.query));
-
-// AI 검색 중 모달 메시지 (순환)
-const SEARCH_MESSAGES = [
-  "AI가 맛집을 분석하고 있습니다...",
-  "대만 현지 맛집을 탐색 중...",
-  "최적의 맛집을 선별하고 있습니다...",
-  "거의 다 됐습니다...",
-];
-
 export function AIRecommend({ onBack, onSelectRestaurant, timeSlot, savedState, onStateChange }: AIRecommendProps) {
   const { impact } = useHaptic();
+  const { t, language } = useLanguage();
   const [query, setQuery] = useState(savedState?.query || "");
   const [loading, setLoading] = useState(false);
-  const [showAIModal, setShowAIModal] = useState(false); // OpenAI 검색 중 모달
+  const [showAIModal, setShowAIModal] = useState(false);
   const [results, setResults] = useState<RecommendationResult[]>(savedState?.results || []);
   const [tip, setTip] = useState(savedState?.tip || "");
   const [hasSearched, setHasSearched] = useState(savedState?.hasSearched || false);
   const [searchMsgIndex, setSearchMsgIndex] = useState(0);
+
+  const presets = [
+    { label: t("ai.preset_spicy"), query: t("ai.query_spicy") },
+    { label: t("ai.preset_value"), query: t("ai.query_value") },
+    { label: t("ai.preset_date"), query: t("ai.query_date") },
+    { label: t("ai.preset_solo"), query: t("ai.query_solo") },
+    { label: t("ai.preset_night_market"), query: t("ai.query_night_market") },
+    { label: t("ai.preset_dessert"), query: t("ai.query_dessert") },
+    { label: t("ai.preset_local"), query: t("ai.query_local") },
+    { label: t("ai.preset_noodle"), query: t("ai.query_noodle") },
+  ];
+
+  const PRESET_QUERY_SET = new Set(presets.map(p => p.query));
+
+  const SEARCH_MESSAGES = [
+    t("ai.loading_1"),
+    t("ai.loading_2"),
+    t("ai.loading_3"),
+    t("ai.loading_4"),
+  ];
 
   // 상태 변경 시 부모에 전달
   useEffect(() => {
@@ -74,6 +74,7 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot, savedState, 
       setSearchMsgIndex(prev => (prev + 1) % SEARCH_MESSAGES.length);
     }, 2500);
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showAIModal]);
 
   const handleRecommend = async (q: string, isPreset: boolean = false) => {
@@ -84,7 +85,6 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot, savedState, 
     setResults([]);
     setTip("");
 
-    // 자유 입력(OpenAI 호출)일 때만 풀스크린 모달 표시
     if (!isPreset) {
       setShowAIModal(true);
     }
@@ -101,13 +101,13 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot, savedState, 
         setResults(data.recommendations || []);
         setTip(data.tip || "");
         if (data.recommendations?.length === 0) {
-          toast.error("조건에 맞는 맛집을 찾지 못했습니다.");
+          toast.error(t("ai.no_results").split("\n")[0]);
         }
       } else {
-        toast.error(data.error || "추천에 실패했습니다.");
+        toast.error(data.error || t("ai.recommend_failed"));
       }
     } catch {
-      toast.error("네트워크 오류가 발생했습니다.");
+      toast.error(t("ai.network_error"));
     } finally {
       setLoading(false);
       setShowAIModal(false);
@@ -124,7 +124,7 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot, savedState, 
               <Loader2 className="w-16 h-16 text-primary animate-spin" />
               <Sparkles className="w-6 h-6 text-accent absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
             </div>
-            <h3 className="font-bold text-lg mb-2">AI 맛집 검색 중</h3>
+            <h3 className="font-bold text-lg mb-2">{t("ai.searching")}</h3>
             <p className="text-sm text-muted-foreground transition-opacity duration-300">
               {SEARCH_MESSAGES[searchMsgIndex]}
             </p>
@@ -158,7 +158,7 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot, savedState, 
           </button>
           <div className="flex items-center gap-2 text-foreground">
             <Sparkles className="w-5 h-5" />
-            <h1 className="font-bold text-lg">AI 맛집 추천</h1>
+            <h1 className="font-bold text-lg">{t("ai.title")}</h1>
           </div>
         </div>
       </div>
@@ -166,7 +166,7 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot, savedState, 
       <div className="px-4 py-4 space-y-4">
         {/* 프리셋 칩 */}
         <div>
-          <p className="text-sm text-muted-foreground mb-2">어떤 맛집을 찾으시나요?</p>
+          <p className="text-sm text-muted-foreground mb-2">{t("ai.question")}</p>
           <div className="flex flex-wrap gap-2">
             {presets.map((preset) => (
               <button
@@ -196,7 +196,7 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot, savedState, 
                 handleRecommend(query, isPreset);
               }
             }}
-            placeholder="원하는 음식이나 분위기를 입력하세요..."
+            placeholder={t("ai.input_placeholder")}
             className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             disabled={loading}
           />
@@ -230,7 +230,7 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot, savedState, 
             ))}
             <p className="text-center text-sm text-muted-foreground">
               <Sparkles className="w-4 h-4 inline-block mr-1 animate-spin" />
-              맛집을 불러오고 있습니다...
+              {t("ai.loading_results")}
             </p>
           </div>
         )}
@@ -266,9 +266,8 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot, savedState, 
         {!loading && hasSearched && results.length === 0 && (
           <div className="text-center py-12">
             <p className="text-4xl mb-3">🤔</p>
-            <p className="text-muted-foreground text-sm">
-              조건에 맞는 맛집을 찾지 못했습니다.<br />
-              다른 키워드로 다시 시도해보세요.
+            <p className="text-muted-foreground text-sm whitespace-pre-line">
+              {t("ai.no_results")}
             </p>
           </div>
         )}
@@ -277,10 +276,9 @@ export function AIRecommend({ onBack, onSelectRestaurant, timeSlot, savedState, 
         {!loading && !hasSearched && (
           <div className="text-center py-12">
             <p className="text-5xl mb-4">🤖</p>
-            <h2 className="font-bold text-lg mb-2">AI가 맛집을 추천해드려요</h2>
-            <p className="text-muted-foreground text-sm">
-              위 태그를 선택하거나<br />
-              원하는 음식, 분위기를 자유롭게 입력하세요
+            <h2 className="font-bold text-lg mb-2">{t("ai.subtitle")}</h2>
+            <p className="text-muted-foreground text-sm whitespace-pre-line">
+              {t("ai.guide")}
             </p>
           </div>
         )}

@@ -3,6 +3,7 @@
 import { Home, Grid3X3, Store, Navigation, PlusCircle, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHaptic } from "@/hooks/useHaptic";
+import { useLanguage } from "@/components/language-provider";
 
 type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add" | "schedule";
 
@@ -18,13 +19,13 @@ interface BottomNavProps {
   user?: User | null;
 }
 
-const navItems = [
-  { id: "home" as const, label: "홈", icon: Home },
-  { id: "nearby" as const, label: "주변맛집", icon: Navigation },
-  { id: "schedule" as const, label: "일정", icon: CalendarDays },
-  { id: "add" as const, label: "등록", icon: PlusCircle, adminOnly: true },
-  { id: "category" as const, label: "카테고리", icon: Grid3X3 },
-  { id: "market" as const, label: "야시장", icon: Store },
+const navItemKeys = [
+  { id: "home" as const, labelKey: "nav.home", icon: Home },
+  { id: "nearby" as const, labelKey: "nav.nearby", icon: Navigation },
+  { id: "schedule" as const, labelKey: "nav.schedule", icon: CalendarDays },
+  { id: "add" as const, labelKey: "nav.add", icon: PlusCircle, adminOnly: true },
+  { id: "category" as const, labelKey: "nav.category", icon: Grid3X3 },
+  { id: "market" as const, labelKey: "nav.market", icon: Store },
 ];
 
 // 등록 권한 체크 (관리자 또는 박병철)
@@ -35,8 +36,9 @@ const canAddRestaurant = (user?: User | null): boolean => {
 
 export function BottomNav({ activeTab, onTabChange, user }: BottomNavProps) {
   const { selection } = useHaptic();
+  const { t } = useLanguage();
   // 권한에 따라 보여줄 메뉴 필터링
-  const visibleItems = navItems.filter((item) => {
+  const visibleItems = navItemKeys.filter((item) => {
     if (item.adminOnly) {
       return canAddRestaurant(user);
     }
@@ -78,7 +80,7 @@ export function BottomNav({ activeTab, onTabChange, user }: BottomNavProps) {
                 "text-xs transition-all duration-200",
                 isActive ? "font-semibold" : "font-medium"
               )}>
-                {item.label}
+                {t(item.labelKey)}
               </span>
             </button>
           );

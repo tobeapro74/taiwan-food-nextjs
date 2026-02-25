@@ -6,6 +6,7 @@ import { X, Star, ImagePlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { useLanguage } from "@/components/language-provider";
 
 interface Review {
   id: number;
@@ -33,7 +34,6 @@ interface ReviewModalProps {
   editReview?: Review | null;
 }
 
-const mealTypes = ["아침 식사", "브런치", "점심 식사", "저녁 식사", "기타"];
 const MAX_PHOTOS = 4;
 const MAX_IMAGE_SIZE = 800; // 최대 이미지 크기 (px) - Vercel 요청 크기 제한 고려
 const IMAGE_QUALITY = 0.6; // JPEG 품질 (0.6 = 60%)
@@ -47,6 +47,17 @@ export function ReviewModal({
   onSubmit,
   editReview,
 }: ReviewModalProps) {
+  const { t } = useLanguage();
+
+  // mealType display mapping: DB stores Korean values, display uses i18n
+  const mealTypeMap: { value: string; key: string }[] = [
+    { value: "아침 식사", key: "review.meal_breakfast" },
+    { value: "브런치", key: "review.meal_brunch" },
+    { value: "점심 식사", key: "review.meal_lunch" },
+    { value: "저녁 식사", key: "review.meal_dinner" },
+    { value: "기타", key: "review.meal_other" },
+  ];
+
   const [rating, setRating] = useState(0);
   const [foodRating, setFoodRating] = useState(0);
   const [serviceRating, setServiceRating] = useState(0);
@@ -158,13 +169,13 @@ export function ReviewModal({
     // 4개 제한 체크
     const remainingSlots = MAX_PHOTOS - photos.length;
     if (remainingSlots <= 0) {
-      toast.warning(`사진은 최대 ${MAX_PHOTOS}개까지 추가할 수 있습니다.`);
+      toast.warning(t("review.photo_max", { max: MAX_PHOTOS }));
       return;
     }
 
     const filesToUpload = Array.from(files).slice(0, remainingSlots);
     if (files.length > remainingSlots) {
-      toast.warning(`${remainingSlots}개만 추가됩니다. (최대 ${MAX_PHOTOS}개)`);
+      toast.warning(t("review.photo_limit", { count: remainingSlots, max: MAX_PHOTOS }));
     }
 
     setIsUploading(true);
@@ -173,7 +184,7 @@ export function ReviewModal({
       for (const file of filesToUpload) {
         // 이미지 파일 체크
         if (!file.type.startsWith("image/")) {
-          toast.warning("이미지 파일만 업로드할 수 있습니다.");
+          toast.warning(t("review.image_only"));
           continue;
         }
 
@@ -193,7 +204,7 @@ export function ReviewModal({
             setPhotos((prev) => [...prev, result.url]);
           } else {
             console.error("업로드 실패:", result.error);
-            toast.error(result.error || "사진 업로드에 실패했습니다.");
+            toast.error(result.error || t("review.upload_failed"));
           }
         } catch (fileError) {
           console.error("파일 처리 오류:", fileError);
@@ -220,12 +231,12 @@ export function ReviewModal({
 
   const handleSubmit = async () => {
     if (!user) {
-      toast.warning("로그인이 필요합니다.");
+      toast.warning(t("review.login_required"));
       return;
     }
 
     if (rating === 0) {
-      toast.warning("평점을 선택해주세요.");
+      toast.warning(t("review.rating_required"));
       return;
     }
 
@@ -255,7 +266,7 @@ export function ReviewModal({
       const result = await response.json();
 
       if (result.success) {
-        toast.success(isEditMode ? "리뷰 수정을 완료했습니다." : "리뷰 등록을 완료했습니다.");
+        toast.success(isEditMode ? t("review.edit_success") : t("review.submit_success"));
         onSubmit();
         onClose();
         // 초기화
@@ -267,11 +278,11 @@ export function ReviewModal({
         setPhotos([]);
         setMealType(null);
       } else {
-        toast.error(result.error || (isEditMode ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다."));
+        toast.error(result.error || (isEditMode ? t("review.edit_failed") : t("review.submit_failed")));
       }
     } catch (error) {
       console.error("리뷰 작성 오류:", error);
-      toast.error(isEditMode ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다.");
+      toast.error(isEditMode ? t("review.edit_failed") : t("review.submit_failed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -325,7 +336,7 @@ export function ReviewModal({
 
         {/* 헤더 */}
         <div className="px-5 pb-3 flex items-center justify-between border-b">
-          <h2 className="text-lg font-semibold">{isEditMode ? "리뷰 수정" : restaurantName}</h2>
+          <h2 className="text-lg font-semibold">{isEditMode ? t("review.edit_title") : restaurantName}</h2>
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-muted transition-colors"
@@ -342,8 +353,8 @@ export function ReviewModal({
               {user?.name?.charAt(0) || "?"}
             </div>
             <div>
-              <p className="font-medium">{user?.name || "게스트"}</p>
-              <p className="text-xs text-muted-foreground">리뷰는 공개됩니다</p>
+              <p className="font-medium">{user?.name || t("common.guest")}</p>
+              <p className="text-xs text-muted-foreground">{t("review.public_notice")}</p>
             </div>
           </div>
 
@@ -355,15 +366,15 @@ export function ReviewModal({
           {/* 세부 별점 */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-foreground">음식</span>
+              <span className="text-foreground">{t("review.food")}</span>
               <StarRating value={foodRating} onChange={setFoodRating} size="sm" />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-foreground">서비스</span>
+              <span className="text-foreground">{t("review.service")}</span>
               <StarRating value={serviceRating} onChange={setServiceRating} size="sm" />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-foreground">분위기</span>
+              <span className="text-foreground">{t("review.atmosphere")}</span>
               <StarRating value={atmosphereRating} onChange={setAtmosphereRating} size="sm" />
             </div>
           </div>
@@ -372,7 +383,7 @@ export function ReviewModal({
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="먼저 평점을 매긴 후 리뷰를 추가하세요."
+            placeholder={t("review.placeholder")}
             className="w-full h-28 p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
           />
 
@@ -417,30 +428,30 @@ export function ReviewModal({
             <ImagePlus className="w-5 h-5" />
             <span>
               {isUploading
-                ? "업로드 중..."
+                ? t("review.uploading")
                 : photos.length >= MAX_PHOTOS
-                ? `사진 ${MAX_PHOTOS}개 추가됨`
-                : `사진 추가 (${photos.length}/${MAX_PHOTOS})`}
+                ? t("review.photos_added", { max: MAX_PHOTOS })
+                : t("review.photo_count", { current: photos.length, max: MAX_PHOTOS })}
             </span>
           </button>
 
           {/* 식사 유형 */}
           <div className="space-y-3">
-            <p className="text-foreground">어떤 식사를 하셨나요?</p>
+            <p className="text-foreground">{t("review.meal_question")}</p>
             <div className="flex flex-wrap gap-2">
-              {mealTypes.map((type) => (
+              {mealTypeMap.map((meal) => (
                 <button
-                  key={type}
+                  key={meal.value}
                   type="button"
-                  onClick={() => setMealType(mealType === type ? null : type)}
+                  onClick={() => setMealType(mealType === meal.value ? null : meal.value)}
                   className={cn(
                     "px-4 py-2 rounded-full border text-sm",
-                    mealType === type
+                    mealType === meal.value
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-background text-foreground border-border hover:border-primary/50"
                   )}
                 >
-                  {type}
+                  {t(meal.key)}
                 </button>
               ))}
             </div>
@@ -454,7 +465,7 @@ export function ReviewModal({
             disabled={rating === 0 || isSubmitting || isUploading}
             className="w-full h-12 text-base"
           >
-            {isSubmitting ? (isEditMode ? "수정 중..." : "게시 중...") : (isEditMode ? "수정" : "게시")}
+            {isSubmitting ? (isEditMode ? t("review.updating") : t("review.submitting")) : (isEditMode ? t("review.update") : t("review.submit"))}
           </Button>
         </div>
       </div>

@@ -143,22 +143,22 @@ export const TIME_SLOT_ICON: Record<TimeSlot, string> = {
 };
 
 // 취향 옵션
-export const PREFERENCE_OPTIONS: { id: PreferenceType; label: string; icon: string }[] = [
-  { id: "food", label: "맛집", icon: "🍜" },
-  { id: "cafe", label: "카페", icon: "☕" },
-  { id: "shopping", label: "쇼핑", icon: "🛍️" },
-  { id: "culture", label: "문화", icon: "🏛️" },
-  { id: "nightview", label: "야경", icon: "🌃" },
-  { id: "nature", label: "자연", icon: "🌿" },
+export const PREFERENCE_OPTIONS: { id: PreferenceType; label: string; labelKey: string; icon: string }[] = [
+  { id: "food", label: "맛집", labelKey: "schedule.pref_food", icon: "🍜" },
+  { id: "cafe", label: "카페", labelKey: "schedule.pref_cafe", icon: "☕" },
+  { id: "shopping", label: "쇼핑", labelKey: "schedule.pref_shopping", icon: "🛍️" },
+  { id: "culture", label: "문화", labelKey: "schedule.pref_culture", icon: "🏛️" },
+  { id: "nightview", label: "야경", labelKey: "schedule.pref_nightview", icon: "🌃" },
+  { id: "nature", label: "자연", labelKey: "schedule.pref_nature", icon: "🌿" },
 ];
 
 // 여행 목적 옵션
-export const PURPOSE_OPTIONS: { id: PurposeType; label: string; icon: string }[] = [
-  { id: "food_tour", label: "맛집 투어", icon: "🍜" },
-  { id: "sns", label: "SNS 감성", icon: "📸" },
-  { id: "healing", label: "힐링", icon: "🧘" },
-  { id: "shopping", label: "쇼핑", icon: "🛒" },
-  { id: "culture", label: "문화 체험", icon: "🎭" },
+export const PURPOSE_OPTIONS: { id: PurposeType; label: string; labelKey: string; icon: string }[] = [
+  { id: "food_tour", label: "맛집 투어", labelKey: "schedule.purpose_food_tour", icon: "🍜" },
+  { id: "sns", label: "SNS 감성", labelKey: "schedule.purpose_sns", icon: "📸" },
+  { id: "healing", label: "힐링", labelKey: "schedule.purpose_healing", icon: "🧘" },
+  { id: "shopping", label: "쇼핑", labelKey: "schedule.purpose_shopping", icon: "🛒" },
+  { id: "culture", label: "문화 체험", labelKey: "schedule.purpose_culture", icon: "🎭" },
 ];
 
 // 성별 옵션
@@ -176,22 +176,22 @@ export const AGE_GROUP_OPTIONS: { id: "20s" | "30s" | "40s_plus"; label: string 
 ];
 
 // 연령대 옵션 (세분화)
-export const DETAILED_AGE_OPTIONS: { id: AgeGroupType; label: string; shortLabel: string }[] = [
-  { id: "10s", label: "10대", shortLabel: "10대" },
-  { id: "20s", label: "20대", shortLabel: "20대" },
-  { id: "30s", label: "30대", shortLabel: "30대" },
-  { id: "40s", label: "40대", shortLabel: "40대" },
-  { id: "50s", label: "50대", shortLabel: "50대" },
-  { id: "60s_plus", label: "60대 이상", shortLabel: "60대+" },
+export const DETAILED_AGE_OPTIONS: { id: AgeGroupType; label: string; labelKey: string; shortLabel: string }[] = [
+  { id: "10s", label: "10대", labelKey: "schedule.age_10s", shortLabel: "10대" },
+  { id: "20s", label: "20대", labelKey: "schedule.age_20s", shortLabel: "20대" },
+  { id: "30s", label: "30대", labelKey: "schedule.age_30s", shortLabel: "30대" },
+  { id: "40s", label: "40대", labelKey: "schedule.age_40s", shortLabel: "40대" },
+  { id: "50s", label: "50대", labelKey: "schedule.age_50s", shortLabel: "50대" },
+  { id: "60s_plus", label: "60대 이상", labelKey: "schedule.age_60s_plus", shortLabel: "60대+" },
 ];
 
 // 입국/출국 시간대 옵션
-export const FLIGHT_TIME_OPTIONS: { id: FlightTimeType; label: string; description: string }[] = [
-  { id: "early_morning", label: "이른 아침", description: "06:00~09:00" },
-  { id: "morning", label: "오전", description: "09:00~12:00" },
-  { id: "afternoon", label: "오후", description: "12:00~17:00" },
-  { id: "evening", label: "저녁", description: "17:00~21:00" },
-  { id: "night", label: "밤/심야", description: "21:00~06:00" },
+export const FLIGHT_TIME_OPTIONS: { id: FlightTimeType; label: string; labelKey: string; description: string }[] = [
+  { id: "early_morning", label: "이른 아침", labelKey: "schedule.flight_early_morning", description: "06:00~09:00" },
+  { id: "morning", label: "오전", labelKey: "schedule.flight_morning", description: "09:00~12:00" },
+  { id: "afternoon", label: "오후", labelKey: "schedule.flight_afternoon", description: "12:00~17:00" },
+  { id: "evening", label: "저녁", labelKey: "schedule.flight_evening", description: "17:00~21:00" },
+  { id: "night", label: "밤/심야", labelKey: "schedule.flight_night", description: "21:00~06:00" },
 ];
 
 // 연령대별 특징 (AI 프롬프트용)
@@ -238,92 +238,118 @@ export const AGE_GROUP_PREFERENCES = {
 export const TAIPEI_DISTRICT_OPTIONS: {
   id: string;
   label: string;
+  labelKey: string;
   labelEn: string;
   description: string;
+  descKey: string;
   nearbyAttractions: string[];
 }[] = [
   {
     id: "ximending",
     label: "시먼딩",
+    labelKey: "schedule.district_ximending",
     labelEn: "Ximending",
     description: "젊은 감성, 쇼핑, 야시장",
+    descKey: "schedule.district_ximending_desc",
     nearbyAttractions: ["시먼딩 거리", "홍러우", "용산사"]
   },
   {
     id: "zhongshan",
     label: "중산구",
+    labelKey: "schedule.district_zhongshan",
     labelEn: "Zhongshan",
     description: "비즈니스, 쇼핑몰, 마사지",
+    descKey: "schedule.district_zhongshan_desc",
     nearbyAttractions: ["중산역 지하상가", "닝샤야시장", "타이베이역"]
   },
   {
     id: "xinyi",
     label: "신이구",
+    labelKey: "schedule.district_xinyi",
     labelEn: "Xinyi",
     description: "타이베이101, 고급 쇼핑, 야경",
+    descKey: "schedule.district_xinyi_desc",
     nearbyAttractions: ["타이베이101", "신광미츠코시", "상산"]
   },
   {
     id: "daan",
     label: "다안구",
+    labelKey: "schedule.district_daan",
     labelEn: "Da'an",
     description: "용캉제, 감성 카페, 로컬 맛집",
+    descKey: "schedule.district_daan_desc",
     nearbyAttractions: ["용캉제", "다안삼림공원", "영강우육면"]
   },
   {
     id: "zhongzheng",
     label: "중정구",
+    labelKey: "schedule.district_zhongzheng",
     labelEn: "Zhongzheng",
     description: "타이베이역, 중정기념당",
+    descKey: "schedule.district_zhongzheng_desc",
     nearbyAttractions: ["중정기념당", "타이베이역", "화산1914"]
   },
   {
     id: "wanhua",
     label: "만화구",
+    labelKey: "schedule.district_wanhua",
     labelEn: "Wanhua",
     description: "용산사, 전통시장, 역사",
+    descKey: "schedule.district_wanhua_desc",
     nearbyAttractions: ["용산사", "화시제야시장", "보피랴오거리"]
   },
   {
     id: "songshan",
     label: "송산구",
+    labelKey: "schedule.district_songshan",
     labelEn: "Songshan",
     description: "라오허제야시장, 송산문창",
+    descKey: "schedule.district_songshan_desc",
     nearbyAttractions: ["라오허제야시장", "송산문창원구", "무지개다리"]
   },
   {
     id: "shilin",
     label: "스린구",
+    labelKey: "schedule.district_shilin",
     labelEn: "Shilin",
     description: "스린야시장, 고궁박물원",
+    descKey: "schedule.district_shilin_desc",
     nearbyAttractions: ["스린야시장", "고궁박물원", "양밍산"]
   },
   {
     id: "beitou",
     label: "베이터우",
+    labelKey: "schedule.district_beitou",
     labelEn: "Beitou",
     description: "온천, 휴양",
+    descKey: "schedule.district_beitou_desc",
     nearbyAttractions: ["베이터우온천", "지열곡", "베이터우도서관"]
   },
   {
     id: "neihu",
     label: "네이후구",
+    labelKey: "schedule.district_neihu",
     labelEn: "Neihu",
     description: "미라마 관람차, IT단지",
+    descKey: "schedule.district_neihu_desc",
     nearbyAttractions: ["미라마 관람차", "네이후 IT파크"]
   },
   {
     id: "banqiao",
     label: "반차오 (신베이)",
+    labelKey: "schedule.district_banqiao",
     labelEn: "Banqiao",
     description: "반차오역, 신베이시청",
+    descKey: "schedule.district_banqiao_desc",
     nearbyAttractions: ["반차오역", "신베이시민광장", "린가 야시장"]
   },
   {
     id: "other",
     label: "기타/모름",
+    labelKey: "schedule.district_other",
     labelEn: "Other",
     description: "직접 입력",
+    descKey: "schedule.district_other_desc",
     nearbyAttractions: []
   },
 ];

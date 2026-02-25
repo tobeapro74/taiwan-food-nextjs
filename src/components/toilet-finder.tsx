@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { MapPin, Navigation, Clock, Phone, Loader2, RefreshCw, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useLanguage } from "@/components/language-provider";
 
 type StoreType = "7eleven" | "familymart";
 
@@ -48,6 +49,7 @@ interface ToiletFinderProps {
 }
 
 export function ToiletFinder({ onClose }: ToiletFinderProps) {
+  const { t } = useLanguage();
   const [storeType, setStoreType] = useState<StoreType>("7eleven");
   const [sevenElevenStores, setSevenElevenStores] = useState<SevenElevenStore[]>([]);
   const [familyMartStores, setFamilyMartStores] = useState<FamilyMartStore[]>([]);
@@ -158,13 +160,13 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
         }
         if (data.data.length === 0) {
           const storeName = type === "7eleven" ? "7-ELEVEN" : "FamilyMart";
-          setError(`2km 이내에 ${storeName}이(가) 없습니다.`);
+          setError(t("toilet.no_store_nearby", { store: storeName }));
         }
       } else {
-        setError(data.error || "검색 중 오류가 발생했습니다.");
+        setError(data.error || t("toilet.search_error"));
       }
     } catch {
-      setError("오류가 발생했습니다. 다시 시도해주세요.");
+      setError(t("toilet.error_retry"));
     } finally {
       setLoading(false);
     }
@@ -222,17 +224,16 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
               <span className="text-4xl">📍</span>
             </div>
             <h3 className="text-lg font-bold text-center text-foreground mb-3">
-              대만 외 지역 감지
+              {t("nearby.outside_taiwan_title")}
             </h3>
             <p className="text-sm text-muted-foreground text-center leading-relaxed mb-5">
-              이 서비스는 대만 타이베이 내에서 이용 가능합니다.
-              현재 대만 외 지역에 계시므로, 시먼딩(西門町) 기준의 샘플 데이터를 보여드립니다.
+              {t("nearby.outside_taiwan_desc")}
             </p>
             <button
               onClick={() => setShowOutsideTaiwanNotice(false)}
               className="w-full py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors"
             >
-              확인
+              {t("common.confirm")}
             </button>
           </div>
         </div>
@@ -253,8 +254,8 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
           <div className="flex items-center gap-2">
             <span className="text-xl">🚽</span>
             <div>
-              <h1 className="font-semibold text-foreground">가까운 화장실 찾기</h1>
-              <p className="text-xs text-muted-foreground">편의점 화장실</p>
+              <h1 className="font-semibold text-foreground">{t("toilet.title")}</h1>
+              <p className="text-xs text-muted-foreground">{t("toilet.convenience_store")}</p>
             </div>
           </div>
         </div>
@@ -289,8 +290,8 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
         <div className="flex justify-between items-center">
           <p className="text-sm text-muted-foreground">
             {userLocation
-              ? "현재 위치 기준 2km 이내"
-              : "위치 정보를 가져오는 중..."}
+              ? t("toilet.within_2km")
+              : t("toilet.getting_location")}
           </p>
           <Button
             variant="outline"
@@ -300,7 +301,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
             className="flex items-center gap-1"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            새로고침
+            {t("toilet.refresh")}
           </Button>
         </div>
 
@@ -336,7 +337,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                 <MapPin className="w-5 h-5 text-accent dark:text-accent flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-accent-foreground font-medium">
-                    위치 권한 필요
+                    {t("toilet.location_required")}
                   </p>
                   <p className="text-accent-foreground text-sm mt-1">
                     {locationError}
@@ -347,7 +348,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                     className="mt-3"
                     onClick={() => findNearbyToilets(storeType)}
                   >
-                    다시 시도
+                    {t("common.retry")}
                   </Button>
                 </div>
               </div>
@@ -384,7 +385,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                       <div className="flex items-center gap-2">
                         {index === 0 && (
                           <span className="px-2 py-0.5 bg-primary text-white text-xs rounded-full font-medium shrink-0">
-                            가장 가까움
+                            {t("toilet.nearest")}
                           </span>
                         )}
                         {store.services?.some(s => s.includes('ATM')) && (
@@ -437,7 +438,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                         }}
                       >
                         <Navigation className="w-4 h-4" />
-                        길찾기
+                        {t("toilet.directions")}
                       </Button>
                     </div>
                   </div>
@@ -467,7 +468,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                       <div className="flex items-center gap-2">
                         {index === 0 && (
                           <span className="px-2 py-0.5 bg-primary text-white text-xs rounded-full font-medium shrink-0">
-                            가장 가까움
+                            {t("toilet.nearest")}
                           </span>
                         )}
                         <h3 className="font-bold text-foreground truncate">
@@ -486,7 +487,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                         <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                           <Clock className="w-4 h-4 flex-shrink-0" />
                           <span className={store.opening_hours.open_now ? "text-primary" : "text-destructive"}>
-                            {store.opening_hours.open_now ? "영업 중" : "영업 종료"}
+                            {store.opening_hours.open_now ? t("toilet.open_now") : t("toilet.closed")}
                           </span>
                         </p>
                       )}
@@ -508,7 +509,7 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
                         }}
                       >
                         <Navigation className="w-4 h-4" />
-                        길찾기
+                        {t("toilet.directions")}
                       </Button>
                     </div>
                   </div>
@@ -520,21 +521,9 @@ export function ToiletFinder({ onClose }: ToiletFinderProps) {
 
         {/* 안내 문구 */}
         <div className="mt-6 mb-24 p-4 bg-muted rounded-lg">
-          {storeType === "7eleven" ? (
-            <p className="text-xs text-muted-foreground text-center">
-              💡 7-ELEVEN 매장 중 화장실을 개방하는 매장만 표시됩니다.
-              <br />
-              데이터는 매일 오전 6시에 자동 업데이트됩니다.
-            </p>
-          ) : (
-            <p className="text-xs text-muted-foreground text-center">
-              💡 대만 FamilyMart(全家)는 대부분 화장실을 이용할 수 있습니다.
-              <br />
-              일부 매장은 화장실이 없거나 직원 전용일 수 있습니다.
-              <br />
-              데이터는 매일 오전 7시에 자동 업데이트됩니다.
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground text-center whitespace-pre-line">
+            {storeType === "7eleven" ? t("toilet.seven_notice") : t("toilet.family_notice")}
+          </p>
         </div>
       </div>
     </div>

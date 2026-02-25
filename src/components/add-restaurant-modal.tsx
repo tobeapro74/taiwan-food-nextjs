@@ -6,6 +6,7 @@ import { X, Search, MapPin, Star, Clock, Phone, Globe, ChevronRight, Loader2, Ch
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { useLanguage } from "@/components/language-provider";
 
 interface AddRestaurantModalProps {
   isOpen: boolean;
@@ -36,17 +37,19 @@ interface PlaceDetails {
   website?: string;
   google_map_url?: string;
   suggested_category?: string;
+  name_en?: string;
+  address_en?: string;
 }
 
 const categories = [
-  { id: "면류", name: "면류", icon: "🍜" },
-  { id: "만두", name: "만두", icon: "🥟" },
-  { id: "밥류", name: "밥류", icon: "🍚" },
-  { id: "탕류", name: "탕류", icon: "🍲" },
-  { id: "디저트", name: "디저트", icon: "🧁" },
-  { id: "길거리음식", name: "길거리음식", icon: "🍢" },
-  { id: "카페", name: "카페", icon: "☕" },
-  { id: "까르푸", name: "까르푸", icon: "🛒" },
+  { id: "면류", nameKey: "categories.noodles", icon: "🍜" },
+  { id: "만두", nameKey: "categories.dumplings", icon: "🥟" },
+  { id: "밥류", nameKey: "categories.rice", icon: "🍚" },
+  { id: "탕류", nameKey: "categories.soup", icon: "🍲" },
+  { id: "디저트", nameKey: "categories.dessert", icon: "🧁" },
+  { id: "길거리음식", nameKey: "categories.street_food", icon: "🍢" },
+  { id: "카페", nameKey: "categories.cafe", icon: "☕" },
+  { id: "까르푸", nameKey: "categories.carrefour", icon: "🛒" },
 ];
 
 export function AddRestaurantModal({
@@ -55,6 +58,7 @@ export function AddRestaurantModal({
   user,
   onSuccess,
 }: AddRestaurantModalProps) {
+  const { t } = useLanguage();
   const [step, setStep] = useState<"search" | "details" | "confirm">("search");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PlaceSearchResult[]>([]);
@@ -148,11 +152,11 @@ export function AddRestaurantModal({
 
         setStep("details");
       } else {
-        toast.error(data.error || "장소 정보를 가져오는 데 실패했습니다.");
+        toast.error(data.error || t("add_restaurant.place_info_failed"));
       }
     } catch (error) {
       console.error("상세 정보 조회 오류:", error);
-      toast.error("장소 정보 조회에 실패했습니다.");
+      toast.error(t("add_restaurant.place_query_failed"));
     } finally {
       setIsLoadingDetails(false);
     }
@@ -161,7 +165,7 @@ export function AddRestaurantModal({
   // 맛집 등록
   const handleSubmit = async () => {
     if (!selectedPlace || !selectedCategory) {
-      toast.warning("카테고리를 선택해주세요.");
+      toast.warning(t("add_restaurant.category_required"));
       return;
     }
 
@@ -185,6 +189,8 @@ export function AddRestaurantModal({
           photos: selectedPlace.photos,
           website: selectedPlace.website,
           google_map_url: selectedPlace.google_map_url,
+          name_en: selectedPlace.name_en,
+          address_en: selectedPlace.address_en,
         }),
       });
 
@@ -197,11 +203,11 @@ export function AddRestaurantModal({
           onClose();
         }, 1500);
       } else {
-        toast.error(data.error || "맛집 등록에 실패했습니다.");
+        toast.error(data.error || t("add_restaurant.register_failed"));
       }
     } catch (error) {
       console.error("등록 오류:", error);
-      toast.error("맛집 등록에 실패했습니다.");
+      toast.error(t("add_restaurant.register_failed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -215,9 +221,9 @@ export function AddRestaurantModal({
         {/* 헤더 */}
         <div className="flex-shrink-0 border-b px-4 py-3 flex items-center justify-between rounded-t-2xl">
           <h2 className="text-lg font-semibold">
-            {step === "search" && "맛집 검색"}
-            {step === "details" && "맛집 정보"}
-            {step === "confirm" && "등록 완료"}
+            {step === "search" && t("add_restaurant.search_title")}
+            {step === "details" && t("add_restaurant.info_title")}
+            {step === "confirm" && t("add_restaurant.complete_title")}
           </h2>
           <button
             onClick={onClose}
@@ -237,7 +243,7 @@ export function AddRestaurantModal({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="구글맵에서 맛집 검색..."
+                placeholder={t("add_restaurant.search_placeholder")}
                 className="w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
                 autoFocus
               />
@@ -250,8 +256,8 @@ export function AddRestaurantModal({
             {searchQuery.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <MapPin className="w-12 h-12 mx-auto mb-3 text-primary/30" />
-                <p className="text-sm">대만에서 발견한 맛집을</p>
-                <p className="text-sm">구글맵 이름으로 검색해보세요!</p>
+                <p className="text-sm">{t("add_restaurant.search_guide_1")}</p>
+                <p className="text-sm">{t("add_restaurant.search_guide_2")}</p>
               </div>
             )}
 
@@ -283,8 +289,8 @@ export function AddRestaurantModal({
             {/* 검색 결과 없음 */}
             {searchQuery.length >= 2 && !isSearching && searchResults.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
-                <p className="text-sm">검색 결과가 없습니다.</p>
-                <p className="text-xs mt-1">다른 검색어를 시도해보세요.</p>
+                <p className="text-sm">{t("add_restaurant.no_results")}</p>
+                <p className="text-xs mt-1">{t("add_restaurant.try_other")}</p>
               </div>
             )}
           </div>
@@ -322,7 +328,7 @@ export function AddRestaurantModal({
                     <span className="font-medium">{selectedPlace.rating}</span>
                     {selectedPlace.reviews_count && (
                       <span className="text-sm text-muted-foreground">
-                        ({selectedPlace.reviews_count.toLocaleString()}개 리뷰)
+                        ({t("restaurant.reviews_count", { count: selectedPlace.reviews_count.toLocaleString() })})
                       </span>
                     )}
                   </div>
@@ -331,7 +337,7 @@ export function AddRestaurantModal({
                 {/* 가격대 */}
                 {selectedPlace.price_level_text && (
                   <div className="text-sm text-muted-foreground">
-                    가격대: {selectedPlace.price_level_text}
+                    {t("restaurant.price_range")}: {selectedPlace.price_level_text}
                   </div>
                 )}
 
@@ -353,7 +359,7 @@ export function AddRestaurantModal({
                       rel="noopener noreferrer"
                       className="text-primary hover:underline truncate"
                     >
-                      웹사이트 방문
+                      {t("add_restaurant.visit_website")}
                     </a>
                   </div>
                 )}
@@ -363,7 +369,7 @@ export function AddRestaurantModal({
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm font-medium">
                       <Clock className="w-4 h-4" />
-                      <span>영업시간</span>
+                      <span>{t("add_restaurant.opening_hours")}</span>
                     </div>
                     <div className="pl-6 text-xs text-muted-foreground space-y-0.5">
                       {selectedPlace.opening_hours.map((hour, idx) => (
@@ -376,7 +382,7 @@ export function AddRestaurantModal({
 
               {/* 카테고리 선택 */}
               <div className="space-y-3">
-                <p className="font-medium">카테고리 선택 *</p>
+                <p className="font-medium">{t("add_restaurant.category_label")} *</p>
                 <div className="flex flex-wrap gap-2">
                   {categories.map((cat) => (
                     <button
@@ -391,7 +397,7 @@ export function AddRestaurantModal({
                       )}
                     >
                       <span>{cat.icon}</span>
-                      <span>{cat.name}</span>
+                      <span>{t(cat.nameKey)}</span>
                     </button>
                   ))}
                 </div>
@@ -399,11 +405,11 @@ export function AddRestaurantModal({
 
               {/* 특징/메모 */}
               <div className="space-y-2">
-                <p className="font-medium">특징/메모 (선택)</p>
+                <p className="font-medium">{t("add_restaurant.feature_label")}</p>
                 <textarea
                   value={feature}
                   onChange={(e) => setFeature(e.target.value)}
-                  placeholder="이 맛집의 특징이나 추천 메뉴를 적어주세요..."
+                  placeholder={t("add_restaurant.feature_placeholder")}
                   className="w-full h-24 p-3 border rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background text-sm"
                 />
               </div>
@@ -415,7 +421,7 @@ export function AddRestaurantModal({
               {isAlreadyRegistered && (
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-sm">
                   <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                  <span>이미 등록된 맛집입니다.</span>
+                  <span>{t("add_restaurant.already_registered")}</span>
                 </div>
               )}
               <Button
@@ -426,12 +432,12 @@ export function AddRestaurantModal({
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    등록 중...
+                    {t("add_restaurant.registering")}
                   </>
                 ) : isAlreadyRegistered ? (
-                  "이미 등록됨"
+                  t("add_restaurant.already_registered")
                 ) : (
-                  "맛집 등록하기"
+                  t("add_restaurant.register_button")
                 )}
               </Button>
               <Button
@@ -443,7 +449,7 @@ export function AddRestaurantModal({
                 }}
                 className="w-full"
               >
-                다른 맛집 검색
+                {t("add_restaurant.search_other")}
               </Button>
             </div>
           </>
@@ -455,9 +461,9 @@ export function AddRestaurantModal({
             <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
               <Check className="w-8 h-8 text-green-600" />
             </div>
-            <h3 className="text-xl font-bold mb-2">등록 완료!</h3>
+            <h3 className="text-xl font-bold mb-2">{t("add_restaurant.complete_title")}!</h3>
             <p className="text-muted-foreground text-center">
-              맛집이 성공적으로 등록되었습니다.
+              {t("add_restaurant.register_success")}
             </p>
           </div>
         )}

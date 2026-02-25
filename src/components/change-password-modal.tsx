@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/language-provider";
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface ChangePasswordModalProps {
 }
 
 export function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswordModalProps) {
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -60,22 +62,22 @@ export function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswo
 
     // 클라이언트 검증
     if (!currentPassword || !newPassword || !newPasswordConfirm) {
-      setError("모든 필드를 입력해주세요.");
+      setError(t("password.all_fields_required"));
       return;
     }
 
     if (newPassword.length < 6) {
-      setError("새 비밀번호는 6자 이상이어야 합니다.");
+      setError(t("password.min_length"));
       return;
     }
 
     if (newPassword !== newPasswordConfirm) {
-      setError("새 비밀번호가 일치하지 않습니다.");
+      setError(t("password.mismatch"));
       return;
     }
 
     if (currentPassword === newPassword) {
-      setError("새 비밀번호는 현재 비밀번호와 달라야 합니다.");
+      setError(t("password.same_as_current"));
       return;
     }
 
@@ -98,10 +100,10 @@ export function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswo
           handleClose();
         }, 2000);
       } else {
-        setError(data.error || "비밀번호 변경에 실패했습니다.");
+        setError(data.error || t("password.change_failed"));
       }
     } catch {
-      setError("비밀번호 변경 중 오류가 발생했습니다.");
+      setError(t("password.change_failed"));
     } finally {
       setIsLoading(false);
     }
@@ -113,7 +115,7 @@ export function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswo
         {/* 헤더 */}
         <div className="bg-card px-4 py-4 flex items-center justify-between border-b border-border">
           <h2 className="text-lg font-semibold text-foreground">
-            비밀번호 변경
+            {t("auth.change_password")}
           </h2>
           <button
             onClick={handleClose}
@@ -135,19 +137,19 @@ export function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswo
           {/* 성공 메시지 */}
           {success && (
             <div className="bg-green-100 text-green-600 text-sm p-3 rounded-lg">
-              비밀번호가 성공적으로 변경되었습니다.
+              {t("password.success")}
             </div>
           )}
 
           {/* 현재 비밀번호 */}
           <div>
-            <label className="block text-sm font-medium mb-1.5">현재 비밀번호</label>
+            <label className="block text-sm font-medium mb-1.5">{t("password.current_password")}</label>
             <div className="relative">
               <input
                 type={showCurrentPassword ? "text" : "password"}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="현재 비밀번호를 입력하세요"
+                placeholder={t("password.current_placeholder")}
                 className="w-full px-4 py-3 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
                 autoComplete="current-password"
               />
@@ -163,13 +165,13 @@ export function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswo
 
           {/* 새 비밀번호 */}
           <div>
-            <label className="block text-sm font-medium mb-1.5">새 비밀번호 (6자 이상)</label>
+            <label className="block text-sm font-medium mb-1.5">{t("password.new_label")}</label>
             <div className="relative">
               <input
                 type={showNewPassword ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="새 비밀번호를 입력하세요"
+                placeholder={t("password.new_placeholder")}
                 className="w-full px-4 py-3 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
                 autoComplete="new-password"
               />
@@ -185,13 +187,13 @@ export function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswo
 
           {/* 새 비밀번호 확인 */}
           <div>
-            <label className="block text-sm font-medium mb-1.5">새 비밀번호 확인</label>
+            <label className="block text-sm font-medium mb-1.5">{t("password.confirm_new_password")}</label>
             <div className="relative">
               <input
                 type={showNewPasswordConfirm ? "text" : "password"}
                 value={newPasswordConfirm}
                 onChange={(e) => setNewPasswordConfirm(e.target.value)}
-                placeholder="새 비밀번호를 다시 입력하세요"
+                placeholder={t("password.confirm_placeholder")}
                 className="w-full px-4 py-3 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
                 autoComplete="new-password"
               />
@@ -214,10 +216,10 @@ export function ChangePasswordModal({ isOpen, onClose, onSuccess }: ChangePasswo
               className="flex-1"
               disabled={isLoading}
             >
-              취소
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={isLoading || success} className="flex-1">
-              {isLoading ? "변경 중..." : "변경하기"}
+              {isLoading ? t("password.changing") : t("password.change")}
             </Button>
           </div>
         </form>

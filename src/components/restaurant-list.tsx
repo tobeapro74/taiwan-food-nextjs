@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2, MapPin } from "lucide-react";
 import { Restaurant } from "@/data/taiwan-food";
 import { RestaurantCard } from "./restaurant-card";
 import { extractRegion, normalizeRegion, DISTRICT_INFO } from "@/lib/district-utils";
+import { useLanguage } from "@/components/language-provider";
 
 interface RestaurantListProps {
   title: string;
@@ -15,6 +16,7 @@ interface RestaurantListProps {
 }
 
 export function RestaurantList({ title, restaurants, onBack, onSelect }: RestaurantListProps) {
+  const { t } = useLanguage();
   const [liveRatings, setLiveRatings] = useState<Record<string, { rating: number | null; userRatingsTotal: number | null }>>({});
   const [isLoading, setIsLoading] = useState(true);
 
@@ -108,7 +110,7 @@ export function RestaurantList({ title, restaurants, onBack, onSelect }: Restaur
       {groupedByRegion.sortedRegions.length > 0 && (
         <div className="px-4 py-3 bg-muted/50 border-b border-border">
           <p className="text-sm text-muted-foreground">
-            타이베이는 총 12개의 구로 구성되어 있으며, 맛집을 구별로 구분해 알려드려요.
+            {t("restaurant.district_guide")}
           </p>
         </div>
       )}
@@ -125,15 +127,15 @@ export function RestaurantList({ title, restaurants, onBack, onSelect }: Restaur
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-primary" />
                     <h2 className="font-semibold text-foreground">
-                      {districtInfo?.name || region}
+                      {districtInfo ? t(districtInfo.nameKey) : region}
                     </h2>
                     <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                      {groupedByRegion.groups[region].length}개
+                      {t("restaurant.count_suffix", { count: groupedByRegion.groups[region].length })}
                     </span>
                   </div>
-                  {districtInfo?.description && (
+                  {districtInfo?.descKey && (
                     <p className="text-xs text-muted-foreground mt-1 ml-6 leading-relaxed">
-                      {districtInfo.description}
+                      {t(districtInfo.descKey)}
                     </p>
                   )}
                 </div>
@@ -152,7 +154,7 @@ export function RestaurantList({ title, restaurants, onBack, onSelect }: Restaur
           })
         ) : (
           <div className="text-center text-muted-foreground py-12">
-            검색 결과가 없습니다.
+            {t("search.no_results")}
           </div>
         )}
       </div>

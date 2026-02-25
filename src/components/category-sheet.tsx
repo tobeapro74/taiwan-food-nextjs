@@ -8,10 +8,12 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useHaptic } from "@/hooks/useHaptic";
+import { useLanguage } from "@/components/language-provider";
 
 interface Option {
   id: string;
   name: string;
+  nameKey?: string;
   icon: string;
 }
 
@@ -25,6 +27,7 @@ interface CategorySheetProps {
 
 export function CategorySheet({ open, onOpenChange, title, options, onSelect }: CategorySheetProps) {
   const { selection } = useHaptic();
+  const { t } = useLanguage();
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-2xl glass-sheet">
@@ -44,7 +47,7 @@ export function CategorySheet({ open, onOpenChange, title, options, onSelect }: 
               }}
             >
               <span className="text-xl mr-3">{option.icon}</span>
-              {option.name}
+              {option.nameKey ? t(option.nameKey) : option.name}
             </Button>
           ))}
         </div>
