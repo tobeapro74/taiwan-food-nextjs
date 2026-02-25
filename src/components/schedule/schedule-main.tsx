@@ -36,6 +36,7 @@ interface SavedScheduleItem {
   travelers: number;
   savedAt: string;
   accommodation?: string;
+  accommodationDistrictId?: string;
   ageGenderBreakdown?: AgeGenderCount[];
 }
 
@@ -293,9 +294,15 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
       const data = await response.json();
       if (data.success) {
         setSavedSchedules((prev) => prev.filter((s) => s._id !== id));
+        toast.success(t("schedule.delete_success"));
+      } else {
+        toast.error(data.error || t("schedule.delete_failed"));
       }
     } catch (error) {
       console.error("Failed to delete schedule:", error);
+      toast.error(t("schedule.delete_failed"));
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -513,7 +520,11 @@ export function ScheduleMain({ onBack, user, onLoginClick, initialViewMode = "cr
                     <h3 className="font-semibold text-foreground">{item.title}</h3>
                     <p className="text-xs text-muted-foreground mt-1">
                       {t("schedule.days_with_unit", { days: item.days })} · {formatAgeGenderSummary(item.ageGenderBreakdown, item.travelers, t)}
-                      {item.accommodation && ` · ${item.accommodation}`}
+                      {item.accommodation && ` · ${
+                        language === "en" && item.accommodationDistrictId
+                          ? (TAIPEI_DISTRICT_OPTIONS.find(d => d.id === item.accommodationDistrictId)?.labelEn || item.accommodation)
+                          : item.accommodation
+                      }`}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {new Date(item.savedAt).toLocaleDateString(language === "ko" ? "ko-KR" : "en-US")}

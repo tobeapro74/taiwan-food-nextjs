@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
         travelers: s.schedule?.input?.travelers || 0,
         savedAt: s.savedAt,
         accommodation: s.schedule?.input?.accommodation?.district,
+        accommodationDistrictId: s.schedule?.input?.accommodation?.districtId,
         ageGenderBreakdown: s.schedule?.input?.ageGenderBreakdown || [],
       })),
     });
