@@ -46,11 +46,23 @@ interface ScheduleResultProps {
   initialSaved?: boolean;
 }
 
+// AI 생성 콘텐츠의 언어를 감지 (한글 포함 여부로 판단)
+function detectContentLanguage(schedule: TravelSchedule): string {
+  const firstTheme = schedule.schedule?.[0]?.theme;
+  if (!firstTheme) return "ko";
+  // 한글이 포함되어 있으면 한국어, 아니면 영어
+  return /[가-힣]/.test(firstTheme) ? "ko" : "en";
+}
+
 export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initialSaved = false }: ScheduleResultProps) {
   const { t, language } = useLanguage();
   const [expandedDays, setExpandedDays] = useState<number[]>([1]);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(initialSaved);
+
+  // 일정 콘텐츠 언어: generatedLanguage가 있으면 사용, 없으면 콘텐츠에서 감지
+  const contentLanguage = schedule.generatedLanguage || detectContentLanguage(schedule);
+  const isLanguageMismatch = contentLanguage !== language;
 
   // 확인 다이얼로그 상태
   const [confirmAction, setConfirmAction] = useState<"back" | "list" | null>(null);
@@ -180,7 +192,7 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
 
       <div className="p-4 space-y-4">
         {/* AI 생성 언어 안내 */}
-        {schedule.generatedLanguage && schedule.generatedLanguage !== language && (
+        {isLanguageMismatch && (
           <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-3">
             <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
             <p className="text-xs text-amber-700 dark:text-amber-300">
