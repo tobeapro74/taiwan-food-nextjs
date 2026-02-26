@@ -88,8 +88,11 @@ async function fetchPlacePhotos(placeName: string): Promise<string[]> {
 
     const cached = await cacheCollection.findOne({ placeName });
     if (cached && cached.photos.length > 0) {
-      // 캐시 히트 - API 호출 없이 반환
-      return cached.photos;
+      // 캐시된 URL이 Google API 직접 URL(만료 가능)이면 무시하고 새로 가져오기
+      const hasExpirableUrl = cached.photos.some(url => url.includes("maps.googleapis.com/maps/api/place/photo"));
+      if (!hasExpirableUrl) {
+        return cached.photos;
+      }
     }
 
     // 2. 캐시 미스 - Google API 호출
@@ -115,12 +118,18 @@ async function fetchPlacePhotos(placeName: string): Promise<string[]> {
       return [];
     }
 
-    // 최대 10장의 사진 URL 생성
-    const photoUrls: string[] = [];
-    for (const photo of detailsData.result.photos.slice(0, 10)) {
-      const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photo.photo_reference}&key=${apiKey}`;
-      photoUrls.push(photoUrl);
-    }
+    // 최대 10장의 사진 URL 생성 (redirect를 따라가서 실제 이미지 URL 획득, 병렬 처리)
+    const photoResults = await Promise.allSettled(
+      detailsData.result.photos.slice(0, 10).map(async (photo: { photo_reference: string }) => {
+        const photoApiUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photo.photo_reference}&key=${apiKey}`;
+        const photoRes = await fetch(photoApiUrl, { redirect: "follow" });
+        if (photoRes.ok) return photoRes.url;
+        throw new Error("Photo fetch failed");
+      })
+    );
+    const photoUrls = photoResults
+      .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
+      .map(r => r.value);
 
     // 3. 캐시에 저장 (upsert)
     await cacheCollection.updateOne(
