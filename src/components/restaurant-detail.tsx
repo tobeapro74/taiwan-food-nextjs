@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, Info, Map, Phone, Banknote, Building2, Tag, Settings, Trash2, Clock, Star } from "lucide-react";
+import { ArrowLeft, MapPin, Info, Map, Navigation, Phone, Banknote, Building2, Tag, Settings, Trash2, Clock, Star } from "lucide-react";
 import { Restaurant, getGoogleMapsLink, getUnsplashImage, categories, getDisplayName, getDisplayLocation, getDisplayFeature, getDisplayBuilding, getDisplayNightMarket } from "@/data/taiwan-food";
 import { ReviewSection } from "@/components/review-section";
 import { GoogleReviews } from "@/components/google-reviews";
@@ -443,15 +443,26 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
               )}
             </div>
 
-            <a
-              href={googleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full h-12 text-base mt-4 inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
-            >
-              <Map className="h-5 w-5" />
-              {t("restaurant.view_on_google_maps")}
-            </a>
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <a
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-12 text-sm inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
+              >
+                <Map className="h-5 w-5" />
+                {t("restaurant.view_on_google_maps")}
+              </a>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${restaurant.coordinates?.lat},${restaurant.coordinates?.lng}&travelmode=transit`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-12 text-sm inline-flex items-center justify-center gap-2 rounded-md bg-accent text-accent-foreground hover:bg-accent/80 font-medium"
+              >
+                <Navigation className="h-5 w-5" />
+                {t("restaurant.directions")}
+              </a>
+            </div>
           </CardContent>
         </Card>
 
