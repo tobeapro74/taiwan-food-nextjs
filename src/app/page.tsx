@@ -223,8 +223,17 @@ export default function Home() {
     return getPopularRestaurants();
   }, []);
 
-  // 야시장별 맛집 - 기본 데이터
+  // 야시장별 맛집 - 기본 데이터 (홈 화면용: "전체"는 각 야시장 대표 1개씩)
   const baseMarketRestaurants = useMemo(() => {
+    if (selectedMarket === "전체") {
+      const items: Restaurant[] = [];
+      for (const m of markets) {
+        if (m.id === "전체") continue;
+        const list = getRestaurantsByMarket(m.id);
+        if (list.length > 0) items.push(list[0]);
+      }
+      return items;
+    }
     return getRestaurantsByMarket(selectedMarket);
   }, [selectedMarket]);
 
@@ -291,7 +300,7 @@ export default function Home() {
       .sort((a, b) => (b.평점 || 0) - (a.평점 || 0));
   }, [basePopularRestaurants, liveRatings, deletedStaticIds]);
 
-  // 실시간 평점 적용된 야시장별 맛집 (평점 높은 순 정렬, 상위 6개, 삭제된 정적 데이터 제외)
+  // 실시간 평점 적용된 야시장별 맛집 (평점 높은 순 정렬, 상위 5개, 삭제된 정적 데이터 제외)
   const marketRestaurants = useMemo(() => {
     return baseMarketRestaurants
       .filter(r => {
@@ -306,7 +315,7 @@ export default function Home() {
         리뷰수: liveRatings[r.이름]?.userRatingsTotal ?? r.리뷰수
       }))
       .sort((a, b) => (b.평점 || 0) - (a.평점 || 0))
-      .slice(0, 6);
+      .slice(0, 5);
   }, [baseMarketRestaurants, liveRatings, deletedStaticIds]);
 
   // 지역별 맛집 랭킹 계산
