@@ -29,12 +29,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log(`[schedules GET] userId: ${user.userId}, name: ${user.name}, email: ${user.email}`);
+
     const db = await connectToDatabase();
     const schedules = await db
       .collection("saved_schedules")
       .find({ userId: user.userId })
       .sort({ savedAt: -1 })
       .toArray();
+
+    console.log(`[schedules GET] found ${schedules.length} schedules for userId: ${user.userId}`);
 
     return NextResponse.json({
       success: true,
