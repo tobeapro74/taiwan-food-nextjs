@@ -5,7 +5,8 @@
     "schedule": "일정",
     "add": "등록",
     "category": "카테고리",
-    "market": "야시장"
+    "market": "야시장",
+    "dashboard": "대시보드"
   },
   "common": {
     "search": "검색",

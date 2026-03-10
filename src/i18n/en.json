@@ -5,7 +5,8 @@
     "schedule": "Plan",
     "add": "Add",
     "category": "Category",
-    "market": "Markets"
+    "market": "Markets",
+    "dashboard": "Dashboard"
   },
   "common": {
     "search": "Search",

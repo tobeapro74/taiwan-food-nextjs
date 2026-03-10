@@ -21,6 +21,8 @@ import { ToiletFinder } from "@/components/toilet-finder";
 import { ScheduleMain } from "@/components/schedule/schedule-main";
 import { Onboarding } from "@/components/onboarding";
 import { AIRecommend, RecommendState } from "@/components/ai-recommend";
+import { AdminDashboard } from "@/components/admin-dashboard";
+import { logActivity } from "@/lib/activity-logger";
 import {
   Restaurant,
   categories,
@@ -43,8 +45,8 @@ import { getRestaurantDistrict, isValidDistrict, DISTRICT_INFO } from "@/lib/dis
 import { useTheme } from "@/components/theme-provider";
 import { useLanguage } from "@/components/language-provider";
 
-type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking" | "guide" | "schedule" | "ai-recommend";
-type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add" | "schedule";
+type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking" | "guide" | "schedule" | "ai-recommend" | "dashboard";
+type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add" | "schedule" | "dashboard";
 type GuideTabType = "overview" | "weather" | "transport" | "accommodation";
 
 interface UserInfo {
@@ -121,6 +123,12 @@ export default function Home() {
     }
   }, []);
 
+  // 로그인 성공 핸들러
+  const handleLoginSuccess = useCallback((userData: UserInfo) => {
+    setUser(userData);
+    logActivity("login", { userName: userData.name });
+  }, []);
+
   // 로그인 상태 확인
   useEffect(() => {
     const checkAuth = async () => {
@@ -135,6 +143,8 @@ export default function Home() {
       }
     };
     checkAuth();
+    // 페이지 방문 기록
+    logActivity("page_view", { page: "home" });
   }, []);
 
   // 네이티브 앱: 카카오 로그인 딥링크(taiwanfood://auth?token=...) 수신 처리
@@ -385,7 +395,7 @@ export default function Home() {
   // 검색 처리 (정적 데이터 + DB 맛집 통합 검색)
   const handleSearch = useCallback(async (query: string) => {
     if (query.trim().length < 1) return;
-
+    logActivity("search", { query });
     setShowSuggestions(false);
     setCurrentView("list");
     setActiveTab("home");
@@ -476,6 +486,7 @@ export default function Home() {
 
   // 탭 변경 처리
   const handleTabChange = (tab: TabType) => {
+    logActivity("page_view", { page: tab });
     if (tab === "home") {
       setCurrentView("home");
       setActiveTab("home");
@@ -508,6 +519,9 @@ export default function Home() {
     } else if (tab === "schedule") {
       setCurrentView("schedule");
       setActiveTab("schedule");
+    } else if (tab === "dashboard") {
+      setCurrentView("dashboard");
+      setActiveTab("dashboard");
     }
   };
 
@@ -622,6 +636,7 @@ export default function Home() {
   // 맛집 선택
   const handleRestaurantSelect = (restaurant: Restaurant) => {
     console.log("Selected restaurant:", { name: restaurant.이름, place_id: restaurant.place_id, category: restaurant.category });
+    logActivity("restaurant_view", { name: restaurant.이름 });
     setViewHistory(prev => [...prev, currentView]); // 현재 화면을 스택에 push
     setSelectedRestaurant(restaurant);
     setCurrentView("detail");
@@ -760,7 +775,7 @@ export default function Home() {
         <AuthModal
           isOpen={authModalOpen}
           onClose={() => setAuthModalOpen(false)}
-          onLoginSuccess={(userData) => setUser(userData)}
+          onLoginSuccess={handleLoginSuccess}
         />
         <AddRestaurantModal
           isOpen={addRestaurantModalOpen}
@@ -839,13 +854,27 @@ export default function Home() {
         <AuthModal
           isOpen={authModalOpen}
           onClose={() => setAuthModalOpen(false)}
-          onLoginSuccess={(userData) => setUser(userData)}
+          onLoginSuccess={handleLoginSuccess}
         />
         <AddRestaurantModal
           isOpen={addRestaurantModalOpen}
           onClose={() => setAddRestaurantModalOpen(false)}
           user={user}
           onSuccess={() => {}}
+        />
+      </>
+    );
+  }
+
+  if (currentView === "dashboard") {
+    return (
+      <>
+        <AdminDashboard />
+        <BottomNav activeTab={activeTab} onTabChange={handleTabChange} user={user} />
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
         />
       </>
     );
@@ -917,7 +946,7 @@ export default function Home() {
         <AuthModal
           isOpen={authModalOpen}
           onClose={() => setAuthModalOpen(false)}
-          onLoginSuccess={(userData) => setUser(userData)}
+          onLoginSuccess={handleLoginSuccess}
         />
         <AddRestaurantModal
           isOpen={addRestaurantModalOpen}
@@ -995,7 +1024,7 @@ export default function Home() {
         <AuthModal
           isOpen={authModalOpen}
           onClose={() => setAuthModalOpen(false)}
-          onLoginSuccess={(userData) => setUser(userData)}
+          onLoginSuccess={handleLoginSuccess}
         />
         <AddRestaurantModal
           isOpen={addRestaurantModalOpen}
@@ -1950,7 +1979,7 @@ export default function Home() {
         <AuthModal
           isOpen={authModalOpen}
           onClose={() => setAuthModalOpen(false)}
-          onLoginSuccess={(userData) => setUser(userData)}
+          onLoginSuccess={handleLoginSuccess}
         />
         <AddRestaurantModal
           isOpen={addRestaurantModalOpen}
@@ -1996,7 +2025,7 @@ export default function Home() {
         <AuthModal
           isOpen={authModalOpen}
           onClose={() => setAuthModalOpen(false)}
-          onLoginSuccess={(userData) => setUser(userData)}
+          onLoginSuccess={handleLoginSuccess}
         />
         <AddRestaurantModal
           isOpen={addRestaurantModalOpen}
@@ -2459,7 +2488,7 @@ export default function Home() {
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
-        onLoginSuccess={(userData) => setUser(userData)}
+        onLoginSuccess={handleLoginSuccess}
       />
 
       {/* 비밀번호 변경 모달 */}
