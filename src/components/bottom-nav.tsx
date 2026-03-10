@@ -1,11 +1,11 @@
 "use client";
 
-import { Home, Grid3X3, Store, Navigation, PlusCircle, CalendarDays, LayoutDashboard } from "lucide-react";
+import { Home, Grid3X3, Store, Navigation, PlusCircle, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHaptic } from "@/hooks/useHaptic";
 import { useLanguage } from "@/components/language-provider";
 
-type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add" | "schedule" | "dashboard";
+type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add" | "schedule";
 
 interface User {
   id: number;
@@ -26,7 +26,6 @@ const navItemKeys = [
   { id: "add" as const, labelKey: "nav.add", icon: PlusCircle, adminOnly: true },
   { id: "category" as const, labelKey: "nav.category", icon: Grid3X3 },
   { id: "market" as const, labelKey: "nav.market", icon: Store },
-  { id: "dashboard" as const, labelKey: "nav.dashboard", icon: LayoutDashboard, adminOnly: true },
 ];
 
 // 등록 권한 체크 (관리자 또는 박병철)

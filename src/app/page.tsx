@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { User, LogOut, Search, X, MapPin, ChevronDown, Key, UserMinus, History, ArrowLeft, Moon, Sun } from "lucide-react";
+import { User, LogOut, Search, X, MapPin, ChevronDown, Key, UserMinus, History, ArrowLeft, Moon, Sun, LayoutDashboard } from "lucide-react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ import { useTheme } from "@/components/theme-provider";
 import { useLanguage } from "@/components/language-provider";
 
 type View = "home" | "list" | "detail" | "nearby" | "history" | "toilet" | "district-ranking" | "guide" | "schedule" | "ai-recommend" | "dashboard";
-type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add" | "schedule" | "dashboard";
+type TabType = "home" | "category" | "market" | "tour" | "places" | "nearby" | "add" | "schedule";
 type GuideTabType = "overview" | "weather" | "transport" | "accommodation";
 
 interface UserInfo {
@@ -519,9 +519,6 @@ export default function Home() {
     } else if (tab === "schedule") {
       setCurrentView("schedule");
       setActiveTab("schedule");
-    } else if (tab === "dashboard") {
-      setCurrentView("dashboard");
-      setActiveTab("dashboard");
     }
   };
 
@@ -2122,6 +2119,18 @@ export default function Home() {
                       <History className="w-4 h-4" />
                       {t("auth.history")}
                     </button>
+                    {(user.is_admin || user.name === "박병철") && (
+                      <button
+                        onClick={() => {
+                          setCurrentView("dashboard");
+                          setUserMenuOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                      >
+                        <LayoutDashboard className="w-4 h-4" />
+                        대시보드
+                      </button>
+                    )}
                     {user?.has_password !== false && (
                       <button
                         onClick={() => {
