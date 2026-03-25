@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      const results: { name: string; status: string }[] = [];
+      const results: { name: string; status: string; error?: string }[] = [];
       let successCount = 0;
 
       for (const restaurant of batch) {
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
           successCount++;
         }
 
-        results.push({ name: restaurant.이름, status: result.status });
+        results.push({ name: restaurant.이름, status: result.status, error: result.error });
 
         // API 호출 간 딜레이
         await new Promise(resolve => setTimeout(resolve, 500));
