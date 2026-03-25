@@ -26,12 +26,17 @@ function toPublicId(name: string): string {
   return `taiwan-food/${name.replace(/[^a-zA-Z0-9가-힣]/g, "_").substring(0, 50)}`;
 }
 
-async function fetchAndUploadImage(name: string, location: string): Promise<{ url: string | null; status: string }> {
+async function fetchAndUploadImage(name: string, location: string): Promise<{ url: string | null; status: string; error?: string }> {
   try {
+    // Step 1: Google Places 검색
     const searchQuery = `${name} Taiwan`;
     const searchUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(searchQuery)}&inputtype=textquery&fields=place_id,photos,business_status&key=${GOOGLE_API_KEY}`;
     const searchRes = await fetch(searchUrl);
     const searchData = await searchRes.json();
+
+    if (searchData.status !== "OK") {
+      return { url: null, status: "google_error", error: `Google search: ${searchData.status} - ${searchData.error_message || ""}` };
+    }
 
     const candidate = searchData.candidates?.[0];
     if (!candidate?.photos?.[0]?.photo_reference) {
@@ -42,16 +47,23 @@ async function fetchAndUploadImage(name: string, location: string): Promise<{ ur
       return { url: null, status: "closed" };
     }
 
+    // Step 2: Google photo URL 생성
     const photoRef = candidate.photos[0].photo_reference;
     const googlePhotoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoRef}&key=${GOOGLE_API_KEY}`;
 
+    // Step 3: Cloudinary 업로드
     const publicId = toPublicId(name);
-    await cloudinary.uploader.upload(googlePhotoUrl, {
-      public_id: publicId,
-      folder: "",
-      overwrite: true,
-      resource_type: "image",
-    });
+    try {
+      await cloudinary.uploader.upload(googlePhotoUrl, {
+        public_id: publicId,
+        folder: "",
+        overwrite: true,
+        resource_type: "image",
+      });
+    } catch (uploadErr: unknown) {
+      const msg = uploadErr instanceof Error ? uploadErr.message : String(uploadErr);
+      return { url: null, status: "cloudinary_error", error: `Cloudinary upload: ${msg}` };
+    }
 
     const optimizedUrl = cloudinary.url(publicId, {
       fetch_format: "auto",
@@ -62,9 +74,9 @@ async function fetchAndUploadImage(name: string, location: string): Promise<{ ur
     });
 
     return { url: optimizedUrl, status: "success" };
-  } catch (err) {
-    console.error(`Failed to fetch/upload image for ${name}:`, err);
-    return { url: null, status: "error" };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { url: null, status: "error", error: msg };
   }
 }
 
