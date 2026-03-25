@@ -224,19 +224,11 @@ export async function GET(request: NextRequest) {
       );
     } catch (uploadError) {
       console.error("Cloudinary upload error:", uploadError);
-      // 업로드 실패해도 Google 원본 URL 반환
+      // Cloudinary 실패 시 Google URL을 DB에 저장하지 않음 (만료되는 URL이므로)
+      // 다음 요청 시 다시 시도하도록 캐시하지 않고 임시로만 반환
       const buildingName = await buildingPromise;
 
-      // MongoDB에 캐시 저장 (Google URL)
-      if (restaurantName) {
-        await saveImageCache({
-          restaurantName,
-          photoUrl: googlePhotoUrl,
-          buildingName,
-        });
-      }
-
-      return NextResponse.json({ photoUrl: googlePhotoUrl, cached: false, buildingName });
+      return NextResponse.json({ photoUrl: googlePhotoUrl, cached: false, buildingName, cloudinaryFailed: true });
     }
   } catch (error) {
     console.error("Google Places API error:", error);
