@@ -70,8 +70,17 @@ export function RestaurantCard({ restaurant, onClick, onViewDetail, variant = "v
   const [googleRating, setGoogleRating] = useState<number | null>(ratingCache[cacheKey]?.rating ?? null);
   const [googleReviewsCount, setGoogleReviewsCount] = useState<number | null>(ratingCache[cacheKey]?.reviewsCount ?? null);
 
+  // propImageUrl이 나중에 들어오면 즉시 반영
   useEffect(() => {
-    // 캐시에 있으면 바로 사용 (이미지 onLoad에서 opacity 전환)
+    if (propImageUrl && propImageUrl !== imageUrl) {
+      imageCache[cacheKey] = propImageUrl;
+      setImageLoaded(false);
+      setImageUrl(propImageUrl);
+    }
+  }, [propImageUrl, cacheKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    // 캐시에 있으면 바로 사용
     if (imageCache[cacheKey]) {
       setImageUrl(imageCache[cacheKey]);
       return;
@@ -106,7 +115,7 @@ export function RestaurantCard({ restaurant, onClick, onViewDetail, variant = "v
     };
 
     fetchImage();
-  }, [cacheKey, restaurant.이름, restaurant.위치, fallbackUrl, propImageUrl]);
+  }, [cacheKey, restaurant.이름, restaurant.위치, fallbackUrl]); // propImageUrl 제거 (별도 useEffect에서 처리)
 
   // 구글 평점 가져오기
   useEffect(() => {
@@ -174,6 +183,7 @@ export function RestaurantCard({ restaurant, onClick, onViewDetail, variant = "v
               sizes="176px"
               unoptimized
               onLoad={() => setImageLoaded(true)}
+              onError={() => { setImageUrl(fallbackUrl); setImageLoaded(true); }}
             />
           )}
           {category && (
@@ -238,6 +248,7 @@ export function RestaurantCard({ restaurant, onClick, onViewDetail, variant = "v
                 sizes="96px"
                 unoptimized
                 onLoad={() => setImageLoaded(true)}
+              onError={() => { setImageUrl(fallbackUrl); setImageLoaded(true); }}
               />
             )}
           </div>
