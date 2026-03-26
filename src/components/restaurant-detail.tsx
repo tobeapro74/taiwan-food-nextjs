@@ -447,6 +447,8 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
               )}
             </div>
 
+            {/* DEBUG: URL 확인 */}
+            <div className="text-xs text-red-500 break-all mb-2">DEBUG: {googleMapsUrl}</div>
             <div className="grid grid-cols-2 gap-2 mt-4">
               <a
                 href={googleMapsUrl}
