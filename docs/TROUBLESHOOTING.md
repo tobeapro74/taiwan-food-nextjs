@@ -2042,3 +2042,107 @@ const foodKeywordMap = {
 
 ### 교훈
 > **정적 데이터와 DB 데이터가 공존하는 앱에서는 검색 기능이 양쪽을 모두 커버해야 한다.** 또한 음식 종류별 키워드 사전을 추가하면 사용자가 직관적으로 검색할 수 있다 (예: "빙수" → 디저트 전체).
+
+---
+
+## 21. "구글 지도에서 보기" 클릭 시 맛집 이름 대신 좌표가 표시되는 문제
+
+### 문제 상황
+맛집 상세페이지에서 "구글 지도에서 보기" 버튼을 누르면, 구글맵에 맛집 이름이 아닌 좌표(25°02'02.0"N 121°33'52.2"E)가 표시됨. 사용자 등록 맛집(Kura Sushi 등)은 엉뚱한 장소가 열리는 경우도 있었음.
+
+### 원인 분석
+
+#### 원인 1: 좌표가 URL에 포함되면 모바일 구글맵 앱이 좌표만 표시
+```typescript
+// ❌ 좌표를 query나 URL 경로에 넣으면 모바일 앱이 장소 이름 대신 좌표를 표시
+`https://www.google.com/maps/search/?api=1&query=${name}&center=${lat},${lng}`
+`https://www.google.com/maps/place/${name}/@${lat},${lng},17z`
+```
+
+#### 원인 2: 한국어 맛집 이름으로 대만 구글맵에서 검색 불가
+- "딩타이펑"(한국어)으로 검색하면 대만 구글맵이 인식 못함
+- "Din Tai Fung"(영어)으로 검색해야 정확한 장소 매칭
+
+#### 원인 3: 사용자 등록 맛집의 address로 검색 시 엉뚱한 장소 표시
+- `restaurant.address`가 짧은 지역명인 경우 다른 장소가 검색됨
+
+### 해결
+
+#### 정적 데이터 맛집: 영어 이름 + 영어 위치로 검색 (좌표 제거)
+```typescript
+// src/data/taiwan-food.ts - getGoogleMapsLink()
+export function getGoogleMapsLink(name, location, coordinates?, nameEn?, locationEn?) {
+  // 영어 이름이 있으면 영어로 검색 (구글맵이 대만에서 영어를 더 잘 인식)
+  const searchName = nameEn || name || "";
+  const searchLocation = locationEn || location || "";
+
+  let query = searchName;
+  if (searchLocation && !searchLocation.includes("야시장") && !searchLocation.includes("Night Market")) {
+    query += " " + searchLocation;
+  } else {
+    query += " Taiwan";
+  }
+  // ✅ 좌표 없이 이름만으로 검색 → 구글맵이 장소를 정확히 찾아줌
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query.trim())}`;
+}
+
+// 예: "Din Tai Fung Taipei, Xinyi" → 딩타이펑 신이본점 정확히 표시
+```
+
+#### 사용자 등록 맛집: Google Place ID 기반 URL 사용
+```typescript
+// src/components/restaurant-detail.tsx
+const googleMapsUrl = isCustomRestaurant
+  ? restaurant.google_map_url ||
+    (restaurant.place_id
+      // ✅ query_place_id로 정확한 장소 지정
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.이름)}&query_place_id=${restaurant.place_id}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.이름 + " Taiwan")}`)
+  : getGoogleMapsLink(restaurant.이름, restaurant.위치, restaurant.coordinates, restaurant.name_en, restaurant.location_en);
+```
+
+### 부수적 문제: Vercel 배포가 수일간 실패하고 있었음
+
+`scripts/check-env.js`가 `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `JWT_SECRET`을 요구했으나, Vercel에는 `CLOUDINARY_URL` 하나로만 설정되어 있었고 `JWT_SECRET`도 미설정이었음. 모든 배포가 5초 만에 빌드 실패 → 이전 캐시된 버전이 계속 서빙됨.
+
+```javascript
+// scripts/check-env.js - 수정 전
+const REQUIRED = [
+  "CLOUDINARY_CLOUD_NAME",    // ❌ Vercel에 없음
+  "CLOUDINARY_API_KEY",       // ❌ Vercel에 없음
+  "CLOUDINARY_API_SECRET",    // ❌ Vercel에 없음
+  "NEXT_PUBLIC_GOOGLE_PLACES_API_KEY",
+  "MONGODB_URI",
+  "JWT_SECRET",               // ❌ Vercel에 없음
+];
+
+// scripts/check-env.js - 수정 후
+const REQUIRED = ["NEXT_PUBLIC_GOOGLE_PLACES_API_KEY", "MONGODB_URI"];
+// Cloudinary: CLOUDINARY_URL 또는 개별 변수 중 하나만 있으면 OK
+const hasCloudinary = process.env.CLOUDINARY_URL ||
+  (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+```
+
+### Google Maps URL API 정리
+
+| 용도 | URL 형식 | 비고 |
+|------|---------|------|
+| 이름 검색 | `search/?api=1&query=이름+위치` | 정적 데이터 맛집용 (영어 이름 권장) |
+| Place ID 지정 | `search/?api=1&query=이름&query_place_id=ChIJ...` | 사용자 등록 맛집용 (가장 정확) |
+| 길찾기 | `dir/?api=1&destination=lat,lng&travelmode=transit` | 좌표 사용 OK (목적지로만 사용) |
+
+### 작동하지 않는 URL 형식 (모바일 앱)
+
+| 형식 | 문제 |
+|------|------|
+| `search/?api=1&query=이름&center=lat,lng` | center 무시되고 이름 검색 실패 시 좌표 표시 |
+| `place/이름/@lat,lng,17z` | 모바일 앱에서 좌표만 표시 |
+| `place/?q=place_id:ChIJ...` | "검색결과 없음" 오류 |
+
+### 관련 파일
+- `src/data/taiwan-food.ts` — `getGoogleMapsLink()` 함수
+- `src/components/restaurant-detail.tsx` — `googleMapsUrl` 생성 로직
+- `scripts/check-env.js` — 환경변수 검증 스크립트
+
+### 교훈
+> **모바일 구글맵 앱은 웹 브라우저와 URL 해석이 다르다.** 좌표를 URL에 넣으면 장소 이름 대신 좌표를 표시하므로, 반드시 이름 기반 검색 또는 `query_place_id`를 사용해야 한다. 또한 한국어 맛집 이름은 대만 구글맵에서 인식되지 않으므로 영어 이름(`name_en`)을 사용해야 한다. 빌드 검증 스크립트의 환경변수명은 실제 Vercel 설정과 반드시 일치시켜야 한다.
