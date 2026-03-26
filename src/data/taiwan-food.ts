@@ -538,11 +538,8 @@ export function getGoogleMapsLink(name: string, location: string, coordinates?: 
   if (location && !location.includes("야시장")) {
     query += " " + location;
   }
-  if (coordinates) {
-    // 좌표로 직접 검색 → 해당 위치의 실제 POI(가게)가 표시됨
-    return `https://www.google.com/maps/search/?api=1&query=${coordinates.lat},${coordinates.lng}`;
-  }
   query += " Taipei Taiwan";
+  // 이름으로 검색하되, 좌표가 있으면 query_place_id 대신 query에 이름을 사용
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query.trim())}`;
 }
 

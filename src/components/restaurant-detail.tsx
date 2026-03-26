@@ -281,11 +281,6 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
         </div>
       )}
 
-      {/* DEBUG: 이미지 URL 표시 */}
-      <div className="bg-red-500 text-white text-xs p-2 break-all z-50 relative">
-        DEBUG imageUrl: {imageUrl}
-      </div>
-
       {/* 히어로 이미지 */}
       <div ref={heroRef} className="h-72 relative overflow-hidden bg-muted">
         {isLoading && (
