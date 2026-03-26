@@ -240,7 +240,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
   const googleMapsUrl = isCustomRestaurant
     ? restaurant.google_map_url ||
       `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address || restaurant.이름)}`
-    : getGoogleMapsLink(restaurant.이름, restaurant.위치, restaurant.coordinates, restaurant.name_en);
+    : getGoogleMapsLink(restaurant.이름, restaurant.위치, restaurant.coordinates, restaurant.name_en, restaurant.location_en);
 
   // 히어로 이미지 스크롤 감지 (미니 헤더 표시)
   const heroRef = useRef<HTMLDivElement>(null);
