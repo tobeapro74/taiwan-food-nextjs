@@ -281,6 +281,11 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
         </div>
       )}
 
+      {/* DEBUG: 이미지 URL 표시 */}
+      <div className="bg-red-500 text-white text-xs p-2 break-all z-50 relative">
+        DEBUG imageUrl: {imageUrl}
+      </div>
+
       {/* 히어로 이미지 */}
       <div ref={heroRef} className="h-72 relative overflow-hidden bg-muted">
         {isLoading && (
@@ -292,6 +297,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
           alt={getDisplayName(restaurant, language)}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}
           onError={() => {
+            console.error("Image load error:", imageUrl);
             setImageUrl(fallbackUrl);
             setIsLoading(false);
           }}
