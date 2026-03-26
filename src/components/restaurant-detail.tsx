@@ -11,7 +11,7 @@ import { ReviewSection } from "@/components/review-section";
 import { GoogleReviews } from "@/components/google-reviews";
 import { CategoryEditModal } from "@/components/category-edit-modal";
 import { RestaurantEditModal } from "@/components/restaurant-edit-modal";
-import Image from "next/image";
+// Image import 제거 - Capacitor WebView 호환성을 위해 img 태그 사용
 import { useLanguage } from "@/components/language-provider";
 
 // 사용자 등록 맛집용 확장 인터페이스
@@ -286,13 +286,16 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
         {isLoading && (
           <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted/50 to-muted" />
         )}
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={imageUrl}
           alt={getDisplayName(restaurant, language)}
-          fill
-          className={`object-cover transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}
-          sizes="100vw"
-          unoptimized
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}
+          onError={() => {
+            setImageUrl(fallbackUrl);
+            setIsLoading(false);
+          }}
+          onLoad={() => setIsLoading(false)}
         />
         {/* 그래디언트 오버레이 */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
