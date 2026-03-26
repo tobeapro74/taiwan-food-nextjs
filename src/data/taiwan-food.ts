@@ -533,16 +533,21 @@ export function getUnsplashImage(name: string): string {
 }
 
 // 구글 맵 링크 생성 (좌표가 있으면 좌표 중심으로 검색하여 정확한 위치 표시)
-export function getGoogleMapsLink(name: string, location: string, coordinates?: { lat: number; lng: number }): string {
-  let query = name || "";
+export function getGoogleMapsLink(name: string, location: string, coordinates?: { lat: number; lng: number }, nameEn?: string): string {
+  // 영어 이름이 있으면 영어로 검색 (구글맵이 대만에서 영어 이름을 더 잘 인식)
+  const searchName = nameEn || name || "";
+
+  if (coordinates) {
+    // place URL 형식: 이름으로 장소를 표시하고 좌표로 위치를 지정
+    // 이 형식은 구글맵에서 해당 좌표의 장소 이름을 정확히 보여줌
+    return `https://www.google.com/maps/place/${encodeURIComponent(searchName)}/@${coordinates.lat},${coordinates.lng},17z`;
+  }
+
+  let query = searchName;
   if (location && !location.includes("야시장")) {
     query += " " + location;
   }
   query += " Taiwan";
-  if (coordinates) {
-    // 이름으로 검색 + 좌표 힌트로 정확한 위치 표시
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query.trim())}&center=${coordinates.lat},${coordinates.lng}&zoom=17`;
-  }
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query.trim())}`;
 }
 
