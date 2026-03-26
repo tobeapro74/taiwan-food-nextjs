@@ -236,10 +236,12 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
     fetchRestaurantInfo();
   }, [restaurant.이름, restaurant.가격대, restaurant.전화번호, restaurant.빌딩, cacheKey, infoCache]);
 
-  // 구글 지도 URL 생성: 사용자 등록 맛집은 google_map_url 또는 address 사용
+  // 구글 지도 URL 생성
   const googleMapsUrl = isCustomRestaurant
     ? restaurant.google_map_url ||
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.address || restaurant.이름)}`
+      (restaurant.place_id
+        ? `https://www.google.com/maps/place/?q=place_id:${restaurant.place_id}`
+        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.이름 + " Taiwan")}`)
     : getGoogleMapsLink(restaurant.이름, restaurant.위치, restaurant.coordinates, restaurant.name_en, restaurant.location_en);
 
   // 히어로 이미지 스크롤 감지 (미니 헤더 표시)
