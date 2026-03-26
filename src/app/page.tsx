@@ -110,6 +110,8 @@ export default function Home() {
 
   // 삭제된 정적 데이터 ID 목록 (홈화면 필터링용)
   const [deletedStaticIds, setDeletedStaticIds] = useState<string[]>([]);
+  // DB 등록 맛집 목록 (지역별 랭킹 등에 사용)
+  const [dbRestaurants, setDbRestaurants] = useState<Restaurant[]>([]);
 
   // DB 캐시된 이미지 URL (일괄 조회)
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
@@ -212,7 +214,7 @@ export default function Home() {
     }
   };
 
-  // 삭제된 정적 데이터 ID 로드
+  // 삭제된 정적 데이터 ID 및 DB 맛집 로드
   useEffect(() => {
     const loadDeletedStaticIds = async () => {
       try {
@@ -220,6 +222,24 @@ export default function Home() {
         const data = await res.json();
         if (data.deletedStaticIds) {
           setDeletedStaticIds(data.deletedStaticIds);
+        }
+        // DB 맛집을 지역별 랭킹 등에 활용
+        if (data.data && Array.isArray(data.data)) {
+          const dbItems: Restaurant[] = data.data.map((item: {
+            place_id: string; name: string; address: string; category: string;
+            feature?: string; google_rating?: number; google_reviews_count?: number;
+            coordinates?: { lat: number; lng: number };
+          }) => ({
+            이름: item.name,
+            위치: item.address || "",
+            특징: item.feature || "",
+            평점: item.google_rating,
+            리뷰수: item.google_reviews_count,
+            coordinates: item.coordinates,
+            place_id: item.place_id,
+            category: item.category,
+          }));
+          setDbRestaurants(dbItems);
         }
       } catch (error) {
         console.error("Failed to load deleted static IDs:", error);
@@ -328,24 +348,23 @@ export default function Home() {
       .slice(0, 5);
   }, [baseMarketRestaurants, liveRatings, deletedStaticIds]);
 
-  // 지역별 맛집 랭킹 계산
+  // 지역별 맛집 랭킹 계산 (정적 데이터 + DB 등록 맛집)
   const districtRanking = useMemo(() => {
     const allRestaurants = getAllRestaurants();
     const districtData: Record<string, { restaurants: Restaurant[]; totalRating: number; count: number }> = {};
 
-    // 지역별로 그룹화
-    for (const restaurant of allRestaurants) {
+    const addToDistrict = (restaurant: Restaurant, isStatic: boolean) => {
       const district = getRestaurantDistrict(restaurant.위치);
-      if (!isValidDistrict(district)) continue;
+      if (!isValidDistrict(district)) return;
 
       // 삭제된 정적 데이터 필터링
-      if (deletedStaticIds.length > 0) {
+      if (isStatic && deletedStaticIds.length > 0) {
         const staticPlaceId = generateStaticPlaceId(restaurant.이름, restaurant.category || "");
-        if (deletedStaticIds.includes(staticPlaceId)) continue;
+        if (deletedStaticIds.includes(staticPlaceId)) return;
       }
 
       const rating = liveRatings[restaurant.이름]?.rating ?? restaurant.평점 ?? 0;
-      if (rating === 0) continue;
+      if (rating === 0) return;
 
       if (!districtData[district]) {
         districtData[district] = { restaurants: [], totalRating: 0, count: 0 };
@@ -358,6 +377,19 @@ export default function Home() {
       });
       districtData[district].totalRating += rating;
       districtData[district].count += 1;
+    };
+
+    // 정적 데이터 맛집
+    for (const restaurant of allRestaurants) {
+      addToDistrict(restaurant, true);
+    }
+
+    // DB 등록 맛집 (중복 제외)
+    const staticNames = new Set(allRestaurants.map(r => r.이름));
+    for (const restaurant of dbRestaurants) {
+      if (!staticNames.has(restaurant.이름)) {
+        addToDistrict(restaurant, false);
+      }
     }
 
     // 평균 평점 계산 및 정렬
@@ -368,11 +400,11 @@ export default function Home() {
         count: data.count,
         restaurants: data.restaurants.sort((a, b) => (b.평점 || 0) - (a.평점 || 0)),
       }))
-      .filter(item => item.count >= 2) // 최소 2개 이상의 맛집이 있는 지역만
+      .filter(item => item.count >= 1) // 최소 1개 이상의 맛집이 있는 지역만
       .sort((a, b) => b.avgRating - a.avgRating);
 
     return ranking;
-  }, [liveRatings, deletedStaticIds]);
+  }, [liveRatings, deletedStaticIds, dbRestaurants]);
 
   // 시간대별 맛집 추천 (대만 시간 UTC+8 기준)
   const timeRecommendation = useMemo(() => {
