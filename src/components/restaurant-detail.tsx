@@ -240,7 +240,7 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
   const googleMapsUrl = isCustomRestaurant
     ? restaurant.google_map_url ||
       (restaurant.place_id
-        ? `https://www.google.com/maps/place/?q=place_id:${restaurant.place_id}`
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.이름)}&query_place_id=${restaurant.place_id}`
         : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.이름 + " Taiwan")}`)
     : getGoogleMapsLink(restaurant.이름, restaurant.위치, restaurant.coordinates, restaurant.name_en, restaurant.location_en);
 
