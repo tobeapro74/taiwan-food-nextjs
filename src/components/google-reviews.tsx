@@ -17,6 +17,7 @@ interface GoogleReview {
 
 interface GoogleReviewsProps {
   restaurantName: string;
+  onReviewsReady?: () => void;
 }
 
 // 리뷰 캐시
@@ -30,7 +31,7 @@ const getReviewCache = (): Record<string, { reviews: GoogleReview[]; rating: num
   return {};
 };
 
-export function GoogleReviews({ restaurantName }: GoogleReviewsProps) {
+export function GoogleReviews({ restaurantName, onReviewsReady }: GoogleReviewsProps) {
   const { t } = useLanguage();
   const cache = getReviewCache();
   const [reviews, setReviews] = useState<GoogleReview[]>(cache[restaurantName]?.reviews || []);
@@ -45,6 +46,7 @@ export function GoogleReviews({ restaurantName }: GoogleReviewsProps) {
       setRating(cache[restaurantName].rating);
       setUserRatingsTotal(cache[restaurantName].userRatingsTotal);
       setIsLoading(false);
+      onReviewsReady?.();
       return;
     }
 
@@ -66,11 +68,12 @@ export function GoogleReviews({ restaurantName }: GoogleReviewsProps) {
         console.error("Error fetching Google reviews:", error);
       } finally {
         setIsLoading(false);
+        onReviewsReady?.();
       }
     };
 
     fetchReviews();
-  }, [restaurantName, cache]);
+  }, [restaurantName, cache]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleExpand = (index: number) => {
     setExpandedReviews(prev => {

@@ -9,6 +9,7 @@ import { ArrowLeft, MapPin, Info, Map, Navigation, Phone, Banknote, Building2, T
 import { Restaurant, getGoogleMapsLink, getUnsplashImage, categories, getDisplayName, getDisplayLocation, getDisplayFeature, getDisplayBuilding, getDisplayNightMarket } from "@/data/taiwan-food";
 import { ReviewSection } from "@/components/review-section";
 import { GoogleReviews } from "@/components/google-reviews";
+import { AiMenuSummary } from "@/components/ai-menu-summary";
 import { CategoryEditModal } from "@/components/category-edit-modal";
 import { RestaurantEditModal } from "@/components/restaurant-edit-modal";
 // Image import 제거 - Capacitor WebView 호환성을 위해 img 태그 사용
@@ -80,6 +81,9 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
   const [currentFeatureEn, setCurrentFeatureEn] = useState(restaurant.feature_en || "");
   const [currentPhoneNumber, setCurrentPhoneNumber] = useState(restaurant.phone_number || "");
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // AI 리뷰 분석용 - Google 리뷰 캐시 완료 신호
+  const [reviewsReady, setReviewsReady] = useState(false);
 
   // 사용자 등록 맛집인지 확인 (place_id가 있고 static_ prefix가 아닌 경우)
   const isCustomRestaurant = !!restaurant.place_id && !restaurant.place_id.startsWith("static_");
@@ -472,8 +476,11 @@ export function RestaurantDetail({ restaurant, onBack, user, onCategoryChange, o
           </CardContent>
         </Card>
 
+        {/* AI 리뷰 분석 섹션 */}
+        <AiMenuSummary restaurantName={restaurant.이름} reviewsReady={reviewsReady} />
+
         {/* Google 리뷰 섹션 */}
-        <GoogleReviews restaurantName={restaurant.이름} />
+        <GoogleReviews restaurantName={restaurant.이름} onReviewsReady={() => setReviewsReady(true)} />
 
         {/* 사용자 리뷰 섹션 */}
         <ReviewSection

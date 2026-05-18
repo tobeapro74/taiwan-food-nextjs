@@ -269,6 +269,13 @@
     "delete_confirm": "Delete this review?",
     "photo_alt": "Review photo {{index}}"
   },
+  "ai_summary": {
+    "title": "AI Review Analysis",
+    "analyzing": "AI analyzing...",
+    "based_on_reviews": "Based on {{count}} reviews",
+    "top_menus": "Top Menus",
+    "top_reviews": "Top Reviews"
+  },
   "ai": {
     "title": "AI Restaurant Picks",
     "searching": "AI Searching Restaurants",
