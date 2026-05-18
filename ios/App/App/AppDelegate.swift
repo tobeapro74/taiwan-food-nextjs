@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WebKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,7 +8,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // WKWebView 디스크 캐시 초기화 (서버 URL 모드에서 구버전 JS 캐시 방지)
+        let dataStore = WKWebsiteDataStore.default()
+        let cacheTypes: Set<String> = [
+            WKWebsiteDataTypeDiskCache,
+            WKWebsiteDataTypeMemoryCache,
+            WKWebsiteDataTypeOfflineWebApplicationCache
+        ]
+        dataStore.removeData(ofTypes: cacheTypes, modifiedSince: Date.distantPast) {}
         return true
     }
 
