@@ -27,7 +27,8 @@ export function AiMenuSummary({ restaurantName, reviewsReady = true }: AiMenuSum
     const fetchSummary = async () => {
       try {
         const res = await fetch(
-          `/api/ai-menu-summary/${encodeURIComponent(restaurantName)}`
+          `/api/ai-menu-summary/${encodeURIComponent(restaurantName)}`,
+          { cache: "no-store" }
         );
         if (!res.ok) {
           setError(true);

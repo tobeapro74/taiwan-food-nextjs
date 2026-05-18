@@ -8,14 +8,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // WKWebView 디스크 캐시 초기화 (서버 URL 모드에서 구버전 JS 캐시 방지)
+        // 앱 시작 시 URL 캐시 삭제 (최신 데이터 로드를 위해)
+        URLCache.shared.removeAllCachedResponses()
+
+        // WKWebView 쿠키 및 캐시도 삭제
         let dataStore = WKWebsiteDataStore.default()
-        let cacheTypes: Set<String> = [
-            WKWebsiteDataTypeDiskCache,
-            WKWebsiteDataTypeMemoryCache,
-            WKWebsiteDataTypeOfflineWebApplicationCache
-        ]
-        dataStore.removeData(ofTypes: cacheTypes, modifiedSince: Date.distantPast) {}
+        let dataTypes = Set([WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache])
+        dataStore.removeData(ofTypes: dataTypes, modifiedSince: Date.distantPast) { }
+
         return true
     }
 
