@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import useSWR from "swr";
 import { User, LogOut, Search, X, MapPin, ChevronDown, Key, UserMinus, History, ArrowLeft, Moon, Sun, LayoutDashboard } from "lucide-react";
 import { useSwipeBack } from "@/hooks/useSwipeBack";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -114,7 +115,11 @@ export default function Home() {
   const [dbRestaurants, setDbRestaurants] = useState<Restaurant[]>([]);
 
   // DB 캐시된 이미지 URL (일괄 조회)
-  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const { data: homeData } = useSWR("/api/home-data", (url: string) => fetch(url).then(r => r.json()), {
+    revalidateOnFocus: false,
+    dedupingInterval: 5 * 60 * 1000,
+  });
+  const imageUrls: Record<string, string> = homeData?.data?.imageUrls || {};
 
   // 온보딩 상태
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -297,21 +302,6 @@ export default function Home() {
     fetchLiveRatings();
   }, [basePopularRestaurants, baseMarketRestaurants]);
 
-  // DB 캐시된 이미지 URL 일괄 조회 (개별 place-photo 호출 제거)
-  useEffect(() => {
-    const fetchImageUrls = async () => {
-      try {
-        const res = await fetch("/api/home-data");
-        const data = await res.json();
-        if (data.data?.imageUrls) {
-          setImageUrls(data.data.imageUrls);
-        }
-      } catch (error) {
-        console.error("Failed to fetch image URLs:", error);
-      }
-    };
-    fetchImageUrls();
-  }, []);
 
   // 실시간 평점 적용된 인기 맛집 (평점 높은 순 정렬, 삭제된 정적 데이터 제외)
   const popularRestaurants = useMemo(() => {

@@ -1,6 +1,10 @@
 {
+  "regions": ["icn1"],
   "functions": {
     "src/app/api/schedule-generate/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/cache/warm-photos/route.ts": {
       "maxDuration": 60
     }
   },

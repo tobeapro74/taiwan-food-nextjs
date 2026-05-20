@@ -46,6 +46,10 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-tabs',
       '@radix-ui/react-avatar',
       '@radix-ui/react-scroll-area',
+      '@radix-ui/react-separator',
+      '@radix-ui/react-slot',
+      'recharts',
+      'sonner',
     ],
   },
 

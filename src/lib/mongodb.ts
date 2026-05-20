@@ -18,7 +18,12 @@ export async function connectToDatabase(): Promise<Db> {
   try {
     client = new MongoClient(MONGODB_URI as string, {
       maxPoolSize: 10,
+      minPoolSize: 2,
       serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      maxIdleTimeMS: 60000,
+      retryWrites: true,
+      retryReads: true,
     });
 
     await client.connect();
