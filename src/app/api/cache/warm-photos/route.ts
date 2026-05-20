@@ -34,11 +34,8 @@ export async function GET(request: NextRequest) {
   const db = await connectToDatabase();
   const cacheCol = db.collection("place_photos_cache");
 
-  // 이미 캐시된 맛집 목록
-  const cached = await cacheCol.find(
-    { "photos.0": { $regex: "cloudinary.com" } },
-    { projection: { placeName: 1 } }
-  ).toArray();
+  // 이미 캐시된 맛집 목록 (빈 배열 포함 - no_place/no_photos도 처리됨으로 간주)
+  const cached = await cacheCol.find({}, { projection: { placeName: 1 } }).toArray();
   const cachedNames = new Set(cached.map(d => d.placeName));
 
   const allRestaurants = getAllRestaurants();
@@ -57,6 +54,12 @@ export async function GET(request: NextRequest) {
       );
       const searchData = await searchRes.json();
       if (searchData.status !== "OK" || !searchData.results?.length) {
+        // no_place도 캐시에 저장해서 다음 호출 시 건너뜀
+        await cacheCol.updateOne(
+          { placeName },
+          { $set: { placeName, photos: [], cachedAt: new Date() } },
+          { upsert: true }
+        );
         results.push({ name: placeName, status: "no_place" });
         continue;
       }
@@ -69,6 +72,11 @@ export async function GET(request: NextRequest) {
       );
       const detailsData = await detailsRes.json();
       if (detailsData.status !== "OK" || !detailsData.result?.photos) {
+        await cacheCol.updateOne(
+          { placeName },
+          { $set: { placeName, photos: [], cachedAt: new Date() } },
+          { upsert: true }
+        );
         results.push({ name: placeName, status: "no_photos" });
         continue;
       }
