@@ -125,22 +125,22 @@ async function fetchPlacePhotos(placeName: string): Promise<string[]> {
       return [];
     }
 
-    // 최대 3장만 Cloudinary에 업로드해서 영구 URL 저장 (타임아웃 방지)
+    // 최대 3장 Cloudinary 업로드 - 순차 처리로 안정성 확보
     const safeId = placeName.replace(/[^a-zA-Z0-9가-힣]/g, "_").substring(0, 40);
     const photoRefs = detailsData.result.photos.slice(0, 3);
-    const photoResults = await Promise.allSettled(
-      photoRefs.map(async (photo: { photo_reference: string }, idx: number) => {
-        const photoApiUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photo.photo_reference}&key=${apiKey}`;
+    const photoUrls: string[] = [];
+    for (let idx = 0; idx < photoRefs.length; idx++) {
+      try {
+        const photoApiUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoRefs[idx].photo_reference}&key=${apiKey}`;
         const result = await cloudinary.uploader.upload(photoApiUrl, {
           public_id: `taiwan-schedule/${safeId}_${idx}`,
           overwrite: true,
         });
-        return result.secure_url;
-      })
-    );
-    const photoUrls = photoResults
-      .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
-      .map(r => r.value);
+        photoUrls.push(result.secure_url);
+      } catch (e) {
+        console.error(`Photo upload failed for ${placeName} [${idx}]:`, e);
+      }
+    }
 
     // 3. 캐시에 저장 (upsert)
     await cacheCollection.updateOne(
