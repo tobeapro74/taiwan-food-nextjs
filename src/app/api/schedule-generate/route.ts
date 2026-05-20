@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllRestaurants, getPlaces } from "@/data/taiwan-food";
 import { connectToDatabase } from "@/lib/mongodb";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 import {
   ScheduleGenerateRequest,
   DaySchedule,
@@ -125,28 +118,13 @@ async function fetchPlacePhotos(placeName: string): Promise<string[]> {
       return [];
     }
 
-    // 최대 10장의 사진을 Cloudinary에 업로드해서 영구 URL 획득 (병렬 처리)
-    const safeId = placeName.replace(/[^a-zA-Z0-9가-힣]/g, "_").substring(0, 40);
-    const photoResults = await Promise.allSettled(
-      detailsData.result.photos.slice(0, 10).map(async (photo: { photo_reference: string }, idx: number) => {
-        const photoApiUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photo.photo_reference}&key=${apiKey}`;
-        try {
-          const result = await cloudinary.uploader.upload(photoApiUrl, {
-            public_id: `taiwan-schedule/${safeId}_${idx}`,
-            overwrite: false,
-          });
-          return result.secure_url;
-        } catch {
-          // Cloudinary 실패 시 redirect URL fallback
-          const photoRes = await fetch(photoApiUrl, { redirect: "follow" });
-          if (photoRes.ok) return photoRes.url;
-          throw new Error("Photo fetch failed");
-        }
-      })
-    );
-    const photoUrls = photoResults
-      .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
-      .map(r => r.value);
+    // 최대 10장의 photo_reference를 API URL로 변환 (Cloudinary 업로드 없이 빠르게)
+    // 실제 사진은 모달 열 때 place-photo API를 통해 lazy 로드
+    const photoUrls = detailsData.result.photos
+      .slice(0, 10)
+      .map((photo: { photo_reference: string }) =>
+        `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photo.photo_reference}&key=${apiKey}`
+      );
 
     // 3. 캐시에 저장 (upsert)
     await cacheCollection.updateOne(

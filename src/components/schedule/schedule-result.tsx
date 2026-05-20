@@ -72,29 +72,10 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [selectedPlaceName, setSelectedPlaceName] = useState("");
 
-  const handlePhotoClick = async (photos: string[], name: string) => {
+  const handlePhotoClick = (photos: string[], name: string) => {
+    setSelectedPhotos(photos);
     setSelectedPlaceName(name);
     setPhotoModalOpen(true);
-
-    // 첫 사진 URL이 유효한지 확인 (만료된 Google redirect URL 감지)
-    const isExpired = photos.length > 0 && photos[0].includes("maps.googleapis.com/maps/api/place/photo");
-    if (!isExpired) {
-      setSelectedPhotos(photos);
-      return;
-    }
-
-    // 만료된 URL이면 place-photo API로 새 사진 1장만 가져와서 표시
-    try {
-      const res = await fetch(`/api/place-photo?query=${encodeURIComponent(name)}&name=${encodeURIComponent(name)}`);
-      const data = await res.json();
-      if (data.photoUrl) {
-        setSelectedPhotos([data.photoUrl]);
-      } else {
-        setSelectedPhotos(photos);
-      }
-    } catch {
-      setSelectedPhotos(photos);
-    }
   };
 
   const toggleDay = (day: number) => {
@@ -493,6 +474,24 @@ function PhotoPreviewModal({
 }) {
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [resolvedPhotos, setResolvedPhotos] = useState<string[]>(photos);
+
+  // photo_reference URL이면 place-photo API로 실제 이미지 URL 획득
+  useEffect(() => {
+    if (!isOpen) return;
+    const isPhotoRef = photos.some(p => p.includes("photo_reference="));
+    if (!isPhotoRef) {
+      setResolvedPhotos(photos);
+      return;
+    }
+    // place-photo API로 대표 사진 1장 가져오기
+    fetch(`/api/place-photo?query=${encodeURIComponent(placeName)}&name=${encodeURIComponent(placeName)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.photoUrl) setResolvedPhotos([data.photoUrl]);
+      })
+      .catch(() => {});
+  }, [isOpen, photos, placeName]);
 
   // 모달이 열릴 때 body 스크롤 막기
   useEffect(() => {
@@ -515,7 +514,7 @@ function PhotoPreviewModal({
       if (e.key === "ArrowLeft") {
         setSelectedIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : prev));
       } else if (e.key === "ArrowRight") {
-        setSelectedIndex((prev) => (prev !== null && prev < photos.length - 1 ? prev + 1 : prev));
+        setSelectedIndex((prev) => (prev !== null && prev < resolvedPhotos.length - 1 ? prev + 1 : prev));
       } else if (e.key === "Escape") {
         setSelectedIndex(null);
       }
@@ -523,7 +522,7 @@ function PhotoPreviewModal({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedIndex, photos.length]);
+  }, [selectedIndex, resolvedPhotos.length]);
 
   if (!isOpen) return null;
 
@@ -540,7 +539,7 @@ function PhotoPreviewModal({
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (selectedIndex !== null && selectedIndex < photos.length - 1) {
+    if (selectedIndex !== null && selectedIndex < resolvedPhotos.length - 1) {
       setSelectedIndex(selectedIndex + 1);
     }
   };
@@ -564,7 +563,7 @@ function PhotoPreviewModal({
         <div className="px-5 pb-3 flex items-center justify-between border-b">
           <div>
             <h2 className="text-lg font-semibold">{placeName}</h2>
-            <p className="text-xs text-muted-foreground">{t("schedule.photos", { count: photos.length })}</p>
+            <p className="text-xs text-muted-foreground">{t("schedule.photos", { count: resolvedPhotos.length })}</p>
           </div>
           <button
             onClick={onClose}
@@ -577,7 +576,7 @@ function PhotoPreviewModal({
         {/* 사진 그리드 - 스크롤 가능 */}
         <div className="p-4 overflow-y-auto flex-1">
           <div className="grid grid-cols-2 gap-2">
-            {photos.map((photo, idx) => (
+            {resolvedPhotos.map((photo, idx) => (
               <div
                 key={idx}
                 className="aspect-square rounded-xl overflow-hidden bg-muted relative cursor-pointer active:scale-[0.98] transition-transform"
@@ -620,7 +619,7 @@ function PhotoPreviewModal({
 
           {/* 사진 카운터 - safe area 고려 */}
           <div className="absolute top-[max(1rem,env(safe-area-inset-top))] left-4 mt-8 z-10 text-white/80 text-sm flex items-center h-12">
-            {selectedIndex + 1} / {photos.length}
+            {selectedIndex + 1} / {resolvedPhotos.length}
           </div>
 
           {/* 이전 버튼 */}
@@ -634,7 +633,7 @@ function PhotoPreviewModal({
           )}
 
           {/* 다음 버튼 */}
-          {selectedIndex < photos.length - 1 && (
+          {selectedIndex < resolvedPhotos.length - 1 && (
             <button
               onClick={handleNext}
               className="absolute right-2 z-10 w-12 h-12 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
@@ -649,7 +648,7 @@ function PhotoPreviewModal({
             onClick={(e) => e.stopPropagation()}
           >
             <Image
-              src={photos[selectedIndex]}
+              src={resolvedPhotos[selectedIndex]}
               alt={t("schedule.photo_alt", { name: placeName, index: selectedIndex + 1 })}
               fill
               className="object-contain"
