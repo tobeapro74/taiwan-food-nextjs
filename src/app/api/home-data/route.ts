@@ -125,21 +125,33 @@ export async function GET() {
         return results as unknown as CustomRestaurant[];
       })(),
 
-      // 3. 이미지 URL 조회 (image_cache 컬렉션에서 일괄 조회)
+      // 3. 이미지 URL 조회 - place_photos_cache[0] 우선, 없으면 image_cache fallback
       (async () => {
         try {
-          const collection = db.collection("image_cache");
-          const results = await collection
+          const urlMap: Record<string, string> = {};
+
+          // place_photos_cache에서 Cloudinary URL 일괄 조회 (10장 중 첫 번째)
+          const photosCacheDocs = await db.collection("place_photos_cache")
+            .find({ "photos.0": { $regex: "cloudinary.com" } })
+            .project({ placeName: 1, "photos": { $slice: 1 } })
+            .toArray();
+          for (const item of photosCacheDocs) {
+            if (item.placeName && item.photos?.[0]) {
+              urlMap[item.placeName] = item.photos[0];
+            }
+          }
+
+          // place_photos_cache에 없는 맛집은 image_cache에서 fallback
+          const imageCacheDocs = await db.collection("image_cache")
             .find({ photoUrl: { $ne: "" }, isClosed: { $ne: true } })
             .project({ restaurantName: 1, photoUrl: 1 })
             .toArray();
-
-          const urlMap: Record<string, string> = {};
-          for (const item of results) {
-            if (item.restaurantName && item.photoUrl) {
+          for (const item of imageCacheDocs) {
+            if (item.restaurantName && item.photoUrl && !urlMap[item.restaurantName]) {
               urlMap[item.restaurantName] = item.photoUrl;
             }
           }
+
           return urlMap;
         } catch {
           return {} as Record<string, string>;
