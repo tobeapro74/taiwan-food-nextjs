@@ -481,9 +481,10 @@ function PhotoPreviewModal({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      setImageErrors(new Set()); // 모달 열릴 때 에러 상태 초기화
     } else {
       document.body.style.overflow = "";
-      setSelectedIndex(null); // 모달 닫힐 때 선택 초기화
+      setSelectedIndex(null);
     }
     return () => {
       document.body.style.overflow = "";
