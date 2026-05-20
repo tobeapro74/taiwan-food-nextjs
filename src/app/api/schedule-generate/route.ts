@@ -125,9 +125,9 @@ async function fetchPlacePhotos(placeName: string): Promise<string[]> {
       return [];
     }
 
-    // 최대 3장 Cloudinary 업로드 - 순차 처리로 안정성 확보
+    // 최대 10장 Cloudinary 업로드 - 순차 처리
     const safeId = placeName.replace(/[^a-zA-Z0-9가-힣]/g, "_").substring(0, 40);
-    const photoRefs = detailsData.result.photos.slice(0, 3);
+    const photoRefs = detailsData.result.photos.slice(0, 10);
     const photoUrls: string[] = [];
     for (let idx = 0; idx < photoRefs.length; idx++) {
       try {
@@ -607,18 +607,12 @@ ${activeGroups.some((g: AgeGenderCount) => g.ageGroup === "60s_plus") ? "7. 60�
       }
     }
 
-    // 각 장소의 사진 가져오기 (병렬 처리)
-    const photoPromises: Promise<void>[] = [];
+    // 각 장소의 사진 가져오기 - 순차 처리 (병렬 시 Cloudinary 업로드 타임아웃 방지)
     for (const day of schedule) {
       for (const activity of day.activities) {
-        photoPromises.push(
-          fetchPlacePhotos(activity.name).then((photos) => {
-            activity.photos = photos;
-          })
-        );
+        activity.photos = await fetchPlacePhotos(activity.name);
       }
     }
-    await Promise.all(photoPromises);
 
     return NextResponse.json({
       success: true,

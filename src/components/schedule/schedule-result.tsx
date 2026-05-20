@@ -393,6 +393,8 @@ function DayCard({
 function ActivityItem({ activity, onPhotoClick, t }: { activity: ScheduleActivity; onPhotoClick?: (photos: string[], name: string) => void; t: (key: string, params?: Record<string, string | number>) => string }) {
   const icon = TIME_SLOT_ICON[activity.timeSlot] || "📍";
   const hasPhotos = activity.photos && activity.photos.length > 0;
+  // photos가 없어도 장소 이름으로 클릭 가능 (모달에서 place-photo API로 조회)
+  const isClickable = !!onPhotoClick;
 
   const bgColor = {
     restaurant: "bg-muted/50 border-border/40",
@@ -402,14 +404,14 @@ function ActivityItem({ activity, onPhotoClick, t }: { activity: ScheduleActivit
   }[activity.type] || "bg-muted";
 
   const handleClick = () => {
-    if (hasPhotos && onPhotoClick) {
-      onPhotoClick(activity.photos!, activity.name);
+    if (onPhotoClick) {
+      onPhotoClick(activity.photos || [], activity.name);
     }
   };
 
   return (
     <div
-      className={`p-4 rounded-xl border ${bgColor} ${hasPhotos ? "cursor-pointer active:scale-[0.98] transition-transform" : ""}`}
+      className={`p-4 rounded-xl border ${bgColor} ${isClickable ? "cursor-pointer active:scale-[0.98] transition-transform" : ""}`}
       onClick={handleClick}
     >
       <div className="flex items-start gap-3">
@@ -474,21 +476,38 @@ function PhotoPreviewModal({
 }) {
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const resolvedPhotos = photos;
-  const photosLoading = false;
+  const [resolvedPhotos, setResolvedPhotos] = useState<string[]>(photos);
+  const [photosLoading, setPhotosLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setImageErrors(new Set());
+    setSelectedIndex(null);
+
+    // Cloudinary URL이면 바로 사용
+    if (photos.length > 0 && photos[0].includes("cloudinary.com")) {
+      setResolvedPhotos(photos);
+      return;
+    }
+
+    // photos가 없거나 만료 URL이면 place-photo API로 1장 조회
+    setPhotosLoading(true);
+    setResolvedPhotos([]);
+    fetch(`/api/place-photo?query=${encodeURIComponent(placeName)}&name=${encodeURIComponent(placeName)}`)
+      .then(r => r.json())
+      .then(data => { if (data.photoUrl) setResolvedPhotos([data.photoUrl]); })
+      .catch(() => {})
+      .finally(() => setPhotosLoading(false));
+  }, [isOpen, photos, placeName]);
 
   // 모달이 열릴 때 body 스크롤 막기
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
-      setImageErrors(new Set()); // 모달 열릴 때 에러 상태 초기화
     } else {
       document.body.style.overflow = "";
-      setSelectedIndex(null);
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
   // 키보드 네비게이션
