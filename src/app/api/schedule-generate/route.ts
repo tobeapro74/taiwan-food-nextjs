@@ -118,13 +118,19 @@ async function fetchPlacePhotos(placeName: string): Promise<string[]> {
       return [];
     }
 
-    // 최대 10장의 photo_reference를 API URL로 변환 (Cloudinary 업로드 없이 빠르게)
-    // 실제 사진은 모달 열 때 place-photo API를 통해 lazy 로드
-    const photoUrls = detailsData.result.photos
-      .slice(0, 10)
-      .map((photo: { photo_reference: string }) =>
-        `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photo.photo_reference}&key=${apiKey}`
-      );
+    // 최대 10장의 사진 URL 획득 - Google redirect를 서버에서 따라가 실제 URL 저장
+    const photoRefs = detailsData.result.photos.slice(0, 10);
+    const photoResults = await Promise.allSettled(
+      photoRefs.map(async (photo: { photo_reference: string }) => {
+        const photoApiUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photo.photo_reference}&key=${apiKey}`;
+        const res = await fetch(photoApiUrl, { redirect: "follow" });
+        if (!res.ok) throw new Error("failed");
+        return res.url;
+      })
+    );
+    const photoUrls = photoResults
+      .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
+      .map(r => r.value);
 
     // 3. 캐시에 저장 (upsert)
     await cacheCollection.updateOne(

@@ -474,30 +474,8 @@ function PhotoPreviewModal({
 }) {
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [resolvedPhotos, setResolvedPhotos] = useState<string[]>([]);
-  const [photosLoading, setPhotosLoading] = useState(true);
-
-  // 모달 열릴 때 photo_reference URL이면 place-photo API로 실제 URL 획득
-  useEffect(() => {
-    if (!isOpen) return;
-    setResolvedPhotos([]);
-    setPhotosLoading(true);
-
-    const isPhotoRef = photos.some(p => p.includes("photo_reference="));
-    if (!isPhotoRef) {
-      setResolvedPhotos(photos);
-      setPhotosLoading(false);
-      return;
-    }
-    // place-photo API로 Cloudinary 영구 URL 가져오기
-    fetch(`/api/place-photo?query=${encodeURIComponent(placeName)}&name=${encodeURIComponent(placeName)}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.photoUrl) setResolvedPhotos([data.photoUrl]);
-      })
-      .catch(() => {})
-      .finally(() => setPhotosLoading(false));
-  }, [isOpen, photos, placeName]);
+  const resolvedPhotos = photos;
+  const photosLoading = false;
 
   // 모달이 열릴 때 body 스크롤 막기
   useEffect(() => {
