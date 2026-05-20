@@ -1,7 +1,7 @@
 import { MongoClient, Db, ObjectId } from 'mongodb';
 
 const MONGODB_URI = process.env.MONGODB_URI;
-const DB_NAME = process.env.MONGODB_DB_NAME || 'taiwan_food';
+const DB_NAME = (process.env.MONGODB_DB_NAME || 'taiwan_food').trim();
 
 if (!MONGODB_URI) {
   throw new Error('MONGODB_URI 환경 변수가 설정되지 않았습니다.');
