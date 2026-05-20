@@ -85,7 +85,7 @@ interface PlacePhotoCache {
 
 // 장소 사진 가져오기 (캐싱 적용, 최대 10장)
 async function fetchPlacePhotos(placeName: string): Promise<string[]> {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
   if (!apiKey) return [];
 
   try {
