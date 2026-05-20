@@ -1061,8 +1061,10 @@ fields=place_id,name,formatted_address,geometry,rating,user_ratings_total,
 
 | 컬렉션명 | 용도 | TTL |
 |---------|------|-----|
-| `image_cache` | 식당 이미지 URL 캐시 | 무제한 |
+| `image_cache` | 식당 이미지 URL 캐시 (대표사진 1장) | 무제한 |
+| `place_photos_cache` | 식당 사진 10장 Cloudinary URL 캐시 | 무제한 |
 | `google_reviews_cache` | 구글 리뷰 캐시 | 24시간 |
+| `ai_menu_summary` | AI 리뷰 분석 결과 캐시 | 7일 |
 | `restaurant_buildings` | 건물 정보 | 무제한 |
 | `ai_preset_cache` | AI 프리셋 추천 결과 캐시 | 무제한 |
 
@@ -1337,6 +1339,90 @@ AI 여행 일정 생성 (OpenAI GPT-4o, 동적 프롬프트)
   }
 }
 ```
+
+---
+
+## AI 리뷰 분석 API (2026.05.20 추가)
+
+### GET /api/ai-menu-summary/[name]
+Google 리뷰를 Claude Haiku로 분석해 대표 메뉴·리뷰 요약 (7일 캐시)
+
+**동작 조건**: `google_reviews_cache` 컬렉션에 해당 식당 리뷰가 먼저 캐시되어 있어야 함
+
+**Response**
+```json
+{
+  "topMenus": ["小籠包", "牛扎餅", "딤섬"],
+  "topReviews": ["소롱포 피가 얇고 육즙이 풍부함", "대기 시간이 길지만 가치 있음"],
+  "reviewCount": 5,
+  "cached": true
+}
+```
+
+**에러 Response**
+```json
+{ "error": "리뷰 없음" }
+```
+→ HTTP 404: google_reviews_cache에 해당 식당 데이터 없음
+
+**캐싱**: MongoDB `ai_menu_summary` 컬렉션, 7일 TTL
+**모델**: claude-haiku-4-5-20251001
+**다국어**: 중국어·일본어·영어 리뷰 → 한국어 번역 요약, 메뉴명은 원어 유지
+**환경변수**: `ANTHROPIC_API_KEY`
+
+---
+
+## 맛집 사진 API (2026.05.20 추가)
+
+### GET /api/place-photos
+place_photos_cache에서 맛집 사진 10장 조회
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| name | O | 맛집명 |
+
+**Response**
+```json
+{
+  "photos": [
+    "https://res.cloudinary.com/...",
+    "https://res.cloudinary.com/..."
+  ],
+  "cached": true
+}
+```
+
+캐시 없으면 `photos: []` 반환 → 클라이언트에서 `/api/place-photo` fallback
+
+---
+
+### GET /api/cache/warm-photos
+전체 정적 맛집 사진 10장 Cloudinary 업로드 및 캐싱 (관리자 전용)
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| key | O | 관리자 키 (admin123) |
+| offset | X | 시작 인덱스 (기본: 0) |
+| limit | X | 처리할 맛집 수 (기본: 5, 타임아웃 방지) |
+
+**Response**
+```json
+{
+  "success": true,
+  "processed": 5,
+  "remaining": 76,
+  "nextOffset": 5,
+  "results": [
+    { "name": "딩타이펑", "status": "ok", "count": 10 },
+    { "name": "후지산 루로우판", "status": "no_place" }
+  ]
+}
+```
+
+`remaining=0`이 될 때까지 반복 호출. 이미 캐시된 맛집은 건너뜀.
+**Google → Cloudinary 업로드** → `place_photos_cache` 저장 (영구 URL)
 
 ---
 

@@ -65,7 +65,9 @@ src/
 │   │   │   └── route.ts              # GET/POST: 등록 히스토리
 │   │   ├── ratings/route.ts          # POST: 실시간 평점 조회
 │   │   ├── upload/route.ts           # POST: 이미지 업로드
-│   │   ├── place-photo/route.ts      # GET: Google Places 이미지 프록시
+│   │   ├── place-photo/route.ts      # GET: Google Places 이미지 프록시 (Cloudinary 캐싱)
+│   │   ├── place-photos/route.ts     # GET: 맛집 사진 10장 조회 (place_photos_cache)
+│   │   ├── ai-menu-summary/[name]/route.ts # GET: AI 리뷰 분석 (Claude Haiku, 7일 캐시)
 │   │   ├── restaurant-prices/[name]/route.ts # GET: 가격/전화번호 조회
 │   │   ├── seven-eleven-toilet/route.ts # GET: 7-ELEVEN 화장실 검색
 │   │   ├── familymart-toilet/route.ts # GET: FamilyMart 매장 검색
@@ -85,6 +87,9 @@ src/
 │   │   │   └── route.ts              # POST: 배치 API 호출
 │   │   ├── cache-stats/
 │   │   │   └── route.ts              # GET: 캐시 통계
+│   │   ├── cache/
+│   │   │   ├── warm-images/route.ts  # GET: 대표사진 일괄 캐싱
+│   │   │   └── warm-photos/route.ts  # GET: 사진 10장 Cloudinary 업로드 (관리자)
 │   │   └── cron/
 │   │       ├── refresh-reviews/route.ts # GET: 리뷰 정보 갱신 (Cron)
 │   │       ├── sync-seven-eleven/route.ts # GET: 7-ELEVEN 동기화 (Cron)
