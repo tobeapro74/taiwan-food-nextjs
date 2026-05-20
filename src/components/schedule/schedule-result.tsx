@@ -72,10 +72,29 @@ export function ScheduleResult({ schedule, onBack, onGoToSavedList, user, initia
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [selectedPlaceName, setSelectedPlaceName] = useState("");
 
-  const handlePhotoClick = (photos: string[], name: string) => {
-    setSelectedPhotos(photos);
+  const handlePhotoClick = async (photos: string[], name: string) => {
     setSelectedPlaceName(name);
     setPhotoModalOpen(true);
+
+    // 첫 사진 URL이 유효한지 확인 (만료된 Google redirect URL 감지)
+    const isExpired = photos.length > 0 && photos[0].includes("maps.googleapis.com/maps/api/place/photo");
+    if (!isExpired) {
+      setSelectedPhotos(photos);
+      return;
+    }
+
+    // 만료된 URL이면 place-photo API로 새 사진 1장만 가져와서 표시
+    try {
+      const res = await fetch(`/api/place-photo?query=${encodeURIComponent(name)}&name=${encodeURIComponent(name)}`);
+      const data = await res.json();
+      if (data.photoUrl) {
+        setSelectedPhotos([data.photoUrl]);
+      } else {
+        setSelectedPhotos(photos);
+      }
+    } catch {
+      setSelectedPhotos(photos);
+    }
   };
 
   const toggleDay = (day: number) => {

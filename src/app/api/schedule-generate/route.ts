@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllRestaurants, getPlaces } from "@/data/taiwan-food";
 import { connectToDatabase } from "@/lib/mongodb";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 import {
   ScheduleGenerateRequest,
   DaySchedule,
@@ -118,13 +125,23 @@ async function fetchPlacePhotos(placeName: string): Promise<string[]> {
       return [];
     }
 
-    // 최대 10장의 사진 URL 생성 (redirect를 따라가서 실제 이미지 URL 획득, 병렬 처리)
+    // 최대 10장의 사진을 Cloudinary에 업로드해서 영구 URL 획득 (병렬 처리)
+    const safeId = placeName.replace(/[^a-zA-Z0-9가-힣]/g, "_").substring(0, 40);
     const photoResults = await Promise.allSettled(
-      detailsData.result.photos.slice(0, 10).map(async (photo: { photo_reference: string }) => {
+      detailsData.result.photos.slice(0, 10).map(async (photo: { photo_reference: string }, idx: number) => {
         const photoApiUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photo.photo_reference}&key=${apiKey}`;
-        const photoRes = await fetch(photoApiUrl, { redirect: "follow" });
-        if (photoRes.ok) return photoRes.url;
-        throw new Error("Photo fetch failed");
+        try {
+          const result = await cloudinary.uploader.upload(photoApiUrl, {
+            public_id: `taiwan-schedule/${safeId}_${idx}`,
+            overwrite: false,
+          });
+          return result.secure_url;
+        } catch {
+          // Cloudinary 실패 시 redirect URL fallback
+          const photoRes = await fetch(photoApiUrl, { redirect: "follow" });
+          if (photoRes.ok) return photoRes.url;
+          throw new Error("Photo fetch failed");
+        }
       })
     );
     const photoUrls = photoResults
