@@ -487,15 +487,25 @@ function PhotoPreviewModal({
     // Cloudinary URL이면 바로 사용
     if (photos.length > 0 && photos[0].includes("cloudinary.com")) {
       setResolvedPhotos(photos);
+      setPhotosLoading(false);
       return;
     }
 
-    // photos가 없거나 만료 URL이면 place-photo API로 1장 조회
+    // place_photos_cache에서 10장 조회
     setPhotosLoading(true);
     setResolvedPhotos([]);
-    fetch(`/api/place-photo?query=${encodeURIComponent(placeName)}&name=${encodeURIComponent(placeName)}`)
+    fetch(`/api/place-photos?name=${encodeURIComponent(placeName)}`)
       .then(r => r.json())
-      .then(data => { if (data.photoUrl) setResolvedPhotos([data.photoUrl]); })
+      .then(data => {
+        if (data.photos?.length > 0) {
+          setResolvedPhotos(data.photos);
+        } else {
+          // 캐시 없으면 place-photo API로 1장 fallback
+          return fetch(`/api/place-photo?query=${encodeURIComponent(placeName)}&name=${encodeURIComponent(placeName)}`)
+            .then(r => r.json())
+            .then(d => { if (d.photoUrl) setResolvedPhotos([d.photoUrl]); });
+        }
+      })
       .catch(() => {})
       .finally(() => setPhotosLoading(false));
   }, [isOpen, photos, placeName]);

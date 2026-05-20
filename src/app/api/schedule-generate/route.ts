@@ -607,13 +607,6 @@ ${activeGroups.some((g: AgeGenderCount) => g.ageGroup === "60s_plus") ? "7. 60�
       }
     }
 
-    // 각 장소의 사진 가져오기 - 순차 처리 (병렬 시 Cloudinary 업로드 타임아웃 방지)
-    for (const day of schedule) {
-      for (const activity of day.activities) {
-        activity.photos = await fetchPlacePhotos(activity.name);
-      }
-    }
-
     return NextResponse.json({
       success: true,
       data: {
