@@ -474,23 +474,29 @@ function PhotoPreviewModal({
 }) {
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [resolvedPhotos, setResolvedPhotos] = useState<string[]>(photos);
+  const [resolvedPhotos, setResolvedPhotos] = useState<string[]>([]);
+  const [photosLoading, setPhotosLoading] = useState(true);
 
-  // photo_reference URL이면 place-photo API로 실제 이미지 URL 획득
+  // 모달 열릴 때 photo_reference URL이면 place-photo API로 실제 URL 획득
   useEffect(() => {
     if (!isOpen) return;
+    setResolvedPhotos([]);
+    setPhotosLoading(true);
+
     const isPhotoRef = photos.some(p => p.includes("photo_reference="));
     if (!isPhotoRef) {
       setResolvedPhotos(photos);
+      setPhotosLoading(false);
       return;
     }
-    // place-photo API로 대표 사진 1장 가져오기
+    // place-photo API로 Cloudinary 영구 URL 가져오기
     fetch(`/api/place-photo?query=${encodeURIComponent(placeName)}&name=${encodeURIComponent(placeName)}`)
       .then(r => r.json())
       .then(data => {
         if (data.photoUrl) setResolvedPhotos([data.photoUrl]);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setPhotosLoading(false));
   }, [isOpen, photos, placeName]);
 
   // 모달이 열릴 때 body 스크롤 막기
@@ -575,31 +581,43 @@ function PhotoPreviewModal({
 
         {/* 사진 그리드 - 스크롤 가능 */}
         <div className="p-4 overflow-y-auto flex-1">
-          <div className="grid grid-cols-2 gap-2">
-            {resolvedPhotos.map((photo, idx) => (
-              <div
-                key={idx}
-                className="aspect-square rounded-xl overflow-hidden bg-muted relative cursor-pointer active:scale-[0.98] transition-transform"
-                onClick={() => !imageErrors.has(idx) && setSelectedIndex(idx)}
-              >
-                {!imageErrors.has(idx) ? (
-                  <Image
-                    src={photo}
-                    alt={t("schedule.photo_alt", { name: placeName, index: idx + 1 })}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 50vw, 33vw"
-                    onError={() => handleImageError(idx)}
-                    unoptimized
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                    <Camera className="w-8 h-8" />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          {photosLoading ? (
+            <div className="grid grid-cols-2 gap-2">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="aspect-square rounded-xl bg-muted animate-pulse" />
+              ))}
+            </div>
+          ) : resolvedPhotos.length === 0 ? (
+            <div className="flex items-center justify-center h-40 text-muted-foreground">
+              <Camera className="w-8 h-8" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              {resolvedPhotos.map((photo, idx) => (
+                <div
+                  key={idx}
+                  className="aspect-square rounded-xl overflow-hidden bg-muted relative cursor-pointer active:scale-[0.98] transition-transform"
+                  onClick={() => !imageErrors.has(idx) && setSelectedIndex(idx)}
+                >
+                  {!imageErrors.has(idx) ? (
+                    <Image
+                      src={photo}
+                      alt={t("schedule.photo_alt", { name: placeName, index: idx + 1 })}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      onError={() => handleImageError(idx)}
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <Camera className="w-8 h-8" />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
