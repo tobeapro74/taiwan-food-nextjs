@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
           const photoApiUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoRefs[idx].photo_reference}&key=${apiKey}`;
           const result = await cloudinary.uploader.upload(photoApiUrl, {
             public_id: `taiwan-photos/${safeId}_${idx}`,
-            overwrite: false,
+            overwrite: true,
           });
           photoUrls.push(result.secure_url);
         } catch {
