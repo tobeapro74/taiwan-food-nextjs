@@ -1,43 +1,50 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { getDb } from "@/lib/mongodb";
 
-/**
- * Health Check API - 필수 환경변수 및 서비스 상태 확인
- * GET /api/health?key=admin123
- */
-const ADMIN_KEY = process.env.CACHE_WARM_KEY || "admin123";
+export const dynamic = "force-dynamic";
 
-const REQUIRED_ENV_VARS = [
-  { name: "CLOUDINARY_CLOUD_NAME", desc: "Cloudinary 클라우드 이름" },
-  { name: "CLOUDINARY_API_KEY", desc: "Cloudinary API 키" },
-  { name: "CLOUDINARY_API_SECRET", desc: "Cloudinary API 시크릿" },
-  { name: "NEXT_PUBLIC_GOOGLE_PLACES_API_KEY", desc: "Google Places API 키" },
-  { name: "MONGODB_URI", desc: "MongoDB 연결 URI" },
-  { name: "JWT_SECRET", desc: "JWT 시크릿 키" },
-];
+export async function GET() {
+  const checks: Record<string, string> = { server: "ok" };
+  let totalMembers: number | undefined;
+  let dauYesterday: number | undefined;
+  let newMembersYesterday: number | undefined;
 
-export async function GET(request: NextRequest) {
-  const key = request.nextUrl.searchParams.get("key");
-  if (key !== ADMIN_KEY) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const db = await getDb();
+    checks["db"] = "ok";
+
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const nowKst = new Date(Date.now() + kstOffset);
+    const yStartKst = new Date(nowKst);
+    yStartKst.setDate(yStartKst.getDate() - 1);
+    yStartKst.setHours(0, 0, 0, 0);
+    const yEndKst = new Date(yStartKst);
+    yEndKst.setHours(23, 59, 59, 999);
+    const yStart = new Date(yStartKst.getTime() - kstOffset);
+    const yEnd = new Date(yEndKst.getTime() - kstOffset);
+
+    const users = db.collection("users");
+    totalMembers = await users.countDocuments();
+    dauYesterday = await users.countDocuments({
+      last_login_at: { $gte: yStart, $lte: yEnd },
+    });
+    newMembersYesterday = await users.countDocuments({
+      created_at: { $gte: yStart, $lte: yEnd },
+    });
+  } catch {
+    checks["db"] = "error";
   }
 
-  const results = REQUIRED_ENV_VARS.map((env) => ({
-    name: env.name,
-    desc: env.desc,
-    set: !!process.env[env.name],
-  }));
-
-  const missing = results.filter((r) => !r.set);
-  const allSet = missing.length === 0;
+  const overall = Object.values(checks).every((v) => v === "ok") ? "ok" : "degraded";
 
   return NextResponse.json({
-    status: allSet ? "healthy" : "unhealthy",
+    status: overall,
+    app: "taiwan-food",
+    version: "0.1.0",
     timestamp: new Date().toISOString(),
-    envVars: {
-      total: results.length,
-      set: results.filter((r) => r.set).length,
-      missing: missing.map((m) => `${m.name} (${m.desc})`),
-    },
-    results,
+    checks,
+    ...(totalMembers !== undefined && { total_members: totalMembers }),
+    ...(dauYesterday !== undefined && { dau_yesterday: dauYesterday }),
+    ...(newMembersYesterday !== undefined && { new_members_yesterday: newMembersYesterday }),
   });
 }
